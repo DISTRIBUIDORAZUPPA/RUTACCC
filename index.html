@@ -309,7 +309,7 @@ footer{text-align:center;font-family:var(--mono);font-size:.58rem;color:var(--mu
 <div id="tabCCC" class="tab-panel active"><div class="wrap">
 
   <div class="sync-row">
-    <span class="sync-info"><span class="sync-dot"></span><span id="syncText">Cargando…</span></span>
+    <span class="sync-info"><span class="sync-dot" id="syncDot"></span><span id="syncText">Cargando…</span></span>
   </div>
 
   <!-- PANEL ALERTAS INACTIVIDAD -->
@@ -468,7 +468,7 @@ document.querySelectorAll('.topbar-logos img').forEach(img=>{
 // Clock
 const todayCode=JS_TO_CODE[new Date().getDay()];
 document.getElementById('clockNow').textContent=(DAY_NAMES[todayCode]||todayCode)+' · '+new Date().toLocaleDateString('es-AR');
-document.getElementById('syncText').textContent=DATA.length+' clientes cargados';
+document.getElementById('syncText').textContent='Cargando datos del servidor…';
 
 // Counters de alerta
 function updateAlertCounts(){
