@@ -864,11 +864,26 @@ function parseCSV(text){
 }
 
 function toB(v){ try{return parseFloat((v||'0').replace(',','.'))||0>0?1:0;}catch{return 0;} }
-function toShare(v){ try{const n=parseFloat((v||'').replace(',','.'));return n<=1?Math.round(n*100*10)/10:Math.round(n*10)/10;}catch{return null;} }
+function toShare(v){
+  try{
+    if(!v||v==='') return null;
+    // viene como "90%" o "0,9" o "0.9"
+    const s = v.replace('%','').replace(',','.').trim();
+    const n = parseFloat(s);
+    if(isNaN(n)) return null;
+    // si ya viene como porcentaje (ej: 90) dejarlo, si viene como decimal (0.9) multiplicar
+    return n > 1 ? Math.round(n*10)/10 : Math.round(n*100*10)/10;
+  }catch{return null;}
+}
 function toDate(v){
   if(!v||v==='null'||v==='') return null;
   try{
-    // fechas tipo "2026-05-26 00:00:00" o "2026-05-26"
+    // formato DD/M/YYYY (ej: 26/5/2026 o 26/05/2026)
+    if(v.includes('/')){
+      const [d,m,y] = v.split('/');
+      return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+    }
+    // formato YYYY-MM-DD o YYYY-MM-DD HH:MM:SS
     return v.slice(0,10);
   }catch{return null;}
 }
