@@ -750,7 +750,30 @@ a.chofer-badge:hover{background:#1a5c8a;color:#fff;}
 .vr-pilar-cat{justify-content:flex-start;padding-left:10px;font-family:var(--serif);font-weight:900;background:var(--gold);color:var(--ink);}
 .vr-pilar-name{justify-content:flex-start;padding-left:18px;font-weight:600;color:var(--ink);}
 @media(max-width:640px){.vr-periodo{flex-direction:column;align-items:flex-start;}}
-</style>
+.cd-banner{display:flex;align-items:center;gap:14px;background:var(--ink);color:#fff;border-radius:12px;padding:12px 18px;margin-bottom:16px;flex-wrap:wrap;}
+.cd-banner-tag{font-family:var(--serif);font-weight:900;font-size:1rem;color:var(--gold);}
+.cd-panels{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.cd-panels-solo{grid-template-columns:1fr;max-width:520px;}
+@media(max-width:760px){.cd-panels{grid-template-columns:1fr;}}
+.cd-panel{border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+.cd-panel-head{font-family:var(--serif);font-weight:900;font-size:.9rem;background:var(--ink);color:var(--gold);padding:9px 14px;}
+.cd-table{overflow-x:auto;}
+.cd-grid{display:grid;grid-template-columns:1fr repeat(3,64px);font-size:.68rem;min-width:280px;}
+.cd-cell{padding:8px 6px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);display:flex;align-items:center;justify-content:center;text-align:center;}
+.cd-head{background:var(--paper);font-family:var(--mono);font-size:.56rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700;}
+.cd-name{justify-content:flex-start;padding-left:12px;font-weight:600;color:var(--ink);}
+.cd-sticky{position:sticky;left:0;background:#fff;z-index:2;}
+.cd-head.cd-sticky{z-index:3;}
+.cd-total{background:var(--paper);font-family:var(--serif);font-weight:900;color:var(--ink);}
+.cd-total.cd-sticky{background:var(--paper);}
+.cd-pct{padding:3px 7px;border-radius:6px;font-weight:700;font-size:.68rem;display:inline-block;}
+.cd-pct.lo{background:#fbdce0;color:#b3223a;}
+.cd-pct.mid{background:#fff3d6;color:#a37200;}
+.cd-pct.hi{background:#d3f7e9;color:#0d7a56;}
+.cd-zuppa{display:grid;grid-template-columns:1fr repeat(3,64px);background:var(--gold);color:var(--ink);border-radius:10px;font-family:var(--serif);font-weight:900;font-size:.75rem;overflow:hidden;}
+.cd-zuppa>div{padding:10px 8px;display:flex;align-items:center;justify-content:center;text-align:center;}
+.cd-zuppa>div:first-child{justify-content:flex-start;padding-left:14px;}
+@media(max-width:640px){.cd-banner{flex-direction:column;align-items:flex-start;}}</style>
 </head>
 <body>
 
@@ -3281,6 +3304,7 @@ function closeTsAccion(){
 
 // CIERRE VESPERTINA
 let cierrePilar = 'cervezas';
+let cierreVista = 'dia';
 
 function setCierrePilar(p){
   cierrePilar = p;
@@ -3289,70 +3313,134 @@ function setCierrePilar(p){
   renderCierreTable();
 }
 
-function renderCierreTable(){
+function setCierreVista(v){
+  cierreVista = v;
+  document.getElementById('cierreVistaDiaBtn').classList.toggle('active', v==='dia');
+  document.getElementById('cierreVistaTodoBtn').classList.toggle('active', v==='todo');
+  document.getElementById('cierreDiaView').style.display = v==='dia' ? 'block' : 'none';
+  document.getElementById('cierreTodoView').style.display = v==='todo' ? 'block' : 'none';
+}
+
+const CD_FIELDS_TODO = [
+  {key:'vol_planif', label:'Planif', tipo:'num'},
+  {key:'vol_real', label:'Real', tipo:'num'},
+  {key:'avance', label:'Avance', tipo:'pct'},
+  {key:'obj_mes', label:'Obj. Mes', tipo:'num'},
+  {key:'vol_dia', label:'Vol. Día', tipo:'num'},
+  {key:'vol_mes', label:'Vol. Mes', tipo:'num'},
+  {key:'vol_total', label:'Vol. Total', tipo:'num'},
+  {key:'resta', label:'Resta', tipo:'num'},
+  {key:'avance_mes', label:'Av. Mes', tipo:'pct'},
+  {key:'avance_mas1', label:'Av. +1', tipo:'pct'},
+  {key:'tendencia', label:'Tend.', tipo:'pct'},
+  {key:'crecimiento', label:'Crec.', tipo:'pct'},
+  {key:'media_real', label:'M.Real', tipo:'num'},
+  {key:'media_nec', label:'M.Nec', tipo:'num'}
+];
+
+function cdFmt_(v){ return v===null||v===undefined ? '—' : v.toLocaleString('es-AR',{maximumFractionDigits:1}); }
+function cdPct_(v){ return v===null||v===undefined ? '—' : Math.round(v*100)+'%'; }
+function cdClass_(v){ return v===null||v===undefined ? '' : (v>=1 ? 'hi' : (v>=0.7 ? 'mid' : 'lo')); }
+function cdCellHtml_(v, tipo){
+  if(tipo==='pct') return `<span class="cd-pct ${cdClass_(v)}">${cdPct_(v)}</span>`;
+  return cdFmt_(v);
+}
+
+function cdPanelHtml_(sup, bloque){
+  const promos = Object.entries(bloque).filter(([k,v])=>!k.includes('_TOTAL') && v.supervisor===sup);
+  let html = `<div class="cd-panel"><div class="cd-panel-head">${esc(sup)}</div>`;
+  html += `<div class="cd-table"><div class="cd-grid">`;
+  html += `<div class="cd-cell cd-head cd-sticky">PV</div><div class="cd-cell cd-head">Planif</div><div class="cd-cell cd-head">Real</div><div class="cd-cell cd-head">Avance</div>`;
+  promos.forEach(([pv,v])=>{
+    html += `<div class="cd-cell cd-name cd-sticky">${esc(pv)}</div>` +
+      `<div class="cd-cell">${cdFmt_(v.vol_planif)}</div>` +
+      `<div class="cd-cell">${cdFmt_(v.vol_real)}</div>` +
+      `<div class="cd-cell">${cdCellHtml_(v.avance,'pct')}</div>`;
+  });
+  const t = bloque[sup + '_TOTAL'];
+  if(t){
+    html += `<div class="cd-cell cd-total cd-sticky">${esc(sup)} — total</div>` +
+      `<div class="cd-cell cd-total">${cdFmt_(t.vol_planif)}</div>` +
+      `<div class="cd-cell cd-total">${cdFmt_(t.vol_real)}</div>` +
+      `<div class="cd-cell cd-total">${cdCellHtml_(t.avance,'pct')}</div>`;
+  }
+  html += `</div></div></div>`;
+  return html;
+}
+
+function renderCierreDia(){
+  const el = document.getElementById('cierreDiaContent');
+  if(!el) return;
   const bloque = CIERRE_VESPERTINA_DATA[cierrePilar];
+  if(!bloque || !Object.keys(bloque).length){
+    el.innerHTML = '<div class="stock-empty">Todavía no hay datos de Cierre Vespertina cargados.</div>';
+    return;
+  }
+  const hora = CIERRE_VESPERTINA_DATA.hora_corte;
+  let html = `<div class="cd-banner"><div class="cd-banner-tag">🌇 Cierre del día${hora ? ' · ' + esc(hora) : ''}</div></div>`;
+
+  if(supAuthData.scope==='all'){
+    const sups = [...new Set(Object.values(bloque).filter(v=>v.supervisor).map(v=>v.supervisor))];
+    html += `<div class="cd-panels">` + sups.map(s=>cdPanelHtml_(s, bloque)).join('') + `</div>`;
+    const z = bloque['ZUPPA_TOTAL'];
+    if(z){
+      html += `<div class="cd-zuppa"><div>ZUPPA</div><div>${cdFmt_(z.vol_planif)}</div><div>${cdFmt_(z.vol_real)}</div><div>${cdCellHtml_(z.avance,'pct')}</div></div>`;
+    }
+  } else {
+    const own = supAuthData.name.split(' ')[0];
+    html += `<div class="cd-panels cd-panels-solo">` + cdPanelHtml_(own, bloque) + `</div>`;
+  }
+  el.innerHTML = html;
+}
+
+function renderCierreCompleto(){
+  const el = document.getElementById('cierreTable');
+  if(!el) return;
+  const bloque = CIERRE_VESPERTINA_DATA[cierrePilar];
+  if(!bloque || !Object.keys(bloque).length){ el.innerHTML = ''; return; }
   const misSupervisores = supAuthData.scope==='all'
     ? [...new Set(Object.values(bloque).filter(v=>v.supervisor).map(v=>v.supervisor))]
     : [supAuthData.name.split(' ')[0]];
 
-  const cols = 6;
-  const gridCols = `130px repeat(${cols}, 64px)`;
+  const cols = CD_FIELDS_TODO.length;
+  const gridCols = `130px repeat(${cols}, 62px)`;
   let html = `<div class="sup-obj-table" style="grid-template-columns:${gridCols}">`;
-  html += `<div class="sup-obj-cell sup-obj-head sup-obj-sticky">PV</div>
-    <div class="sup-obj-cell sup-obj-head">Planif</div>
-    <div class="sup-obj-cell sup-obj-head">Real</div>
-    <div class="sup-obj-cell sup-obj-head">Avance</div>
-    <div class="sup-obj-cell sup-obj-head">Resta</div>
-    <div class="sup-obj-cell sup-obj-head">Tend.</div>
-    <div class="sup-obj-cell sup-obj-head">M.Nec</div>`;
+  html += `<div class="sup-obj-cell sup-obj-head sup-obj-sticky">PV</div>`;
+  CD_FIELDS_TODO.forEach(f=>{ html += `<div class="sup-obj-cell sup-obj-head">${esc(f.label)}</div>`; });
 
-  const fmt = (v)=> v===null||v===undefined ? '—' : v.toLocaleString('es-AR',{maximumFractionDigits:1});
-  const avanceClass = (v)=> v===null ? '' : (v>=1 ? 'hi' : (v>=0.7 ? 'mid' : 'lo'));
+  function filaHtml(nombre, v, nameCls, cellCls){
+    let h = `<div class="sup-obj-cell ${nameCls} sup-obj-sticky">${esc(nombre)}</div>`;
+    CD_FIELDS_TODO.forEach(f=>{
+      h += `<div class="sup-obj-cell ${cellCls}">${cdCellHtml_(v[f.key], f.tipo)}</div>`;
+    });
+    return h;
+  }
 
   misSupervisores.forEach(sup=>{
-    const promos = Object.entries(bloque).filter(([k,v])=>!k.includes('TOTAL') && v.supervisor===sup);
+    const promos = Object.entries(bloque).filter(([k,v])=>!k.includes('_TOTAL') && v.supervisor===sup);
     if(supAuthData.scope==='all'){
       html += `<div class="sup-obj-cell sup-obj-super sup-obj-sticky">${esc(sup)}</div>`;
       for(let i=0;i<cols;i++) html += `<div class="sup-obj-cell sup-obj-super"></div>`;
     }
-    promos.forEach(([pv, v])=>{
-      html += `<div class="sup-obj-cell sup-obj-name sup-obj-sticky">${esc(pv)}</div>
-        <div class="sup-obj-cell">${fmt(v.vol_planif)}</div>
-        <div class="sup-obj-cell">${fmt(v.vol_real)}</div>
-        <div class="sup-obj-cell"><span class="sup-obj-pct ${avanceClass(v.avance)}">${v.avance===null?'—':Math.round(v.avance*100)+'%'}</span></div>
-        <div class="sup-obj-cell">${fmt(v.resta)}</div>
-        <div class="sup-obj-cell">${v.tendencia===null?'—':Math.round(v.tendencia*100)+'%'}</div>
-        <div class="sup-obj-cell">${fmt(v.media_nec)}</div>`;
-    });
-    const totalKey = `${sup}_TOTAL`;
-    const vt = bloque[totalKey];
-    if(vt){
-      html += `<div class="sup-obj-cell sup-obj-super sup-obj-sticky">${esc(sup)} — total</div>
-        <div class="sup-obj-cell sup-obj-super">${fmt(vt.vol_planif)}</div>
-        <div class="sup-obj-cell sup-obj-super">${fmt(vt.vol_real)}</div>
-        <div class="sup-obj-cell sup-obj-super">${vt.avance===null?'—':Math.round(vt.avance*100)+'%'}</div>
-        <div class="sup-obj-cell sup-obj-super">${fmt(vt.resta)}</div>
-        <div class="sup-obj-cell sup-obj-super">${vt.tendencia===null?'—':Math.round(vt.tendencia*100)+'%'}</div>
-        <div class="sup-obj-cell sup-obj-super">${fmt(vt.media_nec)}</div>`;
-    }
+    promos.forEach(([pv, v])=>{ html += filaHtml(pv, v, 'sup-obj-name', ''); });
+    const vt = bloque[`${sup}_TOTAL`];
+    if(vt) html += filaHtml(`${sup} — total`, vt, 'sup-obj-super', 'sup-obj-super');
   });
 
   if(supAuthData.scope==='all'){
     const vz = bloque['ZUPPA_TOTAL'];
-    if(vz){
-      html += `<div class="sup-obj-cell sup-obj-total sup-obj-sticky">ZUPPA</div>
-        <div class="sup-obj-cell sup-obj-total">${fmt(vz.vol_planif)}</div>
-        <div class="sup-obj-cell sup-obj-total">${fmt(vz.vol_real)}</div>
-        <div class="sup-obj-cell sup-obj-total">${vz.avance===null?'—':Math.round(vz.avance*100)+'%'}</div>
-        <div class="sup-obj-cell sup-obj-total">${fmt(vz.resta)}</div>
-        <div class="sup-obj-cell sup-obj-total">${vz.tendencia===null?'—':Math.round(vz.tendencia*100)+'%'}</div>
-        <div class="sup-obj-cell sup-obj-total">${fmt(vz.media_nec)}</div>`;
-    }
+    if(vz) html += filaHtml('ZUPPA', vz, 'sup-obj-total', 'sup-obj-total');
   }
 
   html += '</div>';
-  document.getElementById('cierreTable').innerHTML = html;
+  el.innerHTML = html;
 }
+
+function renderCierreTable(){
+  renderCierreDia();
+  renderCierreCompleto();
+}
+
 
 const SUP_IND_SHORT = {
   'FOCO 1 - VF TOTAL CERVEZAS 2026 (Publico)': 'Cervezas',
@@ -4470,9 +4558,18 @@ function renderRMV(pv){
         <div class="pill active" id="cierrePilarCervezasBtn" onclick="setCierrePilar('cervezas')">🍺 Cervezas</div>
         <div class="pill" id="cierrePilarUngBtn" onclick="setCierrePilar('ung')">🥤 UNG</div>
       </div>
+      <div class="pill-row" style="margin-bottom:16px;">
+        <div class="pill active" id="cierreVistaDiaBtn" onclick="setCierreVista('dia')">🌇 Cierre del día</div>
+        <div class="pill" id="cierreVistaTodoBtn" onclick="setCierreVista('todo')">📋 Todas las columnas</div>
+      </div>
       <div class="sup-note">AVANCE: real sobre planificado del día. MEDIA NEC: hectolitros por día que faltan para llegar al objetivo del mes.</div>
-      <div class="sup-obj-wrap">
-        <div id="cierreTable"></div>
+      <div id="cierreDiaView">
+        <div id="cierreDiaContent"></div>
+      </div>
+      <div id="cierreTodoView" style="display:none">
+        <div class="sup-obj-wrap">
+          <div id="cierreTable"></div>
+        </div>
       </div>
     </div>
 
