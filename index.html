@@ -3965,16 +3965,19 @@ function supVrOwnKey_(){
 }
 
 function renderSupVr(){
-  const el = document.getElementById('supVrContent');
-  if(!el) return;
+  const elVenta = document.getElementById('vrVentaContent');
+  const elSup = document.getElementById('vrSupContent');
+  if(!elVenta || !elSup) return;
   if(!VR_DATA || !VR_DATA.categorias || !VR_DATA.categorias.length){
-    el.innerHTML = '<div class="stock-empty">Todavía no hay datos de VR cargados — se suman en la próxima actualización del dashboard.</div>';
+    elVenta.innerHTML = '<div class="stock-empty">Todavía no hay datos de VR cargados — se suman en la próxima actualización del dashboard.</div>';
+    elSup.innerHTML = '';
     return;
   }
   const isAll = supAuthData.scope === 'all';
-  let html = '';
   const p = VR_DATA.periodo || {};
-  html += `<div class="vr-periodo">
+
+  let htmlVenta = `<div class="vr-periodo">
+    <img class="cd-banner-logo cd-banner-logo-zuppa" src="data:image/png;base64,${CIERRE_LOGO_ZUPPA_B64_}" alt="Zuppa">
     <div class="vr-periodo-tag">${esc(p.titulo||'VR')}</div>
     <div class="vr-periodo-grid">
       <div><span>Inicio</span><b>${esc(p.inicio||'—')}</b></div>
@@ -3985,25 +3988,32 @@ function renderSupVr(){
       <div><span>Restantes</span><b>${p.dias_restantes!=null?p.dias_restantes:'—'}</b></div>
     </div>
   </div>`;
+  if(isAll) htmlVenta += vrCategoriasTable_();
+  elVenta.innerHTML = htmlVenta;
 
-  if(isAll) html += vrCategoriasTable_();
-
-  html += '<div class="section-title">📊 Avance por vendedor</div>';
+  let htmlSup = `<div class="cd-banner-formal">`+
+    `<div class="cd-banner-formal-brand">`+
+      `<img class="cd-banner-logo cd-banner-logo-zuppa" src="data:image/png;base64,${CIERRE_LOGO_ZUPPA_B64_}" alt="Zuppa">`+
+      `<div class="cd-banner-formal-text">`+
+        `<div class="cd-banner-formal-title">Avance por vendedor</div>`+
+        `<div class="cd-banner-formal-date">${esc(p.titulo||'')}</div>`+
+      `</div>`+
+    `</div>`+
+  `</div>`;
   if(isAll){
     if(VR_DATA.jefe_ventas && VR_DATA.jefe_ventas.pilares){
-      html += vrPilaresBlock_('JEFE DE VENTAS', VR_DATA.jefe_ventas.pilares, true);
+      htmlSup += vrPilaresBlock_('JEFE DE VENTAS', VR_DATA.jefe_ventas.pilares, true);
     }
     Object.keys(VR_DATA.supervisores||{}).forEach(nombre=>{
-      html += vrPilaresBlock_(nombre, VR_DATA.supervisores[nombre].pilares, false);
+      htmlSup += vrPilaresBlock_(nombre, VR_DATA.supervisores[nombre].pilares, false);
     });
   } else {
     const key = supVrOwnKey_();
     const propio = (VR_DATA.supervisores||{})[key];
-    if(propio && propio.pilares) html += vrPilaresBlock_(key, propio.pilares, false);
-    else html += '<div class="stock-empty">No encontré tus datos de VR todavía.</div>';
+    if(propio && propio.pilares) htmlSup += vrPilaresBlock_(key, propio.pilares, false);
+    else htmlSup += '<div class="stock-empty">No encontré tus datos de VR todavía.</div>';
   }
-
-  el.innerHTML = html;
+  elSup.innerHTML = htmlSup;
 }
 
 
@@ -4880,7 +4890,12 @@ function renderRMV(pv){
 
     <div id="supViewVr" style="display:none">
       <div class="sup-note">VR = avance de venta del mes: cuánto llevamos vendido contra el objetivo, la tendencia de cierre y cuánto hace falta vender por día (media necesaria) para llegar. Se actualiza una vez por día.</div>
-      <div id="supVrContent"></div>
+
+      <div class="cd-download-row"><button class="cd-download-btn" onclick="descargarCierreComoImagen(this,'vrVentaContent','Avance_de_venta_del_mes')">⬇️ Descargar imagen</button></div>
+      <div id="vrVentaContent"></div>
+
+      <div class="cd-download-row" style="margin-top:22px;"><button class="cd-download-btn" onclick="descargarCierreComoImagen(this,'vrSupContent','Avance_por_vendedor')">⬇️ Descargar imagen</button></div>
+      <div id="vrSupContent"></div>
     </div>
 
   </div>
