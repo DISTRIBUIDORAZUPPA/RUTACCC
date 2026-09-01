@@ -773,7 +773,8 @@ a.chofer-badge:hover{background:#1a5c8a;color:#fff;}
 .cd-zuppa{display:grid;grid-template-columns:1fr repeat(3,64px);background:var(--gold);color:var(--ink);border-radius:10px;font-family:var(--serif);font-weight:900;font-size:.75rem;overflow:hidden;}
 .cd-zuppa>div{padding:10px 8px;display:flex;align-items:center;justify-content:center;text-align:center;}
 .cd-zuppa>div:first-child{justify-content:flex-start;padding-left:14px;}
-@media(max-width:640px){.cd-banner{flex-direction:column;align-items:flex-start;}}</style>
+@media(max-width:640px){.cd-banner{flex-direction:column;align-items:flex-start;}}.cd-grid-5{grid-template-columns:1fr repeat(5,58px);}
+.cd-zuppa-5{grid-template-columns:1fr repeat(5,58px);}</style>
 </head>
 <body>
 
@@ -3939,6 +3940,155 @@ function renderSupVr(){
 
 
 
+function ayerArgentina(){
+  const ahoraUTC = new Date();
+  const ahoraArg = new Date(ahoraUTC.getTime() - 3*60*60*1000 - 24*60*60*1000);
+  return ahoraArg.toISOString().slice(0,10);
+}
+
+let planVista = 'hoy';
+function setPlanVista(v){
+  planVista = v;
+  document.getElementById('planVistaHoyBtn').classList.toggle('active', v==='hoy');
+  document.getElementById('planVistaAyerBtn').classList.toggle('active', v==='ayer');
+  document.getElementById('planVistaHoy').style.display = v==='hoy' ? 'block' : 'none';
+  document.getElementById('planVistaAyer').style.display = v==='ayer' ? 'block' : 'none';
+  if(v==='ayer') renderPlanAyerPills();
+}
+
+let planAyerIndicator = 'cvza';
+let planAyerData = {};
+
+function renderPlanAyerPills(){
+  const el = document.getElementById('planAyerIndicatorPills');
+  el.innerHTML = CCC_FIELDS.map(f=>
+    `<div class="pill${f.key===planAyerIndicator?' active':''}" onclick="setPlanAyerIndicator('${f.key}')">${f.short}</div>`
+  ).join('');
+  loadAndRenderPlanAyer();
+}
+
+function setPlanAyerIndicator(key){
+  planAyerIndicator = key;
+  renderPlanAyerPills();
+}
+
+async function loadAndRenderPlanAyer(){
+  const el = document.getElementById('planAyerContent');
+  el.innerHTML = '<div class="stock-empty">Cargando cierre de ayer…</div>';
+  const ayer = ayerArgentina();
+  planAyerData = {};
+  if(SUP_API_URL && SUP_API_URL.indexOf('PENDIENTE') === -1){
+    try{
+      const resp = await fetch(SUP_API_URL + '?action=getPlanificacion&fecha=' + ayer);
+      const json = await resp.json();
+      if(json.ok){
+        json.data.forEach(r=>{
+          if(r.indicador === planAyerIndicator){
+            planAyerData[r.pv] = {planif: r.planif, real: r.real, clientes: r.clientes};
+          }
+        });
+      }
+    }catch(err){
+      el.innerHTML = '<div class="stock-empty">⚠️ No se pudo conectar con la planilla.</div>';
+      return;
+    }
+  }
+  renderPlanAyer(ayer);
+}
+
+function planPctClass_(pct){
+  if(pct===null||pct===undefined) return '';
+  if(pct>=60) return 'hi';
+  if(pct>=40) return 'mid';
+  return 'lo';
+}
+function planFmtNum_(v){
+  return (v===null||v===undefined||v==='') ? '—' : Number(v).toLocaleString('es-AR',{maximumFractionDigits:0});
+}
+function planFmtPct_(v){
+  return (v===null||v===undefined) ? '—' : Math.round(v)+'%';
+}
+
+function planAyerPanelHtml_(sup){
+  const pvs = [...new Set(DATA_RAW.filter(d=>d.supervisor===sup).map(d=>d.pv))].filter(Boolean).sort();
+  let html = `<div class="cd-panel">`;
+  html += `<div class="cd-panel-head">${esc(sup)}</div>`;
+  html += `<div class="cd-table"><div class="cd-grid cd-grid-5">`;
+  html += `<div class="cd-cell cd-head cd-sticky">PV</div><div class="cd-cell cd-head">Clientes</div><div class="cd-cell cd-head">Planif</div><div class="cd-cell cd-head">Real</div><div class="cd-cell cd-head">%Planif</div><div class="cd-cell cd-head">%R.vs Plan</div>`;
+  let subClientes=0, subPlanif=0, subReal=0, huboClientes=false, huboFila=false;
+  pvs.forEach(pv=>{
+    const d = planAyerData[pv];
+    if(!d) return;
+    huboFila = true;
+    const clientes = (d.clientes===null||d.clientes===undefined||d.clientes==='') ? null : Number(d.clientes);
+    const planif = (d.planif===null||d.planif===undefined||d.planif==='') ? null : Number(d.planif);
+    const real = (d.real===null||d.real===undefined||d.real==='') ? null : Number(d.real);
+    const pctPlanif = (clientes!==null && clientes>0 && planif!==null) ? Math.round(planif/clientes*100) : null;
+    const pctReal = (planif!==null && planif>0 && real!==null) ? Math.round(real/planif*100) : null;
+    if(clientes!==null){ subClientes+=clientes; huboClientes=true; }
+    if(planif!==null) subPlanif+=planif;
+    if(real!==null) subReal+=real;
+    html += `<div class="cd-cell cd-name cd-sticky">${esc(pv)}</div>`+
+      `<div class="cd-cell">${planFmtNum_(clientes)}</div>`+
+      `<div class="cd-cell">${planFmtNum_(planif)}</div>`+
+      `<div class="cd-cell">${planFmtNum_(real)}</div>`+
+      `<div class="cd-cell"><span class="cd-pct ${planPctClass_(pctPlanif)}">${planFmtPct_(pctPlanif)}</span></div>`+
+      `<div class="cd-cell"><span class="cd-pct ${planPctClass_(pctReal)}">${planFmtPct_(pctReal)}</span></div>`;
+  });
+  if(!huboFila){
+    html += `<div class="cd-cell cd-sticky" style="grid-column:1/-1;justify-content:flex-start;color:var(--muted);">Sin datos cargados para ayer.</div>`;
+  }
+  const subPctPlanif = (huboClientes && subClientes>0) ? Math.round(subPlanif/subClientes*100) : null;
+  const subPctReal = subPlanif>0 ? Math.round(subReal/subPlanif*100) : null;
+  if(huboFila){
+    html += `<div class="cd-cell cd-total cd-sticky">${esc(sup)} — total</div>`+
+      `<div class="cd-cell cd-total">${huboClientes?planFmtNum_(subClientes):'—'}</div>`+
+      `<div class="cd-cell cd-total">${planFmtNum_(subPlanif)}</div>`+
+      `<div class="cd-cell cd-total">${planFmtNum_(subReal)}</div>`+
+      `<div class="cd-cell cd-total"><span class="cd-pct ${planPctClass_(subPctPlanif)}">${planFmtPct_(subPctPlanif)}</span></div>`+
+      `<div class="cd-cell cd-total"><span class="cd-pct ${planPctClass_(subPctReal)}">${planFmtPct_(subPctReal)}</span></div>`;
+  }
+  html += `</div></div></div>`;
+  return {html, subClientes, subPlanif, subReal, huboClientes, huboFila};
+}
+
+function renderPlanAyer(ayer){
+  const el = document.getElementById('planAyerContent');
+  const hasData = Object.keys(planAyerData).length > 0;
+  const field = CCC_FIELDS.find(f=>f.key===planAyerIndicator);
+  let html = `<div class="cd-banner"><div class="cd-banner-tag">Cierre de ayer${field? ' · '+esc(field.label):''} · ${esc(ayer)}</div></div>`;
+  if(!hasData){
+    html += '<div class="stock-empty">No hay datos cargados para ese día.</div>';
+    el.innerHTML = html;
+    return;
+  }
+  const sups = supAuthData.scope==='all'
+    ? [...new Set(DATA_RAW.map(d=>d.supervisor))].filter(s=>s && s!=='Sin asignar').sort()
+    : [supAuthData.name];
+  let granClientes=0, granPlanif=0, granReal=0, granHubo=false;
+  html += `<div class="cd-panels${sups.length===1?' cd-panels-solo':''}">`;
+  sups.forEach(sup=>{
+    const r = planAyerPanelHtml_(sup);
+    html += r.html;
+    granClientes += r.subClientes; granPlanif += r.subPlanif; granReal += r.subReal;
+    if(r.huboClientes) granHubo = true;
+  });
+  html += `</div>`;
+  if(supAuthData.scope==='all'){
+    const granPctPlanif = (granHubo && granClientes>0) ? Math.round(granPlanif/granClientes*100) : null;
+    const granPctReal = granPlanif>0 ? Math.round(granReal/granPlanif*100) : null;
+    html += `<div class="cd-zuppa cd-zuppa-5">
+      <div>ZUPPA</div>
+      <div>${granHubo?planFmtNum_(granClientes):'—'}</div>
+      <div>${planFmtNum_(granPlanif)}</div>
+      <div>${planFmtNum_(granReal)}</div>
+      <div><span class="cd-pct ${planPctClass_(granPctPlanif)}">${planFmtPct_(granPctPlanif)}</span></div>
+      <div><span class="cd-pct ${planPctClass_(granPctReal)}">${planFmtPct_(granPctReal)}</span></div>
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
 function supPctClass(pct){
   if(pct >= 60) return 'hi';
   if(pct >= 40) return 'mid';
@@ -4029,11 +4179,12 @@ async function supSaveValue(pv, field, value){
   renderSupTable();
   const hoy = hoyArgentina();
   if(!SUP_API_URL || SUP_API_URL.indexOf('PENDIENTE') !== -1) return;
+  const clientes = DATA_RAW.filter(d=>d.pv===pv && d[supCurrentIndicator]===0 && visitaEsHoy(d.visita)).length;
   try{
     await fetch(SUP_API_URL, {
       method: 'POST',
       headers: {'Content-Type': 'text/plain;charset=utf-8'},
-      body: JSON.stringify({action:'setPlanificacion', fecha: hoy, indicador: supCurrentIndicator, pv, field, value})
+      body: JSON.stringify({action:'setPlanificacion', fecha: hoy, indicador: supCurrentIndicator, pv, field, value, clientes})
     });
   }catch(err){
     console.error('No se pudo guardar en la planilla', err);
@@ -4491,14 +4642,32 @@ function renderRMV(pv){
     </div>
 
     <div id="supViewPlan">
-      <div class="field" style="margin-bottom:16px;">
-        <label>Indicador CCC</label>
-        <div class="pill-row" id="supIndicatorPills"></div>
+      <div class="pill-row" style="margin-bottom:14px;">
+        <div class="pill active" id="planVistaHoyBtn" onclick="setPlanVista('hoy')">✏️ Hoy (en vivo)</div>
+        <div class="pill" id="planVistaAyerBtn" onclick="setPlanVista('ayer')">📅 Cierre de ayer</div>
       </div>
 
-      <div class="sup-note">Se planifica según performance de los 2 KPI's. La planificación de los promotores debe ser mayor al 60% de los clientes no compradores del día. La columna "Clientes" muestra solo los que visitan <b id="cncHoyLabel"></b> (hoy).</div>
+      <div id="planVistaHoy">
+        <div class="field" style="margin-bottom:16px;">
+          <label>Indicador CCC</label>
+          <div class="pill-row" id="supIndicatorPills"></div>
+        </div>
 
-      <div id="supPlanTable"></div>
+        <div class="sup-note">Se planifica según performance de los 2 KPI's. La planificación de los promotores debe ser mayor al 60% de los clientes no compradores del día. La columna "Clientes" muestra solo los que visitan <b id="cncHoyLabel"></b> (hoy).</div>
+
+        <div id="supPlanTable"></div>
+      </div>
+
+      <div id="planVistaAyer" style="display:none">
+        <div class="field" style="margin-bottom:16px;">
+          <label>Indicador CCC</label>
+          <div class="pill-row" id="planAyerIndicatorPills"></div>
+        </div>
+
+        <div class="sup-note">Cierre del día anterior: lo que cada supervisor cargó como Planificado y Real por punto de venta.</div>
+
+        <div id="planAyerContent"></div>
+      </div>
     </div>
 
     <div id="supViewObj" style="display:none">
