@@ -750,6 +750,12 @@ a.chofer-badge:hover{background:#1a5c8a;color:#fff;}
 .vr-pilar-cat{justify-content:flex-start;padding-left:10px;font-family:var(--serif);font-weight:900;background:var(--gold);color:var(--ink);}
 .vr-pilar-name{justify-content:flex-start;padding-left:18px;font-weight:600;color:var(--ink);}
 @media(max-width:640px){.vr-periodo{flex-direction:column;align-items:flex-start;}}
+.vr-sim-input{width:100%;box-sizing:border-box;padding:5px 4px;border:1.5px solid var(--gold);border-radius:6px;font-family:var(--mono);font-size:.68rem;font-weight:700;text-align:center;background:#fffdf5;}
+.vr-sim-input:focus{outline:none;border-color:var(--ink);background:#fff;}
+.vr-sim-input::placeholder{color:#b9b193;font-weight:600;}
+.vr-sim-note{font-family:var(--mono);font-size:.66rem;color:var(--muted);background:var(--paper);border:1px dashed var(--line);border-radius:8px;padding:8px 12px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.vr-sim-reset{font-family:var(--mono);font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:var(--ink);color:#fff;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;white-space:nowrap;}
+.vr-sim-reset:hover{background:var(--gold);color:var(--ink);}
 .cd-banner{display:flex;align-items:center;gap:14px;background:var(--ink);color:#fff;border-radius:12px;padding:12px 18px;margin-bottom:16px;flex-wrap:wrap;}
 .cd-banner-tag{font-family:var(--serif);font-weight:900;font-size:1rem;color:var(--gold);}
 .cd-panels{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
@@ -3888,6 +3894,10 @@ const VR_METRICAS_ORDEN = [
   {key:'vr_vs_planificacion', label:'VR vs Planificación', tipo:'pct'},
   {key:'planificacion_vs_media', label:'Planificación vs Media', tipo:'pct'}
 ];
+const VR_METRICA_TIPO_ = {};
+VR_METRICAS_ORDEN.forEach(m=>{ VR_METRICA_TIPO_[m.key] = m.tipo; });
+const VR_SIM_CAT_DEPENDIENTES_ = ['alcance_hl','mn','tendencia','tendencia_hl','proyectado_vs_tendencia','planificacion_vs_media'];
+let VR_SIM_ROW_META_ = {};
 
 function vrFmtNum_(v, dec){
   if(v===null || v===undefined || isNaN(v)) return '—';
@@ -3924,6 +3934,65 @@ function vrCategoriasTable_(){
   return html;
 }
 
+function vrSlug_(s){
+  return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'x';
+}
+
+function vrCategoriasTableSim_(){
+  const cats = (VR_DATA && VR_DATA.categorias) || [];
+  if(!cats.length) return '';
+  const cols = `170px repeat(${cats.length}, minmax(80px,1fr))`;
+  let html = `<div class="vr-cat-wrap"><div class="vr-cat-table" style="grid-template-columns:${cols}">`;
+  html += `<div class="vr-cat-cell vr-cat-sticky vr-cat-group">Categoría</div>`;
+  cats.forEach(c=>{ html += `<div class="vr-cat-cell vr-cat-group" title="${esc(c.group||'')}">${esc(c.label)}</div>`; });
+  VR_METRICAS_ORDEN.forEach(m=>{
+    const meta = (VR_DATA.metricas||{})[m.key];
+    if(!meta) return;
+    html += `<div class="vr-cat-cell vr-cat-sticky vr-cat-metric">${esc(meta.label||m.label)}</div>`;
+    cats.forEach(c=>{
+      const v = meta.valores ? meta.valores[c.key] : null;
+      if(m.key==='venta_real'){
+        html += `<div class="vr-cat-cell"><input type="number" inputmode="decimal" class="vr-sim-input" id="vrsim-in-${c.key}" placeholder="${v!=null?vrFmtNum_(v,0):''}" oninput="vrSimCatRecalc('${c.key}')"></div>`;
+      } else if(VR_SIM_CAT_DEPENDIENTES_.indexOf(m.key)!==-1){
+        html += `<div class="vr-cat-cell" id="vrsim-out-${m.key}-${c.key}">—</div>`;
+      } else {
+        html += `<div class="vr-cat-cell">${vrCellHtml_(v, m.tipo)}</div>`;
+      }
+    });
+  });
+  html += '</div></div>';
+  return html;
+}
+
+function vrSimCatRecalc(catKey){
+  const inp = document.getElementById('vrsim-in-'+catKey);
+  if(!inp) return;
+  const raw = inp.value;
+  const p = VR_DATA.periodo || {};
+  const DT = p.transcurridos, DL = p.dias_laborales, DR = p.dias_restantes;
+  const metricas = VR_DATA.metricas || {};
+  const OBJ = metricas.objetivos_hl && metricas.objetivos_hl.valores ? metricas.objetivos_hl.valores[catKey] : null;
+  const MMAA = metricas.mmaa_hl && metricas.mmaa_hl.valores ? metricas.mmaa_hl.valores[catKey] : null;
+  const PLAN = metricas.planificacion && metricas.planificacion.valores ? metricas.planificacion.valores[catKey] : null;
+  const out = {alcance_hl:null, mn:null, tendencia:null, tendencia_hl:null, proyectado_vs_tendencia:null, planificacion_vs_media:null};
+  if(raw !== '' && !isNaN(parseFloat(raw))){
+    const VR = parseFloat(raw);
+    if(OBJ){ out.alcance_hl = (VR/OBJ)*100; }
+    if(DR){ out.mn = (OBJ - VR)/DR; }
+    if(DT && DL){
+      out.tendencia_hl = (VR/DT)*DL;
+      if(OBJ) out.tendencia = (out.tendencia_hl/OBJ)*100;
+    }
+    if(out.tendencia_hl!=null && MMAA!=null){ out.proyectado_vs_tendencia = ((MMAA/out.tendencia_hl)-1)*-1*100; }
+    if(out.mn!=null && PLAN!=null){ out.planificacion_vs_media = (PLAN/out.mn)*100; }
+  }
+  VR_SIM_CAT_DEPENDIENTES_.forEach(key=>{
+    const cell = document.getElementById('vrsim-out-'+key+'-'+catKey);
+    if(!cell) return;
+    cell.innerHTML = vrCellHtml_(out[key], VR_METRICA_TIPO_[key]);
+  });
+}
+
 function vrPilarRowHtml_(row, isCategoria){
   const nombre = isCategoria ? row.pilar : row.nombre;
   return `<div class="vr-pilar-cell ${isCategoria?'vr-pilar-cat':'vr-pilar-name'}">${esc(nombre||'')}</div>` +
@@ -3935,6 +4004,47 @@ function vrPilarRowHtml_(row, isCategoria){
     `<div class="vr-pilar-cell">${vrFmtNum_(row.planificacion,0)}</div>` +
     `<div class="vr-pilar-cell">${vrFmtPct_(row.venta_vs_planif)}</div>` +
     `<div class="vr-pilar-cell">${vrFmtPct_(row.alcance)}</div>`;
+}
+
+function vrPilarRowHtmlSim_(row, isCategoria, rowId){
+  const nombre = isCategoria ? row.pilar : row.nombre;
+  VR_SIM_ROW_META_[rowId] = {objetivo: row.objetivo};
+  return `<div class="vr-pilar-cell ${isCategoria?'vr-pilar-cat':'vr-pilar-name'}">${esc(nombre||'')}</div>` +
+    `<div class="vr-pilar-cell">${vrFmtNum_(row.objetivo,0)}</div>` +
+    `<div class="vr-pilar-cell"><input type="number" inputmode="decimal" class="vr-sim-input" id="vrsim-in-${rowId}" placeholder="${row.venta_real!=null?vrFmtNum_(row.venta_real,0):''}" oninput="vrSimPilRecalc('${rowId}')"></div>` +
+    `<div class="vr-pilar-cell" id="vrsim-out-tendencia-${rowId}">—</div>` +
+    `<div class="vr-pilar-cell">${vrFmtNum_(row.venta_dia_ant,1)}</div>` +
+    `<div class="vr-pilar-cell" id="vrsim-out-media-${rowId}">—</div>` +
+    `<div class="vr-pilar-cell">${vrFmtNum_(row.planificacion,0)}</div>` +
+    `<div class="vr-pilar-cell">${vrFmtPct_(row.venta_vs_planif)}</div>` +
+    `<div class="vr-pilar-cell" id="vrsim-out-alcance-${rowId}">—</div>`;
+}
+
+function vrSimPilRecalc(rowId){
+  const inp = document.getElementById('vrsim-in-'+rowId);
+  if(!inp) return;
+  const raw = inp.value;
+  const meta = VR_SIM_ROW_META_[rowId] || {};
+  const OBJ = meta.objetivo;
+  const p = VR_DATA.periodo || {};
+  const DT = p.transcurridos, DL = p.dias_laborales, DR = p.dias_restantes;
+  let alcance=null, media=null, tendencia=null;
+  if(raw !== '' && !isNaN(parseFloat(raw))){
+    const VR = parseFloat(raw);
+    if(OBJ){ alcance = (VR/OBJ)*100; }
+    if(DR){ media = (OBJ - VR)/DR; }
+    if(DT && DL && OBJ){ tendencia = ((VR/DT)*DL/OBJ)*100; }
+  }
+  const elT = document.getElementById('vrsim-out-tendencia-'+rowId);
+  const elM = document.getElementById('vrsim-out-media-'+rowId);
+  const elA = document.getElementById('vrsim-out-alcance-'+rowId);
+  if(elT) elT.innerHTML = vrFmtPct_(tendencia);
+  if(elM) elM.innerHTML = vrFmtNum_(media,1);
+  if(elA) elA.innerHTML = vrFmtPct_(alcance);
+}
+
+function vrSimReset(){
+  renderSupVr();
 }
 
 function vrPilaresBlock_(titulo, pilares, conVendedores){
@@ -3960,14 +4070,52 @@ function vrPilaresBlock_(titulo, pilares, conVendedores){
   return html;
 }
 
+function vrPilaresBlockSim_(titulo, pilares, conVendedores, blockKey){
+  if(!pilares || !pilares.length) return '';
+  let html = `<div class="vr-pilar-block"><div class="vr-pilar-title">${esc(titulo)}</div>`;
+  html += `<div class="vr-pilar-table"><div class="vr-pilar-grid">`;
+  html += `<div class="vr-pilar-cell vr-pilar-head">Pilar</div>` +
+    `<div class="vr-pilar-cell vr-pilar-head">Objetivo</div>` +
+    `<div class="vr-pilar-cell vr-pilar-head">Venta Real</div>` +
+    `<div class="vr-pilar-cell vr-pilar-head">Tendencia</div>` +
+    `<div class="vr-pilar-cell vr-pilar-head">Venta Día Ant.</div>` +
+    `<div class="vr-pilar-cell vr-pilar-head">Media Nec.</div>` +
+    `<div class="vr-pilar-cell vr-pilar-head">Planificación</div>` +
+    `<div class="vr-pilar-cell vr-pilar-head">Vs Planif.</div>` +
+    `<div class="vr-pilar-cell vr-pilar-head">Alcance</div>`;
+  pilares.forEach((p,pi)=>{
+    const pilarId = blockKey+'-p'+pi;
+    html += vrPilarRowHtmlSim_(p, true, pilarId);
+    if(conVendedores && p.vendedores){
+      p.vendedores.forEach((v,vi)=>{
+        const vendId = pilarId+'-v'+vi;
+        html += vrPilarRowHtmlSim_(v, false, vendId);
+      });
+    }
+  });
+  html += '</div></div></div>';
+  return html;
+}
+
 function supVrOwnKey_(){
   return ((supAuthData && supAuthData.name) || '').split(' ')[0].toUpperCase();
+}
+
+let vrModo = 'real';
+function vrSetModo(m){
+  vrModo = m;
+  const btnReal = document.getElementById('vrModoRealBtn');
+  const btnSim = document.getElementById('vrModoSimBtn');
+  if(btnReal) btnReal.classList.toggle('active', m==='real');
+  if(btnSim) btnSim.classList.toggle('active', m==='sim');
+  renderSupVr();
 }
 
 function renderSupVr(){
   const elVenta = document.getElementById('vrVentaContent');
   const elSup = document.getElementById('vrSupContent');
   if(!elVenta || !elSup) return;
+  VR_SIM_ROW_META_ = {};
   if(!VR_DATA || !VR_DATA.categorias || !VR_DATA.categorias.length){
     elVenta.innerHTML = '<div class="stock-empty">Todavía no hay datos de VR cargados — se suman en la próxima actualización del dashboard.</div>';
     elSup.innerHTML = '';
@@ -3988,7 +4136,10 @@ function renderSupVr(){
       <div><span>Restantes</span><b>${p.dias_restantes!=null?p.dias_restantes:'—'}</b></div>
     </div>
   </div>`;
-  if(isAll) htmlVenta += vrCategoriasTable_();
+  if(vrModo==='sim'){
+    htmlVenta += `<div class="vr-sim-note"><span>🧮 Modo simulador: cargá una <b>Venta Real</b> hipotética y mirá cómo cambian el alcance, la tendencia y la media necesaria. No modifica los datos reales del tablero.</span><button class="vr-sim-reset" onclick="vrSimReset()">↺ Reiniciar</button></div>`;
+  }
+  if(isAll) htmlVenta += (vrModo==='sim' ? vrCategoriasTableSim_() : vrCategoriasTable_());
   elVenta.innerHTML = htmlVenta;
 
   let htmlSup = `<div class="cd-banner-formal">`+
@@ -4002,15 +4153,15 @@ function renderSupVr(){
   `</div>`;
   if(isAll){
     if(VR_DATA.jefe_ventas && VR_DATA.jefe_ventas.pilares){
-      htmlSup += vrPilaresBlock_('JEFE DE VENTAS', VR_DATA.jefe_ventas.pilares, true);
+      htmlSup += vrModo==='sim' ? vrPilaresBlockSim_('JEFE DE VENTAS', VR_DATA.jefe_ventas.pilares, true, 'jefe') : vrPilaresBlock_('JEFE DE VENTAS', VR_DATA.jefe_ventas.pilares, true);
     }
     Object.keys(VR_DATA.supervisores||{}).forEach(nombre=>{
-      htmlSup += vrPilaresBlock_(nombre, VR_DATA.supervisores[nombre].pilares, false);
+      htmlSup += vrModo==='sim' ? vrPilaresBlockSim_(nombre, VR_DATA.supervisores[nombre].pilares, false, vrSlug_(nombre)) : vrPilaresBlock_(nombre, VR_DATA.supervisores[nombre].pilares, false);
     });
   } else {
     const key = supVrOwnKey_();
     const propio = (VR_DATA.supervisores||{})[key];
-    if(propio && propio.pilares) htmlSup += vrPilaresBlock_(key, propio.pilares, false);
+    if(propio && propio.pilares) htmlSup += vrModo==='sim' ? vrPilaresBlockSim_(key, propio.pilares, false, vrSlug_(key)) : vrPilaresBlock_(key, propio.pilares, false);
     else htmlSup += '<div class="stock-empty">No encontré tus datos de VR todavía.</div>';
   }
   elSup.innerHTML = htmlSup;
@@ -4890,6 +5041,11 @@ function renderRMV(pv){
 
     <div id="supViewVr" style="display:none">
       <div class="sup-note">VR = avance de venta del mes: cuánto llevamos vendido contra el objetivo, la tendencia de cierre y cuánto hace falta vender por día (media necesaria) para llegar. Se actualiza una vez por día.</div>
+
+      <div class="pill-row" style="margin-bottom:14px;">
+        <div class="pill active" id="vrModoRealBtn" onclick="vrSetModo('real')">📊 Datos reales</div>
+        <div class="pill" id="vrModoSimBtn" onclick="vrSetModo('sim')">🧮 Simulador</div>
+      </div>
 
       <div class="cd-download-row"><button class="cd-download-btn" onclick="descargarCierreComoImagen(this,'vrVentaContent','Avance_de_venta_del_mes')">⬇️ Descargar imagen</button></div>
       <div id="vrVentaContent"></div>
