@@ -742,13 +742,13 @@ a.chofer-badge:hover{background:#1a5c8a;color:#fff;}
 .vr-cat-group.vr-cat-sticky{z-index:3;}
 .vr-cat-metric{justify-content:flex-start;font-weight:600;color:var(--ink);padding-left:10px;font-size:.64rem;}
 .vr-pilar-block{margin-bottom:22px;}
-.vr-pilar-title{font-family:var(--serif);font-weight:900;font-size:.85rem;background:var(--ink);color:var(--gold);border-radius:10px 10px 0 0;padding:8px 14px;}
+.vr-pilar-title{font-family:var(--serif);font-weight:900;font-size:.95rem;background:var(--ink);color:var(--gold);border-radius:10px 10px 0 0;padding:9px 15px;}
 .vr-pilar-table{overflow-x:auto;border:1px solid var(--line);border-top:none;border-radius:0 0 10px 10px;}
-.vr-pilar-grid{display:grid;grid-template-columns:130px repeat(8,minmax(78px,1fr));font-size:.62rem;min-width:760px;}
-.vr-pilar-cell{padding:8px 6px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);display:flex;align-items:center;justify-content:center;text-align:center;}
-.vr-pilar-head{background:var(--paper);font-family:var(--mono);font-size:.56rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700;}
-.vr-pilar-cat{justify-content:flex-start;padding-left:10px;font-family:var(--serif);font-weight:900;background:var(--gold);color:var(--ink);}
-.vr-pilar-name{justify-content:flex-start;padding-left:18px;font-weight:600;color:var(--ink);}
+.vr-pilar-grid{display:grid;grid-template-columns:150px repeat(8,minmax(92px,1fr));font-size:.82rem;min-width:940px;}
+.vr-pilar-cell{padding:10px 7px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);display:flex;align-items:center;justify-content:center;text-align:center;}
+.vr-pilar-head{background:var(--paper);font-family:var(--mono);font-size:.66rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700;}
+.vr-pilar-cat{justify-content:flex-start;padding-left:12px;font-family:var(--serif);font-weight:900;background:var(--gold);color:var(--ink);}
+.vr-pilar-name{justify-content:flex-start;padding-left:20px;font-weight:600;color:var(--ink);}
 @media(max-width:640px){.vr-periodo{flex-direction:column;align-items:flex-start;}}
 .vr-sim-input{width:100%;box-sizing:border-box;padding:5px 4px;border:1.5px solid var(--gold);border-radius:6px;font-family:var(--mono);font-size:.68rem;font-weight:700;text-align:center;background:#fffdf5;}
 .vr-sim-input:focus{outline:none;border-color:var(--ink);background:#fff;}
@@ -877,6 +877,9 @@ a.chofer-badge:hover{background:#1a5c8a;color:#fff;}
   .sens-hero-meta{gap:12px;}
   .sens-panel-head{flex-direction:column;align-items:flex-start;}
 }
+.cd-banner-logos-multi{display:flex;align-items:center;gap:10px;}
+.cd-pilar-heading{font-family:var(--serif);font-weight:900;font-size:.88rem;background:var(--gold);color:var(--ink);border-radius:10px;padding:7px 14px;margin:14px 0 10px;}
+.cd-pilar-heading:first-child{margin-top:0;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -3427,6 +3430,8 @@ function setCierreVista(v){
   document.getElementById('cierreVistaTodoBtn').classList.toggle('active', v==='todo');
   document.getElementById('cierreDiaView').style.display = v==='dia' ? 'block' : 'none';
   document.getElementById('cierreTodoView').style.display = v==='todo' ? 'block' : 'none';
+  const pilarRow = document.getElementById('cierrePilarRow');
+  if(pilarRow) pilarRow.style.display = v==='todo' ? 'flex' : 'none';
 }
 
 const CD_FIELDS_TODO = [
@@ -3521,15 +3526,17 @@ const CIERRE_LOGO_PEPSI_B64_='iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAApPU
 function renderCierreDia(){
   const el = document.getElementById('cierreDiaContent');
   if(!el) return;
-  const bloque = CIERRE_VESPERTINA_DATA[cierrePilar];
-  if(!bloque || !Object.keys(bloque).length){
+  const fecha = CIERRE_VESPERTINA_DATA.fecha_cierre;
+  const PILARES_CD = [
+    {key:'cervezas', nombre:'Cervezas', logo:CIERRE_LOGO_QUILMES_B64_, emoji:'🍺'},
+    {key:'ung', nombre:'UNG', logo:CIERRE_LOGO_PEPSI_B64_, emoji:'🥤'},
+  ];
+  const conDatos = PILARES_CD.filter(p => CIERRE_VESPERTINA_DATA[p.key] && Object.keys(CIERRE_VESPERTINA_DATA[p.key]).length);
+  if(!conDatos.length){
     el.innerHTML = '<div class="stock-empty">Todavía no hay datos de Cierre Vespertina cargados.</div>';
     return;
   }
-  const fecha = CIERRE_VESPERTINA_DATA.fecha_cierre;
-  const esUng = cierrePilar==='ung';
-  const indicadorLogo = esUng ? CIERRE_LOGO_PEPSI_B64_ : CIERRE_LOGO_QUILMES_B64_;
-  const indicadorNombre = esUng ? 'UNG' : 'Cervezas';
+
   let html = `<div class="cd-banner-formal">`+
     `<div class="cd-banner-formal-brand">`+
       `<img class="cd-banner-logo cd-banner-logo-zuppa" src="data:image/png;base64,${CIERRE_LOGO_ZUPPA_B64_}" alt="Zuppa">`+
@@ -3538,20 +3545,25 @@ function renderCierreDia(){
         `<div class="cd-banner-formal-date">${fecha?esc(fecha):''}</div>`+
       `</div>`+
     `</div>`+
-    `<img class="cd-banner-logo cd-banner-logo-indicator" src="data:image/png;base64,${indicadorLogo}" alt="${indicadorNombre}">`+
+    `<div class="cd-banner-logos-multi">` + conDatos.map(p=>`<img class="cd-banner-logo cd-banner-logo-indicator" src="data:image/png;base64,${p.logo}" alt="${p.nombre}">`).join('') + `</div>`+
   `</div>`;
 
-  if(supAuthData.scope==='all'){
-    const sups = [...new Set(Object.values(bloque).filter(v=>v.supervisor).map(v=>v.supervisor))];
-    html += `<div class="cd-panels">` + sups.map(s=>cdPanelHtml_(s, bloque)).join('') + `</div>`;
-    const z = bloque['ZUPPA_TOTAL'];
-    if(z){
-      html += `<div class="cd-zuppa"><div>ZUPPA</div><div>${cdFmt_(z.vol_planif)}</div><div>${cdFmt_(z.vol_real)}</div><div>${cdCellHtml_(z.avance,'pct')}</div></div>`;
+  conDatos.forEach(p=>{
+    const bloque = CIERRE_VESPERTINA_DATA[p.key];
+    html += `<div class="cd-pilar-heading">${p.emoji} ${esc(p.nombre)}</div>`;
+    if(supAuthData.scope==='all'){
+      const sups = [...new Set(Object.values(bloque).filter(v=>v.supervisor).map(v=>v.supervisor))];
+      html += `<div class="cd-panels">` + sups.map(s=>cdPanelHtml_(s, bloque)).join('') + `</div>`;
+      const z = bloque['ZUPPA_TOTAL'];
+      if(z){
+        html += `<div class="cd-zuppa"><div>ZUPPA</div><div>${cdFmt_(z.vol_planif)}</div><div>${cdFmt_(z.vol_real)}</div><div>${cdCellHtml_(z.avance,'pct')}</div></div>`;
+      }
+    } else {
+      const own = supAuthData.name.split(' ')[0];
+      html += `<div class="cd-panels cd-panels-solo">` + cdPanelHtml_(own, bloque) + `</div>`;
     }
-  } else {
-    const own = supAuthData.name.split(' ')[0];
-    html += `<div class="cd-panels cd-panels-solo">` + cdPanelHtml_(own, bloque) + `</div>`;
-  }
+  });
+
   el.innerHTML = html;
 }
 
@@ -5561,7 +5573,7 @@ async function sensInit(){
     </div>
 
     <div id="supViewCierre" style="display:none">
-      <div class="pill-row" style="margin-bottom:16px;">
+      <div class="pill-row" id="cierrePilarRow" style="margin-bottom:16px;display:none">
         <div class="pill active" id="cierrePilarCervezasBtn" onclick="setCierrePilar('cervezas')">🍺 Cervezas</div>
         <div class="pill" id="cierrePilarUngBtn" onclick="setCierrePilar('ung')">🥤 UNG</div>
       </div>
