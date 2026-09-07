@@ -3296,6 +3296,17 @@ function downloadTradeSpendCSV(){
 }
 
 function renderTradeSpend(){
+  const periodoNote = document.getElementById('tsPeriodoNote');
+  if(periodoNote){
+    const p = TRADE_SPEND_DATA.periodo;
+    if(p && p.desde && p.hasta){
+      periodoNote.textContent = p.desde===p.hasta ? `📅 Datos de trade spend al ${p.desde}` : `📅 Datos de trade spend del ${p.desde} al ${p.hasta}`;
+      periodoNote.style.display = 'block';
+    } else {
+      periodoNote.style.display = 'none';
+    }
+  }
+
   const search = (document.getElementById('tsSearchBox').value||'').trim().toLowerCase();
   let data = tsScopedClientes();
   if(search) data = data.filter(c=>c.cliente.toLowerCase().includes(search) || c.cod.includes(search));
@@ -5687,6 +5698,8 @@ async function sensInit(){
           <div class="ab-body"><div class="ab-num" id="tsNumPct" style="font-size:1.4rem">…</div><div class="ab-lbl">% sobre facturación</div></div>
         </div>
       </div>
+
+      <div class="sup-note" id="tsPeriodoNote" style="display:none"></div>
 
       <div class="pill-row" style="margin-bottom:14px;">
         <div class="pill active" id="tsViewClienteBtn" onclick="tsSetView('cliente')">👤 Por Cliente</div>
