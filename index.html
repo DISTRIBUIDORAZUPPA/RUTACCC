@@ -3262,6 +3262,28 @@ function tsScopedClientes(){
   return TRADE_SPEND_DATA.clientes.filter(c=>c.supervisor===supAuthData.name);
 }
 
+function tsEscCsv_(v){
+  const s = String(v===null||v===undefined?'':v);
+  return /[";\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+}
+
+function tsDescargarCSV_(headers, rows, prefijo){
+  let csv = '\uFEFF' + headers.map(tsEscCsv_).join(';') + '\n';
+  rows.forEach(r=>{ csv += r.map(tsEscCsv_).join(';') + '\n'; });
+
+  const sufijo = supAuthData.scope==='all' ? 'todos' : supAuthData.name.replace(/\s+/g,'_');
+  const fecha = hoyArgentina();
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${prefijo}_${sufijo}_${fecha}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 function downloadTradeSpendCSV(){
   const search = (document.getElementById('tsSearchBox').value||'').trim().toLowerCase();
   let data = tsScopedClientes();
@@ -3274,25 +3296,45 @@ function downloadTradeSpendCSV(){
     const conc = (c.concentracion!==undefined && c.concentracion!==null) ? c.concentracion : (c.facturacion>0 ? c.gasto/c.facturacion*100 : null);
     return [c.cod, c.cliente, c.pv, c.supervisor, c.facturacion, c.gasto, conc!==null?conc.toFixed(2):''];
   });
+  tsDescargarCSV_(headers, rows, 'trade_spend_por_cliente');
+}
 
-  const escCsv = (v)=>{
-    const s = String(v===null||v===undefined?'':v);
-    return /[";\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
-  };
-  let csv = '\uFEFF' + headers.map(escCsv).join(';') + '\n';
-  rows.forEach(r=>{ csv += r.map(escCsv).join(';') + '\n'; });
+function downloadTsAccionCSV(){
+  const search = (document.getElementById('tsAccionSearchBox').value||'').trim().toLowerCase();
+  const allowedCods = supAuthData.scope==='all' ? null : new Set(tsScopedClientes().map(c=>c.cod));
 
-  const nombre = supAuthData.scope==='all' ? 'trade_spend_todos' : 'trade_spend_' + supAuthData.name.replace(/\s+/g,'_');
-  const fecha = hoyArgentina();
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${nombre}_${fecha}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  let acciones = (TRADE_SPEND_DATA.acciones || []).map(a=>{
+    let clientes = a.clientes;
+    if(allowedCods) clientes = clientes.filter(c=>allowedCods.has(c.cod));
+    const gasto = clientes.reduce((s,c)=>s+c.gasto,0);
+    return {codigo:a.codigo, descripcion:a.descripcion, categoria:a.categoria||'Sin categoría', gasto:gasto, clientes:clientes};
+  }).filter(a=>a.clientes.length>0);
+
+  if(search){
+    acciones = acciones.filter(a=> a.codigo.toLowerCase().includes(search) || a.descripcion.toLowerCase().includes(search));
+  }
+  if(!acciones.length){ alert('No hay acciones para descargar con estos filtros.'); return; }
+  acciones.sort((a,b)=>Math.abs(b.gasto)-Math.abs(a.gasto));
+
+  const headers = ['Código','Descripción','Categoría','Clientes','Gasto Trade Spend'];
+  const rows = acciones.map(a=>[a.codigo, a.descripcion, a.categoria, a.clientes.length, a.gasto]);
+  tsDescargarCSV_(headers, rows, 'trade_spend_por_accion');
+}
+
+function downloadTsCategoriaCSV(){
+  if(tsCategoriaSeleccionada){
+    const acciones = window.tsLastCategoriaAcciones || [];
+    if(!acciones.length){ alert('No hay acciones para descargar en esta categoría.'); return; }
+    const headers = ['Código','Descripción','Clientes','Gasto Trade Spend'];
+    const rows = acciones.map(a=>[a.codigo, a.descripcion, a.clientes.length, a.gasto]);
+    tsDescargarCSV_(headers, rows, 'trade_spend_categoria_' + tsCategoriaSeleccionada.replace(/\s+/g,'_'));
+  } else {
+    const cats = window.tsLastCategorias || [];
+    if(!cats.length){ alert('No hay categorías para descargar.'); return; }
+    const headers = ['Categoría','Acciones','Clientes','Gasto Trade Spend'];
+    const rows = cats.map(c=>[c.nombre, c.acciones, c.clientes, c.gasto]);
+    tsDescargarCSV_(headers, rows, 'trade_spend_por_categoria');
+  }
 }
 
 function renderTradeSpend(){
@@ -5717,8 +5759,9 @@ async function sensInit(){
       </div>
 
       <div id="tsViewAccion" style="display:none">
-        <div class="search-row" style="margin-bottom:14px;">
-          <input type="text" id="tsAccionSearchBox" placeholder="🔍  Buscar código o descripción de acción…" oninput="renderTsAccion()">
+        <div class="search-row" style="margin-bottom:14px;display:flex;gap:8px;">
+          <input type="text" id="tsAccionSearchBox" placeholder="🔍  Buscar código o descripción de acción…" oninput="renderTsAccion()" style="flex:1;">
+          <button onclick="downloadTsAccionCSV()" style="border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:0 14px;font-family:var(--sans);font-weight:700;font-size:.78rem;cursor:pointer;white-space:nowrap;">⬇️ Descargar</button>
         </div>
         <div class="sup-note">Ranking de acciones de trade spend por gasto total. Tocá una para ver qué clientes la usaron.</div>
         <div id="tsAccionList"></div>
@@ -5726,11 +5769,17 @@ async function sensInit(){
 
       <div id="tsViewCategoria" style="display:none">
         <div id="tsCategoriaListWrap">
+          <div class="search-row" style="margin-bottom:14px;display:flex;justify-content:flex-end;">
+            <button onclick="downloadTsCategoriaCSV()" style="border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:0 14px;height:38px;font-family:var(--sans);font-weight:700;font-size:.78rem;cursor:pointer;white-space:nowrap;">⬇️ Descargar</button>
+          </div>
           <div class="sup-note">Ranking de categorías de trade spend por gasto total. Tocá una para ver sus acciones y sumar el gasto de las que elijas.</div>
           <div id="tsCategoriaList"></div>
         </div>
         <div id="tsCategoriaDetailWrap" style="display:none">
-          <button class="ts-cat-back" onclick="tsCerrarCategoria()">← Volver a categorías</button>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <button class="ts-cat-back" onclick="tsCerrarCategoria()">← Volver a categorías</button>
+            <button onclick="downloadTsCategoriaCSV()" style="border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:0 14px;height:34px;font-family:var(--sans);font-weight:700;font-size:.78rem;cursor:pointer;white-space:nowrap;">⬇️ Descargar</button>
+          </div>
           <div class="ts-cat-detail-title" id="tsCategoriaDetailTitle"></div>
           <div class="sup-note">Tildá las acciones que quieras combinar para ver el gasto total sumado entre todas.</div>
           <div id="tsCategoriaAccionesList"></div>
