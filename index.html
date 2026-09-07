@@ -4085,7 +4085,8 @@ const SUP_AUTH = {
   'guillen2026': {name:'GUILLEN IGNACIO', scope:'own', role:'supervisor'},
   'sans2026':    {name:'SANS LUCAS',      scope:'own', role:'supervisor'},
   'jefe2026':    {name:'TODOS',           scope:'all', role:'jefe'},
-  'gerencia2026':{name:'GERENCIA',        scope:'all', role:'gerencia'}
+  'gerencia2026':{name:'GERENCIA',        scope:'all', role:'gerencia'},
+  'salinas2026': {name:'SALINAS',         scope:'all', role:'liderbb'}
 };
 
 let supAuthData = null;
@@ -4124,13 +4125,20 @@ function showSupContent(){
   document.getElementById('supContent').style.display = 'block';
   const foto = FOTOS_PV[supAuthData.name];
   const fotoHtml = foto ? `<img src="${foto}" class="sup-welcome-foto" alt="${esc(supAuthData.name)}">` : '';
-  const texto = supAuthData.role==='gerencia' ? '👋 Hola, Gerencia' : (supAuthData.scope==='all' ? '👋 Hola, Jefe de Ventas' : ('👋 Hola, ' + supAuthData.name));
+  const texto = supAuthData.role==='gerencia' ? '👋 Hola, Gerencia' : (supAuthData.role==='liderbb' ? '👋 Hola, Líder Beyond Beer' : (supAuthData.scope==='all' ? '👋 Hola, Jefe de Ventas' : ('👋 Hola, ' + supAuthData.name)));
   document.getElementById('supWelcome').innerHTML = `${fotoHtml}<span>${texto}</span>`;
-  document.getElementById('supViewExecBtn').style.display = (supAuthData.scope==='all' && supAuthData.role!=='gerencia') ? '' : 'none';
+  document.getElementById('supViewExecBtn').style.display = (supAuthData.scope==='all' && supAuthData.role!=='gerencia' && supAuthData.role!=='liderbb') ? '' : 'none';
   const opEl = document.getElementById('supPillsOperativas');
   if(opEl) opEl.style.display = supAuthData.role==='gerencia' ? 'none' : 'contents';
+  if(supAuthData.role==='liderbb'){
+    document.getElementById('supViewSensBtn').style.display = 'none';
+    ['supViewPlanBtn','supViewObjBtn','supViewCccBtn','supViewGalaxiaBtn','supViewRmvBtn','supViewCncRutaBtn','supViewCoachingBtn','supViewCoachSpvBtn'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.style.display = 'none';
+    });
+  }
   renderSupIndicatorPills();
-  if(supAuthData.role==='gerencia') supSetView('vr');
+  if(supAuthData.role==='gerencia' || supAuthData.role==='liderbb') supSetView('vr');
 }
 
 function renderSupIndicatorPills(){
