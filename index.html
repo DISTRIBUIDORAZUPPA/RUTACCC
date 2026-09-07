@@ -3339,6 +3339,29 @@ function downloadTsCategoriaCSV(){
   }
 }
 
+function renderTsResumenCategorias(){
+  const panel = document.getElementById('tsCategoriaResumenPanel');
+  if(!panel) return;
+  const allowedCods = supAuthData.scope==='all' ? null : new Set(tsScopedClientes().map(c=>c.cod));
+  const porCat = {};
+  (TRADE_SPEND_DATA.acciones || []).forEach(a=>{
+    let clientes = a.clientes;
+    if(allowedCods) clientes = clientes.filter(c=>allowedCods.has(c.cod));
+    if(!clientes.length) return;
+    const gasto = clientes.reduce((s,c)=>s+c.gasto,0);
+    const cat = a.categoria || 'Sin categoría';
+    porCat[cat] = (porCat[cat]||0) + gasto;
+  });
+  const cats = Object.keys(porCat).map(nombre=>({nombre, gasto:porCat[nombre]})).sort((a,b)=>Math.abs(b.gasto)-Math.abs(a.gasto));
+  if(!cats.length){ panel.style.display = 'none'; panel.innerHTML = ''; return; }
+  const colores = ['var(--gold)','var(--amber)','var(--amber-deep)','var(--red)','var(--green)','var(--muted)'];
+  panel.innerHTML = cats.map((c,i)=>`<div class="alert-btn" style="border-color:${colores[i%colores.length]};cursor:default">
+      <span class="ab-emoji">🗂️</span>
+      <div class="ab-body"><div class="ab-num" style="font-size:1.1rem">$ ${Math.round(c.gasto).toLocaleString('es-AR')}</div><div class="ab-lbl">${esc(c.nombre)}</div></div>
+    </div>`).join('');
+  panel.style.display = 'grid';
+}
+
 function renderTradeSpend(){
   const periodoNote = document.getElementById('tsPeriodoNote');
   if(periodoNote){
@@ -3350,6 +3373,7 @@ function renderTradeSpend(){
       periodoNote.style.display = 'none';
     }
   }
+  renderTsResumenCategorias();
 
   const search = (document.getElementById('tsSearchBox').value||'').trim().toLowerCase();
   let data = tsScopedClientes();
@@ -3414,11 +3438,14 @@ function tsSetView(view){
   document.getElementById('tsViewClienteBtn').classList.toggle('active', view==='cliente');
   document.getElementById('tsViewAccionBtn').classList.toggle('active', view==='accion');
   document.getElementById('tsViewCategoriaBtn').classList.toggle('active', view==='categoria');
+  document.getElementById('tsViewCanalBtn').classList.toggle('active', view==='canal');
   document.getElementById('tsViewCliente').style.display = view==='cliente' ? 'block' : 'none';
   document.getElementById('tsViewAccion').style.display = view==='accion' ? 'block' : 'none';
   document.getElementById('tsViewCategoria').style.display = view==='categoria' ? 'block' : 'none';
+  document.getElementById('tsViewCanal').style.display = view==='canal' ? 'block' : 'none';
   if(view==='accion') renderTsAccion();
   if(view==='categoria') tsCerrarCategoria();
+  if(view==='canal') tsCerrarCanal();
 }
 
 let tsCategoriaSeleccionada = null;
@@ -3544,6 +3571,129 @@ function tsActualizarSelBar(){
 function tsLimpiarSeleccion(){
   tsSeleccionAcciones = new Set();
   renderTsCategoriaAcciones();
+}
+
+// ---- Trade Spend: Por Canal (columna nueva CANAL en WAPI SUPERVISORES, cruzada con CATEGORIA TRADE SPEND) ----
+let tsCanalSeleccionado = null;
+
+function tsComputeCanalCategoriaMatrix_(){
+  const allowedCods = supAuthData.scope==='all' ? null : new Set(tsScopedClientes().map(c=>c.cod));
+  const matrix = {};
+  (TRADE_SPEND_DATA.acciones || []).forEach(a=>{
+    const categoria = a.categoria || 'Sin categoría';
+    let clientes = a.clientes;
+    if(allowedCods) clientes = clientes.filter(c=>allowedCods.has(c.cod));
+    clientes.forEach(c=>{
+      const canal = c.canal || 'Sin canal';
+      if(!matrix[canal]) matrix[canal] = {};
+      if(!matrix[canal][categoria]) matrix[canal][categoria] = {gasto:0, acciones:new Set(), clientes:new Set()};
+      matrix[canal][categoria].gasto += c.gasto;
+      matrix[canal][categoria].acciones.add(a.codigo);
+      matrix[canal][categoria].clientes.add(c.cod);
+    });
+  });
+  return matrix;
+}
+
+function renderTsCanal(){
+  const matrix = tsComputeCanalCategoriaMatrix_();
+  window.tsLastCanalMatrix = matrix;
+  const canales = Object.keys(matrix).map(canal=>{
+    let gasto=0; const acciones=new Set(); const clientesSet=new Set();
+    Object.values(matrix[canal]).forEach(cell=>{
+      gasto += cell.gasto;
+      cell.acciones.forEach(x=>acciones.add(x));
+      cell.clientes.forEach(x=>clientesSet.add(x));
+    });
+    return {nombre:canal, gasto:gasto, acciones:acciones.size, clientes:clientesSet.size};
+  }).sort((a,b)=>Math.abs(b.gasto)-Math.abs(a.gasto));
+  window.tsLastCanales = canales;
+
+  const el = document.getElementById('tsCanalList');
+  if(!canales.length){
+    el.innerHTML = '<div class="stock-empty">Sin datos de trade spend para este filtro</div>';
+    return;
+  }
+  const maxGasto = Math.abs(canales[0].gasto) || 0;
+  const rows = canales.map((c,i)=>{
+    const pct = maxGasto>0 ? Math.max(6, Math.round(Math.abs(c.gasto)/maxGasto*100)) : 0;
+    return `<div class="ts-rank-row" onclick="tsAbrirCanal(${i})">
+      <div class="ts-rank-fill" style="width:${pct}%"></div>
+      <div class="ts-rank-num">${i+1}</div>
+      <div class="ts-rank-name">${esc(c.nombre)}</div>
+      <div class="ts-rank-nums">${c.acciones} acción${c.acciones===1?'':'es'} · ${c.clientes} cliente${c.clientes===1?'':'s'} · $ <b>${Math.round(c.gasto).toLocaleString('es-AR')}</b></div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="ts-rank-list">${rows}</div>`;
+}
+
+function tsAbrirCanal(idx){
+  const canal = window.tsLastCanales[idx];
+  if(!canal) return;
+  tsCanalSeleccionado = canal.nombre;
+  document.getElementById('tsCanalListWrap').style.display = 'none';
+  document.getElementById('tsCanalDetailWrap').style.display = 'block';
+  document.getElementById('tsCanalDetailTitle').textContent = '🚚 ' + canal.nombre;
+  renderTsCanalCategorias();
+}
+
+function tsCerrarCanal(){
+  tsCanalSeleccionado = null;
+  const listWrap = document.getElementById('tsCanalListWrap');
+  const detailWrap = document.getElementById('tsCanalDetailWrap');
+  if(!listWrap || !detailWrap) return;
+  listWrap.style.display = 'block';
+  detailWrap.style.display = 'none';
+  renderTsCanal();
+}
+
+function renderTsCanalCategorias(){
+  const matrix = window.tsLastCanalMatrix || {};
+  const cell = matrix[tsCanalSeleccionado] || {};
+  const cats = Object.keys(cell).map(nombre=>({
+    nombre: nombre, gasto: cell[nombre].gasto, acciones: cell[nombre].acciones.size, clientes: cell[nombre].clientes.size
+  })).sort((a,b)=>Math.abs(b.gasto)-Math.abs(a.gasto));
+  window.tsLastCanalCategorias = cats;
+
+  const el = document.getElementById('tsCanalCategoriasList');
+  if(!cats.length){
+    el.innerHTML = '<div class="stock-empty">Sin acciones para este canal</div>';
+    return;
+  }
+  const maxGasto = Math.abs(cats[0].gasto) || 0;
+  const rows = cats.map((c,i)=>{
+    const pct = maxGasto>0 ? Math.max(6, Math.round(Math.abs(c.gasto)/maxGasto*100)) : 0;
+    return `<div class="ts-rank-row" style="cursor:default">
+      <div class="ts-rank-fill" style="width:${pct}%"></div>
+      <div class="ts-rank-num">${i+1}</div>
+      <div class="ts-rank-name">${esc(c.nombre)}</div>
+      <div class="ts-rank-nums">${c.acciones} acción${c.acciones===1?'':'es'} · ${c.clientes} cliente${c.clientes===1?'':'s'} · $ <b>${Math.round(c.gasto).toLocaleString('es-AR')}</b></div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="ts-rank-list">${rows}</div>`;
+}
+
+function downloadTsCanalCSV(){
+  if(tsCanalSeleccionado){
+    const cats = window.tsLastCanalCategorias || [];
+    if(!cats.length){ alert('No hay categorías para descargar en este canal.'); return; }
+    const headers = ['Categoría','Acciones','Clientes','Gasto Trade Spend'];
+    const rows = cats.map(c=>[c.nombre, c.acciones, c.clientes, c.gasto]);
+    tsDescargarCSV_(headers, rows, 'trade_spend_canal_' + tsCanalSeleccionado.replace(/\s+/g,'_'));
+  } else {
+    const matrix = window.tsLastCanalMatrix || {};
+    const rows = [];
+    Object.keys(matrix).forEach(canal=>{
+      Object.keys(matrix[canal]).forEach(categoria=>{
+        const cell = matrix[canal][categoria];
+        rows.push([canal, categoria, cell.acciones.size, cell.clientes.size, cell.gasto]);
+      });
+    });
+    if(!rows.length){ alert('No hay datos de canal para descargar.'); return; }
+    rows.sort((a,b)=>Math.abs(b[4])-Math.abs(a[4]));
+    const headers = ['Canal','Categoría','Acciones','Clientes','Gasto Trade Spend'];
+    tsDescargarCSV_(headers, rows, 'trade_spend_por_canal_completo');
+  }
 }
 
 function renderTsAccion(){
@@ -5769,12 +5919,15 @@ async function sensInit(){
         </div>
       </div>
 
+      <div class="alert-panel" id="tsCategoriaResumenPanel" style="display:none"></div>
+
       <div class="sup-note" id="tsPeriodoNote" style="display:none"></div>
 
       <div class="pill-row" style="margin-bottom:14px;">
         <div class="pill active" id="tsViewClienteBtn" onclick="tsSetView('cliente')">👤 Por Cliente</div>
         <div class="pill" id="tsViewAccionBtn" onclick="tsSetView('accion')">🏷️ Por Acción</div>
         <div class="pill" id="tsViewCategoriaBtn" onclick="tsSetView('categoria')">🗂️ Por Categoría</div>
+        <div class="pill" id="tsViewCanalBtn" onclick="tsSetView('canal')">🚚 Por Canal</div>
       </div>
 
       <div id="tsViewCliente">
@@ -5816,6 +5969,25 @@ async function sensInit(){
             <div class="ts-selbar-total">Total combinado: <b id="tsSelTotal">$ 0</b></div>
             <button class="ts-selbar-clear" onclick="tsLimpiarSeleccion()">Limpiar selección</button>
           </div>
+        </div>
+      </div>
+
+      <div id="tsViewCanal" style="display:none">
+        <div id="tsCanalListWrap">
+          <div class="search-row" style="margin-bottom:14px;display:flex;justify-content:flex-end;">
+            <button onclick="downloadTsCanalCSV()" style="border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:0 14px;height:38px;font-family:var(--sans);font-weight:700;font-size:.78rem;cursor:pointer;white-space:nowrap;">⬇️ Descargar completo</button>
+          </div>
+          <div class="sup-note">Ranking de canales por gasto total de trade spend. Tocá uno para ver su desglose por categoría. "Descargar completo" trae canal + categoría + gasto de todos los cruces.</div>
+          <div id="tsCanalList"></div>
+        </div>
+        <div id="tsCanalDetailWrap" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <button class="ts-cat-back" onclick="tsCerrarCanal()">← Volver a canales</button>
+            <button onclick="downloadTsCanalCSV()" style="border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:0 14px;height:34px;font-family:var(--sans);font-weight:700;font-size:.78rem;cursor:pointer;white-space:nowrap;">⬇️ Descargar</button>
+          </div>
+          <div class="ts-cat-detail-title" id="tsCanalDetailTitle"></div>
+          <div class="sup-note">Gasto de trade spend de este canal, agrupado por categoría.</div>
+          <div id="tsCanalCategoriasList"></div>
         </div>
       </div>
     </div>
