@@ -592,6 +592,8 @@ a.chofer-badge:hover{background:#1a5c8a;color:#fff;}
 .ts-cat-detail-title{font-family:var(--serif);font-weight:900;font-size:1.05rem;color:var(--ink);margin-bottom:10px;}
 .ts-rank-row.ts-selectable{padding-left:10px;}
 .ts-rank-check{position:relative;z-index:1;flex-shrink:0;width:17px;height:17px;accent-color:var(--gold);cursor:pointer;}
+.ts-ver-clientes{position:relative;z-index:1;flex-shrink:0;border:1px solid var(--line);background:#fff;border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:.85rem;cursor:pointer;padding:0;line-height:1;}
+.ts-ver-clientes:hover{border-color:var(--gold);background:#fdf1d6;}
 .ts-selbar{position:sticky;bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:var(--ink);color:#fff;border-radius:12px;padding:12px 18px;margin-top:12px;box-shadow:0 8px 20px -10px rgba(0,0,0,.4);}
 .ts-selbar-info{font-family:var(--sans);font-size:.78rem;opacity:.85;}
 .ts-selbar-info b{color:var(--gold);}
@@ -3507,6 +3509,7 @@ function renderTsCategoriaAcciones(){
       <div class="ts-rank-num">${idx+1}</div>
       <div class="ts-rank-name">${esc(a.codigo)} — ${esc(a.descripcion)}</div>
       <div class="ts-rank-nums">${a.clientes.length} cliente${a.clientes.length===1?'':'s'} · $ <b>${Math.round(a.gasto).toLocaleString('es-AR')}</b></div>
+      <button type="button" class="ts-ver-clientes" onclick="event.preventDefault();event.stopPropagation();tsOpenAccionDetailCategoria(${idx})" title="Ver clientes de esta acción">👁️</button>
     </label>`;
   }).join('');
 
@@ -3588,17 +3591,34 @@ function renderTsAccion(){
   el.innerHTML = html;
 }
 
-function tsOpenAccionDetail(idx){
-  const a = window.tsLastAcciones[idx];
+function tsResumenCampoTs_(clientes, campo){
+  const vals = new Set();
+  (clientes||[]).forEach(c=>{ const v = (c[campo]||'').toString().trim(); if(v) vals.add(v); });
+  if(vals.size === 0) return '—';
+  if(vals.size === 1) return [...vals][0];
+  return 'Varios (' + vals.size + ')';
+}
+
+function tsMostrarAccionModal_(a){
   if(!a) return;
   document.getElementById('tsAccionModalCodigo').textContent = a.codigo;
   document.getElementById('tsAccionModalDesc').textContent = a.descripcion;
   document.getElementById('tsAccionModalGasto').textContent = '$ ' + Math.round(a.gasto).toLocaleString('es-AR');
+  document.getElementById('tsAccionModalPromotor').textContent = tsResumenCampoTs_(a.clientes, 'pv');
+  document.getElementById('tsAccionModalSupervisor').textContent = tsResumenCampoTs_(a.clientes, 'supervisor');
   const cEl = document.getElementById('tsAccionModalClientes');
   cEl.innerHTML = a.clientes.length
     ? a.clientes.map(c=>`<div class="ts-accion-tag"><span>${esc(c.cliente)} <span style="color:var(--muted);font-weight:500;">#${esc(c.cod)}</span></span><b>$ ${Math.round(c.gasto).toLocaleString('es-AR')}</b></div>`).join('')
     : '<div class="stock-empty">Sin clientes</div>';
   document.getElementById('tsAccionModal').classList.add('open');
+}
+
+function tsOpenAccionDetail(idx){
+  tsMostrarAccionModal_(window.tsLastAcciones[idx]);
+}
+
+function tsOpenAccionDetailCategoria(idx){
+  tsMostrarAccionModal_(window.tsLastCategoriaAcciones[idx]);
 }
 
 function closeTsAccion(){
@@ -5949,7 +5969,11 @@ async function sensInit(){
       <button class="modal-ventas-close" onclick="closeTsAccion()">✕</button>
     </div>
     <div style="padding:4px 22px 22px;display:flex;flex-direction:column;gap:14px;">
-      <div class="rz-modal-item"><div class="rz-modal-lbl">Gasto total</div><div class="rz-modal-val" id="tsAccionModalGasto">—</div></div>
+      <div class="rz-modal-grid">
+        <div class="rz-modal-item"><div class="rz-modal-lbl">Gasto total</div><div class="rz-modal-val" id="tsAccionModalGasto">—</div></div>
+        <div class="rz-modal-item"><div class="rz-modal-lbl">Promotor</div><div class="rz-modal-val" id="tsAccionModalPromotor">—</div></div>
+        <div class="rz-modal-item"><div class="rz-modal-lbl">Supervisor</div><div class="rz-modal-val" id="tsAccionModalSupervisor">—</div></div>
+      </div>
       <div>
         <div class="rz-modal-lbl" style="margin-bottom:8px;">Clientes que la usaron</div>
         <div id="tsAccionModalClientes" style="display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto;"></div>
