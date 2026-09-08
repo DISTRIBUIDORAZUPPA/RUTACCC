@@ -5480,6 +5480,72 @@ function sensDescargarExcelD_(){
   setTimeout(()=>URL.revokeObjectURL(url), 2000);
 }
 
+function sensRenderResumenCierreHtml_(){
+  const mesActual = sensMesActual_();
+  let html = `<div style="font-weight:700;font-size:.95rem;margin-bottom:10px;">Objetivos sensibilizados — ${esc(mesActual)}</div>`;
+  SENS_PILARES_ORDEN.forEach(pk=>{
+    const d = (SENSIBILIZACION_DATA.pilares||{})[pk];
+    if(!d) return;
+    html += `<div style="margin-bottom:14px;"><div style="font-weight:600;color:var(--gold);font-size:.82rem;margin-bottom:6px;">${esc(d.label)}</div>`;
+    ['guillen','sans'].forEach(supKey=>{
+      const lista = d[supKey] || [];
+      if(!lista.length) return;
+      const supLabel = supKey==='guillen' ? 'GUILLEN IGNACIO' : 'SANS LUCAS';
+      const totalBase = sensNuevoTotalSupervisor(pk, supKey, lista);
+      html += `<table class="sens-table" style="margin-bottom:8px;"><thead><tr><th colspan="2">${esc(supLabel)}</th></tr></thead><tbody>`;
+      lista.forEach((p,i)=>{
+        const peso = sensPesoDe(lista, i);
+        const prorateado = totalBase * (peso/100);
+        const id = sensRowId(pk, supKey, p.n);
+        const aj = sensAjustes[id] || {accion:'mantener', hl:0};
+        const nuevoObj = prorateado + (aj.accion==='mantener' ? 0 : (Number(aj.hl)||0));
+        html += `<tr><td>${esc(p.n)}</td><td>${sensFmt(nuevoObj,1)} HL</td></tr>`;
+      });
+      html += `</tbody></table>`;
+    });
+    html += `</div>`;
+  });
+  return html;
+}
+
+function sensCopiarMailCierre_(){
+  const asuntoEl = document.getElementById('sensMailAsunto');
+  const cuerpoEl = document.getElementById('sensMailCuerpo');
+  const texto = 'Asunto: ' + (asuntoEl?asuntoEl.value:'') + '\n\n' + (cuerpoEl?cuerpoEl.value:'');
+  const avisar = ok => alert(ok
+    ? 'Texto copiado. Pegalo en un mail nuevo (Outlook) y adjuntá la imagen descargada.'
+    : 'No se pudo copiar automáticamente. Copiá el texto a mano del cuadro de arriba.');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(texto).then(()=>avisar(true)).catch(()=>avisar(false));
+  } else {
+    avisar(false);
+  }
+}
+
+function sensRenderMailCierrePanel_(){
+  const mesActual = sensMesActual_();
+  const mesSlug = mesActual.replace(/\s+/g,'_');
+  const cuerpoDefault = `Buenas tardes equipos,\n\nLos objetivos sensibilizados para ${mesActual} quedaron de la siguiente manera (ver imagen adjunta).\n\nSaludos.`;
+  return `<div class="sens-panel sens-mailcierre">
+    <div class="sens-panel-head">
+      <div class="sens-panel-title" style="display:block;">📧 Mail de cierre</div>
+    </div>
+    <p class="sens-dexp-note">Cuando ya está todo guardado, generá acá el texto y la imagen para mandar por mail (Outlook) avisando los objetivos finales del mes.</p>
+    <div style="padding:0 16px 12px;display:flex;flex-direction:column;gap:8px;max-width:640px;">
+      <label style="font-size:.72rem;color:var(--muted);">Asunto</label>
+      <input type="text" id="sensMailAsunto" value="Objetivos sensibilizados – ${esc(mesActual)}" style="font-family:inherit;font-size:.82rem;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);">
+      <label style="font-size:.72rem;color:var(--muted);">Cuerpo</label>
+      <textarea id="sensMailCuerpo" rows="6" style="font-family:inherit;font-size:.82rem;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);resize:vertical;">${cuerpoDefault}</textarea>
+    </div>
+    <div class="cd-download-row">
+      <button class="cd-download-btn" onclick="sensCopiarMailCierre_()">📋 Copiar texto</button>
+      <button class="cd-download-btn" onclick="descargarCierreComoImagen(this,'sensResumenCierreImg','Objetivos_sensibilizados_${mesSlug}')">⬇️ Descargar imagen</button>
+    </div>
+    <div id="sensResumenCierreImg" style="padding:16px;background:var(--paper);">
+      ${sensRenderResumenCierreHtml_()}
+    </div>
+  </div>`;
+}
 function sensRenderPanels(){
   const el = document.getElementById('sensPanels');
   if(!el || !supAuthData) return;
@@ -5503,6 +5569,7 @@ function sensRenderPanels(){
     html += sensSupervisorPanel(sensPilarActivo,'guillen','GUILLEN IGNACIO', d.guillen, false);
     html += sensSupervisorPanel(sensPilarActivo,'sans','SANS LUCAS', d.sans, false);
     if(supAuthData.role!=='gerencia') html += sensRenderExportDPanel();
+    html += sensRenderMailCierrePanel_();
   } else if(ownKey){
     const lista = d[ownKey];
     const label = ownKey==='guillen' ? 'GUILLEN IGNACIO' : 'SANS LUCAS';
