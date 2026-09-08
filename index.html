@@ -5294,6 +5294,7 @@ function sensRenderJdvPanel(pilarKey){
     const aj = sensJdvAjustes[id] || {accion:'mantener', hl:0, motivo:''};
     const nuevoObj = t.obj + (aj.accion==='mantener' ? 0 : (Number(aj.hl)||0));
     const changed = Math.abs(nuevoObj - t.obj) > 0.01;
+    const nuevaTendencia = (t.tendencia!=null && t.obj>0 && nuevoObj>0) ? t.tendencia*(t.obj/nuevoObj) : null;
     totalObjOriginal += t.obj;
     totalNuevo += nuevoObj;
     const foto = FOTOS_PV[s.label];
@@ -5319,6 +5320,7 @@ function sensRenderJdvPanel(pilarKey){
       <td class="dim">${aj.accion!=='mantener' && aj.hl ? sensFmt(Math.abs(aj.hl),1) : '—'}</td>
       ${sensMotivoCellHtml(id, aj, '', '', false)}`}
       <td class="sens-nuevo-obj ${changed?'changed':''}">${sensFmt(nuevoObj,1)}</td>
+      <td class="dim ${changed?'changed':''}">${nuevaTendencia!=null?sensFmt(nuevaTendencia*100,1)+'%':'—'}</td>
     </tr>`;
   });
   const delta = totalNuevo - totalObjOriginal;
@@ -5342,7 +5344,7 @@ function sensRenderJdvPanel(pilarKey){
     <div class="sens-table-scroll">
       <table class="sens-table">
         <thead><tr>
-          <th>Supervisor</th><th>Objetivo actual</th><th>Obj. mes ant.</th><th>Tendencia</th><th>Promedio 3M</th><th>Acum. 3M</th><th>VE al día</th><th>% Alcance</th><th>Acción</th><th>Ajuste HL</th><th>Motivo</th><th>Nuevo objetivo</th>
+          <th>Supervisor</th><th>Objetivo actual</th><th>Obj. mes ant.</th><th>Tendencia</th><th>Promedio 3M</th><th>Acum. 3M</th><th>VE al día</th><th>% Alcance</th><th>Acción</th><th>Ajuste HL</th><th>Motivo</th><th>Nuevo objetivo</th><th>Nueva tendencia</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
@@ -5366,6 +5368,7 @@ function sensSupervisorPanel(pilarKey, supKey, supLabel, lista, editable){
     const aj = sensAjustes[id] || {accion:'mantener', hl:0, motivo:''};
     const nuevoObj = prorateado + (aj.accion==='mantener' ? 0 : (Number(aj.hl)||0));
     const changed = Math.abs(nuevoObj - p.obj) > 0.01;
+    const nuevaTendencia = (p.tendencia!=null && p.obj>0 && nuevoObj>0) ? p.tendencia*(p.obj/nuevoObj) : null;
     rows += `<tr>
       <td>${esc(p.n)}</td>
       <td class="dim">${sensFmt(peso,1)}%</td>
@@ -5389,6 +5392,7 @@ function sensSupervisorPanel(pilarKey, supKey, supLabel, lista, editable){
       <td class="dim">${aj.accion!=='mantener' && aj.hl ? sensFmt(Math.abs(aj.hl),1) : '—'}</td>
       ${sensMotivoCellHtml(id, aj, '', '', false)}`}
       <td class="sens-nuevo-obj ${changed?'changed':''}">${sensFmt(nuevoObj,1)}</td>
+      <td class="dim ${changed?'changed':''}">${nuevaTendencia!=null?sensFmt(nuevaTendencia*100,1)+'%':'—'}</td>
     </tr>`;
   });
 
@@ -5416,10 +5420,10 @@ function sensSupervisorPanel(pilarKey, supKey, supLabel, lista, editable){
     <div class="sens-table-scroll">
       <table class="sens-table">
         <thead><tr>
-          <th>Promotor</th><th>Peso</th><th>Objetivo actual</th><th>Obj. mes ant.</th><th>Tendencia</th><th>Promedio 3M</th><th>Acum. 3M</th><th>VE al día</th><th>% Alcance</th><th>Acción</th><th>Ajuste HL</th><th>Motivo</th><th>Nuevo objetivo</th>
+          <th>Promotor</th><th>Peso</th><th>Objetivo actual</th><th>Obj. mes ant.</th><th>Tendencia</th><th>Promedio 3M</th><th>Acum. 3M</th><th>VE al día</th><th>% Alcance</th><th>Acción</th><th>Ajuste HL</th><th>Motivo</th><th>Nuevo objetivo</th><th>Nueva tendencia</th>
         </tr></thead>
         <tbody>${rows}</tbody>
-        <tfoot><tr><td colspan="12">Suma promotores</td><td>${sensFmt(totalNuevo,1)}</td></tr></tfoot>
+        <tfoot><tr><td colspan="12">Suma promotores</td><td>${sensFmt(totalNuevo,1)}</td><td></td></tr></tfoot>
       </table>
     </div>
   </div>`;
