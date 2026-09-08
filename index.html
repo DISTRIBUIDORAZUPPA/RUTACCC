@@ -5235,6 +5235,7 @@ function sensSupervisorTotales(lista){
   const sum = a => a.length ? a.reduce((x,y)=>x+y,0) : null;
   return {
     obj: sum(lista.map(p=>p.obj).filter(v=>v!=null)) || 0,
+    objAnt: sum(campo('objAnt')),
     prom3m: sum(campo('prom3m')),
     acum3m: sum(campo('acum3m')),
     ve: sum(campo('ve')),
@@ -5296,6 +5297,7 @@ function sensRenderJdvPanel(pilarKey){
     rows += `<tr>
       <td><div class="sens-name-cell">${foto?`<img class="sens-avatar" src="${foto}" alt="${esc(s.label)}">`:''}<span>${esc(s.label)}</span></div></td>
       <td>${sensFmt(t.obj,1)}</td>
+      <td class="dim">${t.objAnt!=null?sensFmt(t.objAnt,1):'—'}</td>
       <td class="dim">${t.prom3m!=null?sensFmt(t.prom3m,1):'—'}</td>
       <td class="dim">${t.acum3m!=null?sensFmt(t.acum3m,1):'—'}</td>
       <td>${t.ve!=null?sensFmt(t.ve,1):'—'}</td>
@@ -5336,7 +5338,7 @@ function sensRenderJdvPanel(pilarKey){
     <div class="sens-table-scroll">
       <table class="sens-table">
         <thead><tr>
-          <th>Supervisor</th><th>Objetivo actual</th><th>Promedio 3M</th><th>Acum. 3M</th><th>VE al día</th><th>% Alcance</th><th>Acción</th><th>Ajuste HL</th><th>Motivo</th><th>Nuevo objetivo</th>
+          <th>Supervisor</th><th>Objetivo actual</th><th>Obj. mes ant.</th><th>Promedio 3M</th><th>Acum. 3M</th><th>VE al día</th><th>% Alcance</th><th>Acción</th><th>Ajuste HL</th><th>Motivo</th><th>Nuevo objetivo</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
@@ -5364,6 +5366,8 @@ function sensSupervisorPanel(pilarKey, supKey, supLabel, lista, editable){
       <td>${esc(p.n)}</td>
       <td class="dim">${sensFmt(peso,1)}%</td>
       <td>${sensFmt(p.obj,1)}</td>
+      <td class="dim">${p.objAnt!=null?sensFmt(p.objAnt,1):'—'}</td>
+      <td class="dim">${p.tendencia!=null && p.tendencia!==''?esc(String(p.tendencia)):'—'}</td>
       <td class="dim">${p.prom3m!=null?sensFmt(p.prom3m,1):'—'}</td>
       <td class="dim">${p.acum3m!=null?sensFmt(p.acum3m,1):'—'}</td>
       <td>${p.ve!=null?sensFmt(p.ve,1):'—'}</td>
@@ -5408,10 +5412,10 @@ function sensSupervisorPanel(pilarKey, supKey, supLabel, lista, editable){
     <div class="sens-table-scroll">
       <table class="sens-table">
         <thead><tr>
-          <th>Promotor</th><th>Peso</th><th>Objetivo actual</th><th>Promedio 3M</th><th>Acum. 3M</th><th>VE al día</th><th>% Alcance</th><th>Acción</th><th>Ajuste HL</th><th>Motivo</th><th>Nuevo objetivo</th>
+          <th>Promotor</th><th>Peso</th><th>Objetivo actual</th><th>Obj. mes ant.</th><th>Tendencia</th><th>Promedio 3M</th><th>Acum. 3M</th><th>VE al día</th><th>% Alcance</th><th>Acción</th><th>Ajuste HL</th><th>Motivo</th><th>Nuevo objetivo</th>
         </tr></thead>
         <tbody>${rows}</tbody>
-        <tfoot><tr><td colspan="10">Suma promotores</td><td>${sensFmt(totalNuevo,1)}</td></tr></tfoot>
+        <tfoot><tr><td colspan="12">Suma promotores</td><td>${sensFmt(totalNuevo,1)}</td></tr></tfoot>
       </table>
     </div>
   </div>`;
