@@ -5526,6 +5526,16 @@ function sensCopiarMailCierre_(){
   }
 }
 
+function sensAbrirMailCierre_(){
+  const asuntoEl = document.getElementById('sensMailAsunto');
+  const cuerpoEl = document.getElementById('sensMailCuerpo');
+  const asunto = asuntoEl ? asuntoEl.value : '';
+  const cuerpo = cuerpoEl ? cuerpoEl.value : '';
+  const a = document.createElement('a');
+  a.href = 'mailto:?subject=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(cuerpo);
+  a.click();
+}
+
 function sensRenderMailCierrePanel_(){
   const mesActual = sensMesActual_();
   const mesSlug = mesActual.replace(/\s+/g,'_');
@@ -5534,7 +5544,7 @@ function sensRenderMailCierrePanel_(){
     <div class="sens-panel-head">
       <div class="sens-panel-title" style="display:block;">📧 Mail de cierre</div>
     </div>
-    <p class="sens-dexp-note">Cuando ya está todo guardado, generá acá el texto y la imagen para mandar por mail (Outlook) avisando los objetivos finales del mes.</p>
+    <p class="sens-dexp-note">Cuando ya está todo guardado: "Abrir mail" te abre un mail nuevo en Outlook con el asunto y el cuerpo ya cargados. Después descargá la imagen y arrastrala como adjunto — por seguridad, ningún sitio puede adjuntar el archivo automáticamente.</p>
     <div style="padding:0 16px 12px;display:flex;flex-direction:column;gap:8px;max-width:640px;">
       <label style="font-size:.72rem;color:var(--muted);">Asunto</label>
       <input type="text" id="sensMailAsunto" value="Objetivos sensibilizados – ${esc(mesActual)}" style="font-family:inherit;font-size:.82rem;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);">
@@ -5542,6 +5552,7 @@ function sensRenderMailCierrePanel_(){
       <textarea id="sensMailCuerpo" rows="6" style="font-family:inherit;font-size:.82rem;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);resize:vertical;">${cuerpoDefault}</textarea>
     </div>
     <div class="cd-download-row">
+      <button class="cd-download-btn" onclick="sensAbrirMailCierre_()">✉️ Abrir mail</button>
       <button class="cd-download-btn" onclick="sensCopiarMailCierre_()">📋 Copiar texto</button>
       <button class="cd-download-btn" onclick="descargarCierreComoImagen(this,'sensResumenCierreImg','Objetivos_sensibilizados_${mesSlug}')">⬇️ Descargar imagen</button>
     </div>
@@ -5550,6 +5561,7 @@ function sensRenderMailCierrePanel_(){
     </div>
   </div>`;
 }
+
 function sensRenderPanels(){
   const el = document.getElementById('sensPanels');
   if(!el || !supAuthData) return;
