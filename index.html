@@ -2259,6 +2259,7 @@ function supSetView(view){
   document.getElementById('supViewVrBtn').classList.toggle('active', view==='vr');
   document.getElementById('supViewSensBtn').classList.toggle('active', view==='sens');
   document.getElementById('supViewSalidasBtn').classList.toggle('active', view==='salidas');
+  document.getElementById('supViewPasBtn').classList.toggle('active', view==='pas');
   document.getElementById('supViewPlan').style.display = view==='plan' ? 'block' : 'none';
   document.getElementById('supViewObj').style.display = view==='obj' ? 'block' : 'none';
   document.getElementById('supViewCcc').style.display = view==='ccc' ? 'block' : 'none';
@@ -2273,6 +2274,7 @@ function supSetView(view){
   document.getElementById('supViewVr').style.display = view==='vr' ? 'block' : 'none';
   document.getElementById('supViewSens').style.display = view==='sens' ? 'block' : 'none';
   document.getElementById('supViewSalidas').style.display = view==='salidas' ? 'block' : 'none';
+  document.getElementById('supViewPas').style.display = view==='pas' ? 'block' : 'none';
   if(view==='obj') renderSupObjTable();
   if(view==='ccc') renderSupCccTable();
   if(view==='trade') renderTradeSpend();
@@ -2286,6 +2288,7 @@ function supSetView(view){
   if(view==='vr') renderSupVr();
   if(view==='sens') sensInit();
   if(view==='salidas') smInit();
+  if(view==='pas') supPasInit();
 }
 
 // ================================================================
@@ -4430,7 +4433,7 @@ function showSupContent(){
   if(opEl) opEl.style.display = supAuthData.role==='gerencia' ? 'none' : 'contents';
   if(supAuthData.role==='liderbb'){
     document.getElementById('supViewSensBtn').style.display = 'none';
-    ['supViewPlanBtn','supViewObjBtn','supViewCccBtn','supViewGalaxiaBtn','supViewRmvBtn','supViewCncRutaBtn','supViewCoachingBtn','supViewCoachSpvBtn','supViewSalidasBtn'].forEach(id=>{
+    ['supViewPlanBtn','supViewObjBtn','supViewCccBtn','supViewGalaxiaBtn','supViewRmvBtn','supViewCncRutaBtn','supViewCoachingBtn','supViewCoachSpvBtn','supViewSalidasBtn','supViewPasBtn'].forEach(id=>{
       const el = document.getElementById(id);
       if(el) el.style.display = 'none';
     });
@@ -5907,6 +5910,8 @@ function pasKey_(sup, grupo, vendedor) { return sup + '|||' + grupo + '|||' + ve
 async function initPas() {
   if (pasLoaded) { renderPasPanel(); return; }
   pasLoaded = true;
+  const elLoad = document.getElementById('pasContent');
+  if (elLoad) elLoad.innerHTML = '<div class="stock-empty">Cargando…</div>';
   await pasCargarDia();
   renderPasPanel();
 }
@@ -5965,12 +5970,13 @@ function renderPasPanel() {
   el.innerHTML = html;
 }
 
-function pasFilaVendedor_(g, v) {
+function pasFilaVendedor_(g, v, supOverride) {
+  const supEff = supOverride || pasCurrentSup;
   const foto = FOTOS_PV[v.n.toUpperCase()];
   const fotoHtml = foto ? `<img class="sens-avatar" src="${foto}" alt="${esc(v.n)}">` : '';
-  const dia = pasDiaData[pasKey_(pasCurrentSup, g.nombre, v.n)] || {};
-  const objArgs = JSON.stringify(g.nombre) + ',' + JSON.stringify(v.n) + ',"objetivoDia",this.value';
-  const realArgs = JSON.stringify(g.nombre) + ',' + JSON.stringify(v.n) + ',"realDia",this.value';
+  const dia = pasDiaData[pasKey_(supEff, g.nombre, v.n)] || {};
+  const objArgs = JSON.stringify(supEff) + ',' + JSON.stringify(g.nombre) + ',' + JSON.stringify(v.n) + ',"objetivoDia",this.value';
+  const realArgs = JSON.stringify(supEff) + ',' + JSON.stringify(g.nombre) + ',' + JSON.stringify(v.n) + ',"realDia",this.value';
   return `<tr>
       <td><div class="sens-name-cell">${fotoHtml}<span>${esc(v.n)}</span></div></td>
       <td>${sensFmt(v.objetivo,1)}</td>
@@ -6001,9 +6007,9 @@ function pasFilaTotal_(nombre, t) {
     </tr>`;
 }
 
-function pasRenderGrupo_(g) {
+function pasRenderGrupo_(g, supOverride) {
   let rows = '';
-  g.vendedores.forEach(v => { rows += pasFilaVendedor_(g, v); });
+  g.vendedores.forEach(v => { rows += pasFilaVendedor_(g, v, supOverride); });
   const totalRow = g.total ? pasFilaTotal_(esc(g.nombre) + ' — Total', g.total) : '';
   return `<div style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700;margin:14px 0 6px;">${esc(g.nombre)}</div>
     <div class="sens-table-scroll"><table class="sens-table">
@@ -6029,9 +6035,9 @@ function pasRenderTotalSupervisor_(t) {
     </table></div>`;
 }
 
-async function pasInputChange(grupo, vendedor, field, value) {
+async function pasInputChange(sup, grupo, vendedor, field, value) {
   const val = value === '' ? null : Number(value);
-  const key = pasKey_(pasCurrentSup, grupo, vendedor);
+  const key = pasKey_(sup, grupo, vendedor);
   pasDiaData[key] = pasDiaData[key] || {};
   pasDiaData[key][field] = val;
   if (!SUP_API_URL || SUP_API_URL.indexOf('PENDIENTE') !== -1) return;
@@ -6040,10 +6046,64 @@ async function pasInputChange(grupo, vendedor, field, value) {
     await fetch(SUP_API_URL, {
       method: 'POST',
       headers: {'Content-Type': 'text/plain;charset=utf-8'},
-      body: JSON.stringify({action:'setPasDia', fecha: hoy, supervisor: pasCurrentSup, grupo: grupo, vendedor: vendedor, field: field, value: val})
+      body: JSON.stringify({action:'setPasDia', fecha: hoy, supervisor: sup, grupo: grupo, vendedor: vendedor, field: field, value: val})
     });
   } catch (err) {
     console.error('No se pudo guardar Objetivo/Real Día de PAS', err);
+  }
+}
+
+const PAS_NAME_TO_KEY_ = { 'SANS LUCAS': 'sans', 'GUILLEN IGNACIO': 'guillen' };
+
+function pasBloqueHtml_(supKey) {
+  const data = (typeof PAS_DATA !== 'undefined') ? PAS_DATA : null;
+  const sup = data ? data[supKey] : null;
+  if (!sup) {
+    return { informeAl: '', html: '<div class="stock-empty">Todavía no se pegó el informe PAS de hoy para ' + (supKey === 'sans' ? 'SANS' : 'GUILLÉN') + '.</div>' };
+  }
+  const gruposRef = sup.grupos.filter(g => g.tipo === 'ref');
+  const gruposConjunta = sup.grupos.filter(g => g.tipo === 'conjunta');
+  let html = '';
+  if (gruposRef.length) {
+    html += '<div class="section-title">REF (promotores especiales)</div>';
+    gruposRef.forEach(g => { html += pasRenderGrupo_(g, supKey); });
+  }
+  if (gruposConjunta.length) {
+    html += '<div class="section-title">Vendedores conjunta</div>';
+    gruposConjunta.forEach(g => { html += pasRenderGrupo_(g, supKey); });
+  }
+  if (sup.totalSupervisor) html += pasRenderTotalSupervisor_(sup.totalSupervisor);
+  return { informeAl: sup.informeAl || '', html: html };
+}
+
+async function supPasInit() {
+  if (!pasLoaded) {
+    pasLoaded = true;
+    const c = document.getElementById('supPasContent');
+    if (c) c.innerHTML = '<div class="stock-empty">Cargando…</div>';
+    await pasCargarDia();
+  }
+  supPasRenderPanel();
+}
+
+function supPasRenderPanel() {
+  const el = document.getElementById('supPasContent');
+  const infoEl = document.getElementById('supPasInformeAl');
+  if (!el) return;
+
+  if (supAuthData.scope === 'all') {
+    const sans = pasBloqueHtml_('sans');
+    const guillen = pasBloqueHtml_('guillen');
+    if (infoEl) infoEl.textContent = '';
+    el.innerHTML =
+      '<div class="section-title" style="font-size:.82rem;">🔵 SANS' + (sans.informeAl ? ' — Informe al: ' + esc(sans.informeAl) : '') + '</div>' + sans.html +
+      '<div class="section-title" style="font-size:.82rem;margin-top:22px;">🟢 GUILLÉN' + (guillen.informeAl ? ' — Informe al: ' + esc(guillen.informeAl) : '') + '</div>' + guillen.html;
+  } else {
+    const supKey = PAS_NAME_TO_KEY_[supAuthData.name];
+    if (!supKey) { el.innerHTML = '<div class="stock-empty">No se encontró información de PAS para este usuario.</div>'; if (infoEl) infoEl.textContent = ''; return; }
+    const b = pasBloqueHtml_(supKey);
+    if (infoEl) infoEl.textContent = b.informeAl ? ('Informe al: ' + b.informeAl) : '';
+    el.innerHTML = b.html;
   }
 }
 
@@ -6238,6 +6298,7 @@ async function pasInputChange(grupo, vendedor, field, value) {
       <div class="pill" id="supViewCoachingBtn" onclick="supSetView('coaching')">🎓 Coaching</div>
       <div class="pill" id="supViewCoachSpvBtn" onclick="supSetView('coachspv')">🎯 Coaching Supervisores</div>
       <div class="pill" id="supViewSalidasBtn" onclick="supSetView('salidas')">🧭 Salidas al mercado</div>
+      <div class="pill" id="supViewPasBtn" onclick="supSetView('pas')">📊 Resultados PAS</div>
       </div>
     </div>
 
@@ -6545,6 +6606,12 @@ async function pasInputChange(grupo, vendedor, field, value) {
 
       <div class="section-title">Últimos envíos</div>
       <div id="smHistorialTable"><div class="sup-note">Cargando…</div></div>
+    </div>
+
+    <div id="supViewPas" style="display:none">
+      <div class="sup-note">Objetivo, Venta Acumulada y el resto de las columnas vienen del informe diario de Portal D+ (PAS) que se pega en la planilla. "Objetivo Día" y "Real Día" se completan a mano acá — cualquiera puede cargarlos, aunque el supervisor no esté.</div>
+      <div id="supPasInformeAl" style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin:-6px 0 16px;"></div>
+      <div id="supPasContent"></div>
     </div>
 
   </div>
