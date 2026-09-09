@@ -896,9 +896,11 @@ a.chofer-badge:hover{background:#1a5c8a;color:#fff;}
 .cd-pilar-heading:first-child{margin-top:0;}
 .pas-num-strong{font-weight:800;color:var(--ink);}
 .pas-num-big{font-size:.86rem;}
-.pas-avance-red{font-weight:800;color:var(--red);}
-.pas-avance-yellow{font-weight:800;color:#a1760c;}
-.pas-avance-green{font-weight:800;color:var(--green);}
+.pas-avance-badge{display:inline-block;min-width:52px;padding:3px 10px;border-radius:20px;background:var(--ink);font-weight:800;font-variant-numeric:tabular-nums;}
+.pas-avance-badge.pas-num-big{font-size:.8rem;padding:4px 14px;min-width:64px;}
+.pas-avance-red{color:#ff6b5b;}
+.pas-avance-yellow{color:var(--gold);}
+.pas-avance-green{color:#4caf6e;}
 .pas-total-row td{background:var(--paper);}
 .pas-total-block{border:1.5px solid var(--gold);border-radius:12px;padding:14px 14px 4px;margin:18px 0 6px;background:var(--card);}
 </style>
@@ -5997,7 +5999,7 @@ function pasFilaVendedor_(g, v, supOverride) {
       <td class="pas-num-strong">${sensFmt(v.objetivo,1)}</td>
       <td class="pas-num-strong">${sensFmt(v.ventaAcum,1)}</td>
       <td class="dim">${sensFmt(v.tendencia,1)}</td>
-      <td class="${avanceCls}">${v.avance!=null?sensFmt(v.avance*100,1)+'%':'—'}</td>
+      <td><span class="pas-avance-badge ${avanceCls}">${v.avance!=null?sensFmt(v.avance*100,1)+'%':'—'}</span></td>
       <td class="dim">${sensFmt(v.mediaReal,1)}</td>
       <td class="dim">${sensFmt(v.mediaNecesaria,1)}</td>
       <td class="dim">${sensFmt(v.visita7,1)}</td>
@@ -6014,7 +6016,7 @@ function pasFilaTotal_(nombre, t) {
       <td class="pas-num-strong">${sensFmt(t.objetivo,1)}</td>
       <td class="pas-num-strong">${sensFmt(t.ventaAcum,1)}</td>
       <td class="dim">${sensFmt(t.tendencia,1)}</td>
-      <td class="${avanceCls}">${t.avance!=null?sensFmt(t.avance*100,1)+'%':'—'}</td>
+      <td><span class="pas-avance-badge ${avanceCls}">${t.avance!=null?sensFmt(t.avance*100,1)+'%':'—'}</span></td>
       <td class="dim">${sensFmt(t.mediaReal,1)}</td>
       <td class="dim">${sensFmt(t.mediaNecesaria,1)}</td>
       <td class="dim">${sensFmt(t.visita7,1)}</td>
@@ -6044,7 +6046,7 @@ function pasRenderTotalSupervisor_(t) {
         <td class="pas-num-strong pas-num-big">${sensFmt(t.objetivo,1)}</td>
         <td class="pas-num-strong pas-num-big">${sensFmt(t.ventaAcum,1)}</td>
         <td class="dim">${sensFmt(t.tendencia,1)}</td>
-        <td class="${avanceCls} pas-num-big">${t.avance!=null?sensFmt(t.avance*100,1)+'%':'—'}</td>
+        <td><span class="pas-avance-badge pas-num-big ${avanceCls}">${t.avance!=null?sensFmt(t.avance*100,1)+'%':'—'}</span></td>
         <td class="dim">${sensFmt(t.mediaReal,1)}</td>
         <td class="dim">${sensFmt(t.mediaNecesaria,1)}</td>
         <td class="dim">${sensFmt(t.visita7,1)}</td>
