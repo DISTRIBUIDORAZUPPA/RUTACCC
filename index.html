@@ -894,6 +894,13 @@ a.chofer-badge:hover{background:#1a5c8a;color:#fff;}
 .cd-banner-logos-multi{display:flex;align-items:center;gap:10px;}
 .cd-pilar-heading{font-family:var(--serif);font-weight:900;font-size:.88rem;background:var(--gold);color:var(--ink);border-radius:10px;padding:7px 14px;margin:14px 0 10px;}
 .cd-pilar-heading:first-child{margin-top:0;}
+.pas-num-strong{font-weight:800;color:var(--ink);}
+.pas-num-big{font-size:.86rem;}
+.pas-avance-red{font-weight:800;color:var(--red);}
+.pas-avance-yellow{font-weight:800;color:#a1760c;}
+.pas-avance-green{font-weight:800;color:var(--green);}
+.pas-total-row td{background:var(--paper);}
+.pas-total-block{border:1.5px solid var(--gold);border-radius:12px;padding:14px 14px 4px;margin:18px 0 6px;background:var(--card);}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -5970,6 +5977,13 @@ function renderPasPanel() {
   el.innerHTML = html;
 }
 
+function pasAvanceClass_(avance) {
+  if (avance == null || isNaN(avance)) return '';
+  if (avance < 0.6) return 'pas-avance-red';
+  if (avance < 0.9) return 'pas-avance-yellow';
+  return 'pas-avance-green';
+}
+
 function pasFilaVendedor_(g, v, supOverride) {
   const supEff = supOverride || pasCurrentSup;
   const foto = FOTOS_PV[v.n.toUpperCase()];
@@ -5977,12 +5991,13 @@ function pasFilaVendedor_(g, v, supOverride) {
   const dia = pasDiaData[pasKey_(supEff, g.nombre, v.n)] || {};
   const objArgs = JSON.stringify(supEff) + ',' + JSON.stringify(g.nombre) + ',' + JSON.stringify(v.n) + ',"objetivoDia",this.value';
   const realArgs = JSON.stringify(supEff) + ',' + JSON.stringify(g.nombre) + ',' + JSON.stringify(v.n) + ',"realDia",this.value';
+  const avanceCls = pasAvanceClass_(v.avance);
   return `<tr>
       <td><div class="sens-name-cell">${fotoHtml}<span>${esc(v.n)}</span></div></td>
-      <td>${sensFmt(v.objetivo,1)}</td>
-      <td>${sensFmt(v.ventaAcum,1)}</td>
+      <td class="pas-num-strong">${sensFmt(v.objetivo,1)}</td>
+      <td class="pas-num-strong">${sensFmt(v.ventaAcum,1)}</td>
       <td class="dim">${sensFmt(v.tendencia,1)}</td>
-      <td class="dim">${v.avance!=null?sensFmt(v.avance*100,1)+'%':'—'}</td>
+      <td class="${avanceCls}">${v.avance!=null?sensFmt(v.avance*100,1)+'%':'—'}</td>
       <td class="dim">${sensFmt(v.mediaReal,1)}</td>
       <td class="dim">${sensFmt(v.mediaNecesaria,1)}</td>
       <td class="dim">${sensFmt(v.visita7,1)}</td>
@@ -5993,12 +6008,13 @@ function pasFilaVendedor_(g, v, supOverride) {
 }
 
 function pasFilaTotal_(nombre, t) {
-  return `<tr style="font-weight:700;">
+  const avanceCls = pasAvanceClass_(t.avance);
+  return `<tr class="pas-total-row" style="font-weight:700;">
       <td>${esc(nombre)}</td>
-      <td>${sensFmt(t.objetivo,1)}</td>
-      <td>${sensFmt(t.ventaAcum,1)}</td>
+      <td class="pas-num-strong">${sensFmt(t.objetivo,1)}</td>
+      <td class="pas-num-strong">${sensFmt(t.ventaAcum,1)}</td>
       <td class="dim">${sensFmt(t.tendencia,1)}</td>
-      <td class="dim">${t.avance!=null?sensFmt(t.avance*100,1)+'%':'—'}</td>
+      <td class="${avanceCls}">${t.avance!=null?sensFmt(t.avance*100,1)+'%':'—'}</td>
       <td class="dim">${sensFmt(t.mediaReal,1)}</td>
       <td class="dim">${sensFmt(t.mediaNecesaria,1)}</td>
       <td class="dim">${sensFmt(t.visita7,1)}</td>
@@ -6019,20 +6035,22 @@ function pasRenderGrupo_(g, supOverride) {
 }
 
 function pasRenderTotalSupervisor_(t) {
-  return `<div class="section-title">Total Supervisor</div>
+  const avanceCls = pasAvanceClass_(t.avance);
+  return `<div class="pas-total-block">
+    <div class="section-title" style="margin-top:0;">🏁 Total Supervisor</div>
     <div class="sens-table-scroll"><table class="sens-table">
       <thead><tr><th>Objetivo</th><th>Venta Acum.</th><th>Tendencia</th><th>Avance</th><th>Media Real</th><th>Media Nec.</th><th>Visita-7</th><th>Visita-14</th></tr></thead>
       <tbody><tr>
-        <td>${sensFmt(t.objetivo,1)}</td>
-        <td>${sensFmt(t.ventaAcum,1)}</td>
+        <td class="pas-num-strong pas-num-big">${sensFmt(t.objetivo,1)}</td>
+        <td class="pas-num-strong pas-num-big">${sensFmt(t.ventaAcum,1)}</td>
         <td class="dim">${sensFmt(t.tendencia,1)}</td>
-        <td class="dim">${t.avance!=null?sensFmt(t.avance*100,1)+'%':'—'}</td>
+        <td class="${avanceCls} pas-num-big">${t.avance!=null?sensFmt(t.avance*100,1)+'%':'—'}</td>
         <td class="dim">${sensFmt(t.mediaReal,1)}</td>
         <td class="dim">${sensFmt(t.mediaNecesaria,1)}</td>
         <td class="dim">${sensFmt(t.visita7,1)}</td>
         <td class="dim">${sensFmt(t.visita14,1)}</td>
       </tr></tbody>
-    </table></div>`;
+    </table></div></div>`;
 }
 
 async function pasInputChange(sup, grupo, vendedor, field, value) {
@@ -6618,7 +6636,7 @@ function supPasRenderPanel() {
 
 </div></div>
 
-<div id="tabPas" class="tab-panel" style="display:none!important">
+<div id="tabPas" class="tab-panel">
   <div class="pill-row" style="margin-bottom:10px;">
     <div class="pill active" id="pasPillSans" onclick="pasSetSup('sans')">SANS</div>
     <div class="pill" id="pasPillGuillen" onclick="pasSetSup('guillen')">GUILLÉN</div>
