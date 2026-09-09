@@ -5527,13 +5527,18 @@ function sensCopiarMailCierre_(){
 }
 
 function sensAbrirMailCierre_(){
+  /*ABRIRMAIL_FIX_V2*/
   const asuntoEl = document.getElementById('sensMailAsunto');
   const cuerpoEl = document.getElementById('sensMailCuerpo');
   const asunto = asuntoEl ? asuntoEl.value : '';
   const cuerpo = cuerpoEl ? cuerpoEl.value : '';
+  const url = 'mailto:?subject=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(cuerpo);
   const a = document.createElement('a');
-  a.href = 'mailto:?subject=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(cuerpo);
+  a.href = url;
+  a.style.display = 'none';
+  document.body.appendChild(a);
   a.click();
+  setTimeout(function(){ if (a.parentNode) a.parentNode.removeChild(a); }, 100);
 }
 
 function sensRenderMailCierrePanel_(){
