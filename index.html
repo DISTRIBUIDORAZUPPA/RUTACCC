@@ -2250,6 +2250,7 @@ function supSetView(view){
   document.getElementById('supViewCoachSpvBtn').classList.toggle('active', view==='coachspv');
   document.getElementById('supViewVrBtn').classList.toggle('active', view==='vr');
   document.getElementById('supViewSensBtn').classList.toggle('active', view==='sens');
+  document.getElementById('supViewSalidasBtn').classList.toggle('active', view==='salidas');
   document.getElementById('supViewPlan').style.display = view==='plan' ? 'block' : 'none';
   document.getElementById('supViewObj').style.display = view==='obj' ? 'block' : 'none';
   document.getElementById('supViewCcc').style.display = view==='ccc' ? 'block' : 'none';
@@ -2263,6 +2264,7 @@ function supSetView(view){
   document.getElementById('supViewCoachSpv').style.display = view==='coachspv' ? 'block' : 'none';
   document.getElementById('supViewVr').style.display = view==='vr' ? 'block' : 'none';
   document.getElementById('supViewSens').style.display = view==='sens' ? 'block' : 'none';
+  document.getElementById('supViewSalidas').style.display = view==='salidas' ? 'block' : 'none';
   if(view==='obj') renderSupObjTable();
   if(view==='ccc') renderSupCccTable();
   if(view==='trade') renderTradeSpend();
@@ -2275,7 +2277,125 @@ function supSetView(view){
   if(view==='coachspv') renderSupCoachSpv();
   if(view==='vr') renderSupVr();
   if(view==='sens') sensInit();
+  if(view==='salidas') smInit();
 }
+
+// ================================================================
+// SALIDAS AL MERCADO — Supervisores y Jefe de Ventas
+// ================================================================
+let smQuienVal = '';
+let smTareaVal = '';
+
+function smSetQuien(el){
+  smQuienVal = el.dataset.v;
+  document.querySelectorAll('#smQuienPills .pill').forEach(p=>{ p.classList.toggle('active', p===el); });
+}
+
+function smSetTarea(el){
+  smTareaVal = el.dataset.v;
+  document.querySelectorAll('#smTareaPills .pill').forEach(p=>{ p.classList.toggle('active', p===el); });
+  document.getElementById('smTareaOtroWrap').style.display = (smTareaVal==='OTRO') ? 'block' : 'none';
+}
+
+function smBuscarPdv(){
+  const codigo = (document.getElementById('smCodigoPdv').value || '').trim();
+  const infoEl = document.getElementById('smPdvInfo');
+  if(!codigo){ infoEl.textContent = ''; return; }
+  const cliente = DATA_RAW.find(d=>d.cod===String(codigo));
+  if(cliente){
+    infoEl.style.color = 'var(--muted)';
+    infoEl.textContent = '✓ ' + cliente.cliente + ' · Promotor: ' + cliente.pv;
+  } else {
+    infoEl.style.color = 'var(--red)';
+    infoEl.textContent = '⚠️ No se encontró ese código en Ruta CCC. Se puede enviar igual.';
+  }
+}
+
+async function smEnviar(){
+  const quienCompleta = smQuienVal;
+  const codigoPdv = (document.getElementById('smCodigoPdv').value || '').trim();
+  const tarea = smTareaVal;
+  const tareaOtro = (document.getElementById('smTareaOtro').value || '').trim();
+  const planAccion = (document.getElementById('smPlanAccion').value || '').trim();
+  const msgEl = document.getElementById('smEnviarMsg');
+
+  if(!quienCompleta || !codigoPdv || !tarea || !planAccion || (tarea==='OTRO' && !tareaOtro)){
+    msgEl.style.color = 'var(--red)';
+    msgEl.textContent = '⚠️ Completá quién completa, código de PDV, tarea (y el detalle si elegiste "OTRO") y el plan de acción.';
+    return;
+  }
+
+  const cliente = DATA_RAW.find(d=>d.cod===String(codigoPdv));
+  const btn = document.getElementById('smEnviarBtn');
+  if(btn) btn.disabled = true;
+  msgEl.style.color = 'var(--muted)';
+  msgEl.textContent = 'Enviando...';
+
+  try{
+    const resp = await fetch(SUP_API_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'guardarSalidaMercado',
+        quienCompleta: quienCompleta,
+        codigoPdv: codigoPdv,
+        razonSocial: cliente ? cliente.cliente : '',
+        promotor: cliente ? cliente.pv : '',
+        tarea: tarea,
+        tareaOtro: tarea==='OTRO' ? tareaOtro : '',
+        planAccion: planAccion
+      })
+    });
+    const json = await resp.json();
+    if(json && json.ok){
+      msgEl.style.color = 'var(--muted)';
+      msgEl.textContent = '✅ Enviado.';
+      smQuienVal = '';
+      smTareaVal = '';
+      document.querySelectorAll('#smQuienPills .pill, #smTareaPills .pill').forEach(p=>p.classList.remove('active'));
+      document.getElementById('smCodigoPdv').value = '';
+      document.getElementById('smPdvInfo').textContent = '';
+      document.getElementById('smTareaOtro').value = '';
+      document.getElementById('smTareaOtroWrap').style.display = 'none';
+      document.getElementById('smPlanAccion').value = '';
+      smCargarHistorial();
+    } else {
+      msgEl.style.color = 'var(--red)';
+      msgEl.textContent = '❌ No se pudo enviar: ' + (json && json.error ? json.error : 'error desconocido');
+    }
+  } catch(err){
+    msgEl.style.color = 'var(--red)';
+    msgEl.textContent = '❌ No se pudo enviar (revisá la conexión).';
+  } finally {
+    if(btn) btn.disabled = false;
+  }
+}
+
+async function smCargarHistorial(){
+  const wrap = document.getElementById('smHistorialTable');
+  if(!wrap) return;
+  try{
+    const resp = await fetch(SUP_API_URL + '?action=getSalidasMercado');
+    const json = await resp.json();
+    if(!json || !json.ok || !json.data || !json.data.length){
+      wrap.innerHTML = '<div class="sup-note">Todavía no hay envíos registrados.</div>';
+      return;
+    }
+    let html = '<div class="sens-table-scroll"><table class="sens-table"><thead><tr><th>Fecha</th><th>Completó</th><th>Código PDV</th><th>Razón social</th><th>Promotor</th><th>Tarea</th><th>Plan de acción</th></tr></thead><tbody>';
+    json.data.forEach(r=>{
+      const tareaTxt = (r.tarea==='OTRO' && r.tareaOtro) ? ('OTRO: ' + r.tareaOtro) : r.tarea;
+      html += `<tr><td>${esc(r.fecha)}</td><td>${esc(r.quienCompleta)}</td><td>${esc(r.codigoPdv)}</td><td style="text-align:left;">${esc(r.razonSocial||'—')}</td><td>${esc(r.promotor||'—')}</td><td style="text-align:left;">${esc(tareaTxt)}</td><td style="text-align:left;">${esc(r.planAccion)}</td></tr>`;
+    });
+    html += '</tbody></table></div>';
+    wrap.innerHTML = html;
+  } catch(err){
+    wrap.innerHTML = '<div class="sup-note">No se pudo cargar el historial.</div>';
+  }
+}
+
+function smInit(){
+  smCargarHistorial();
+}
+
 
 // COACHING
 const PILARES_COACHING = [
@@ -4302,7 +4422,7 @@ function showSupContent(){
   if(opEl) opEl.style.display = supAuthData.role==='gerencia' ? 'none' : 'contents';
   if(supAuthData.role==='liderbb'){
     document.getElementById('supViewSensBtn').style.display = 'none';
-    ['supViewPlanBtn','supViewObjBtn','supViewCccBtn','supViewGalaxiaBtn','supViewRmvBtn','supViewCncRutaBtn','supViewCoachingBtn','supViewCoachSpvBtn'].forEach(id=>{
+    ['supViewPlanBtn','supViewObjBtn','supViewCccBtn','supViewGalaxiaBtn','supViewRmvBtn','supViewCncRutaBtn','supViewCoachingBtn','supViewCoachSpvBtn','supViewSalidasBtn'].forEach(id=>{
       const el = document.getElementById(id);
       if(el) el.style.display = 'none';
     });
@@ -5953,6 +6073,7 @@ async function sensInit(){
       <div class="pill" id="supViewCncRutaBtn" onclick="supSetView('cncruta')">🗓️ Planificación Ruta CNC</div>
       <div class="pill" id="supViewCoachingBtn" onclick="supSetView('coaching')">🎓 Coaching</div>
       <div class="pill" id="supViewCoachSpvBtn" onclick="supSetView('coachspv')">🎯 Coaching Supervisores</div>
+      <div class="pill" id="supViewSalidasBtn" onclick="supSetView('salidas')">🧭 Salidas al mercado</div>
       </div>
     </div>
 
@@ -6200,6 +6321,67 @@ async function sensInit(){
       </div>
     </div>
 
+    <div id="supViewSalidas" style="display:none">
+      <div class="sup-note">Salidas al mercado: se completa cada vez que corresponda (no es diario) para dejar registrado quién hizo una salida de campo puntual, en qué punto de venta y qué tarea.</div>
+
+      <div style="max-width:760px;display:flex;flex-direction:column;gap:16px;margin-bottom:22px;">
+        <div class="field">
+          <label>Quién completa</label>
+          <div class="pill-row" id="smQuienPills">
+            <div class="pill" data-v="SANS LUCAS" onclick="smSetQuien(this)">SANS LUCAS</div>
+            <div class="pill" data-v="GUILLEN IGNACIO" onclick="smSetQuien(this)">GUILLEN IGNACIO</div>
+            <div class="pill" data-v="CRISTIAN CABALLERO" onclick="smSetQuien(this)">CRISTIAN CABALLERO</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Código del PDV</label>
+          <input type="text" id="smCodigoPdv" placeholder="Ej: 1234" oninput="smBuscarPdv()" style="font-family:inherit;font-size:.82rem;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);max-width:260px;">
+          <div id="smPdvInfo" style="font-size:.76rem;color:var(--muted);margin-top:4px;"></div>
+        </div>
+
+        <div class="field">
+          <label>Tarea a realizar</label>
+          <div class="pill-row" id="smTareaPills">
+            <div class="pill" data-v="COACHING SANS" onclick="smSetTarea(this)">COACHING SANS</div>
+            <div class="pill" data-v="COACHING GUILLEN" onclick="smSetTarea(this)">COACHING GUILLEN</div>
+            <div class="pill" data-v="CLIENTES NO COMPRADORES" onclick="smSetTarea(this)">CLIENTES NO COMPRADORES</div>
+            <div class="pill" data-v="ESTANDAR DE EJECUCIÓN" onclick="smSetTarea(this)">ESTANDAR DE EJECUCIÓN</div>
+            <div class="pill" data-v="NPS" onclick="smSetTarea(this)">NPS</div>
+            <div class="pill" data-v="PLAN 31" onclick="smSetTarea(this)">PLAN 31</div>
+            <div class="pill" data-v="EDUCACIÓN 8 PASOS PV" onclick="smSetTarea(this)">EDUCACIÓN 8 PASOS PV</div>
+            <div class="pill" data-v="REFF/MAYORISTAS" onclick="smSetTarea(this)">REFF/MAYORISTAS</div>
+            <div class="pill" data-v="COMPORTAMIENTO MAY" onclick="smSetTarea(this)">COMPORTAMIENTO MAY</div>
+            <div class="pill" data-v="TRABAJO DE OFICINA" onclick="smSetTarea(this)">TRABAJO DE OFICINA</div>
+            <div class="pill" data-v="AUTOSERVICIOS" onclick="smSetTarea(this)">AUTOSERVICIOS</div>
+            <div class="pill" data-v="CONVENCIÓN DISTRIBUIDORES" onclick="smSetTarea(this)">CONVENCIÓN DISTRIBUIDORES</div>
+            <div class="pill" data-v="FRANCO COMPENSATORIO" onclick="smSetTarea(this)">FRANCO COMPENSATORIO</div>
+            <div class="pill" data-v="COACHING" onclick="smSetTarea(this)">COACHING</div>
+            <div class="pill" data-v="VACACIONES" onclick="smSetTarea(this)">VACACIONES</div>
+            <div class="pill" data-v="REUNION SPR" onclick="smSetTarea(this)">REUNION SPR</div>
+            <div class="pill" data-v="OTRO" onclick="smSetTarea(this)">OTRO</div>
+          </div>
+        </div>
+
+        <div class="field" id="smTareaOtroWrap" style="display:none">
+          <label>Especificar</label>
+          <input type="text" id="smTareaOtro" placeholder="Detallá la tarea" style="font-family:inherit;font-size:.82rem;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);">
+        </div>
+
+        <div class="field">
+          <label>Plan de acción</label>
+          <textarea id="smPlanAccion" rows="4" placeholder="Detallá qué se hizo / qué se va a hacer" style="font-family:inherit;font-size:.82rem;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);resize:vertical;"></textarea>
+        </div>
+
+        <div>
+          <button class="sens-save-btn" id="smEnviarBtn" onclick="smEnviar()">📤 Enviar</button>
+        </div>
+        <div id="smEnviarMsg" style="font-size:.78rem;"></div>
+      </div>
+
+      <div class="section-title">Últimos envíos</div>
+      <div id="smHistorialTable"><div class="sup-note">Cargando…</div></div>
+    </div>
 
   </div>
 
