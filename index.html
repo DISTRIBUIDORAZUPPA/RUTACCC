@@ -929,6 +929,7 @@ a.chofer-badge:hover{background:#1a5c8a;color:#fff;}
     <button class="tab-btn" onclick="switchTab('stock')"><span class="tab-full">📦 Stock</span><span class="tab-short">📦 Stock</span></button>
     <button class="tab-btn" onclick="switchTab('rechazos')"><span class="tab-full">🚫 Rechazos</span><span class="tab-short">🚫 Rech.</span></button>
     <button class="tab-btn" onclick="switchTab('sup')"><span class="tab-full">🔐 Supervisores</span><span class="tab-short">🔐 Superv.</span></button>
+    <button class="tab-btn" onclick="switchTab('pas')"><span class="tab-full">📊 Resultados PAS</span><span class="tab-short">📊 PAS</span></button>
     
   </div>
 </div>
@@ -2036,11 +2037,15 @@ function switchTab(tab){
     document.getElementById('tabSup').classList.toggle('active', tab==='sup');
     if(tab==='sup') initSupervisores();
   }
+  if(document.getElementById('tabPas')){
+    document.getElementById('tabPas').classList.toggle('active', tab==='pas');
+    if(tab==='pas') initPas();
+  }
   if(document.getElementById('tabRMV2')) document.getElementById('tabRMV2').classList.toggle('active', tab==='rmv2');
   if(document.getElementById('tabRanking')) document.getElementById('tabRanking').classList.toggle('active', tab==='ranking');
   document.getElementById('tabMapa').classList.toggle('active', tab==='mapa');
   document.querySelectorAll('.tab-btn').forEach((b,i)=>{
-    b.classList.toggle('active', (tab==='ccc'&&i===0)||(tab==='rmv2'&&i===1)||(tab==='stock'&&i===2)||(tab==='rechazos'&&i===3)||(tab==='sup'&&i===4)||(tab==='ranking'&&i===5));
+    b.classList.toggle('active', (tab==='ccc'&&i===0)||(tab==='rmv2'&&i===1)||(tab==='stock'&&i===2)||(tab==='rechazos'&&i===3)||(tab==='sup'&&i===4)||(tab==='ranking'&&i===5)||(tab==='pas'&&i===5));
   });
   const mark = document.querySelector('.brand .mark');
   const sub  = document.querySelector('.brand .sub');
@@ -2064,6 +2069,9 @@ function switchTab(tab){
   } else if(tab==='sup'){
     mark.textContent = '🔐 Supervisores';
     sub.textContent  = 'Planificación diaria de equipos';
+  } else if(tab==='pas'){
+    mark.textContent = '📊 Resultados PAS';
+    sub.textContent  = 'Planeamiento diario por vendedor';
   } else if(tab==='ranking'){
     mark.textContent = '🏆 Ranking';
     sub.textContent  = 'Indicadores por Promotor';
@@ -5886,6 +5894,159 @@ async function sensInit(){
   sensRenderPanels();
 }
 
+
+const PAS_DATA = {"sans":{"informeAl":"09-sep-26","grupos":[{"nombre":"FOCO 1 - VF TOTAL CERVEZAS 2026","tipo":"conjunta","vendedores":[{"n":"BRIZUELA","objetivo":245.07,"ventaAcum":52.27,"tendencia":169.86,"avance":0.6931,"mediaReal":6.53,"mediaNecesaria":10.71,"visita7":9.85,"visita14":9.79},{"n":"CUBILLOS","objetivo":346.69,"ventaAcum":64.49,"tendencia":209.59,"avance":0.6045,"mediaReal":8.06,"mediaNecesaria":15.68,"visita7":7.09,"visita14":6.88},{"n":"MANZANO","objetivo":241.61,"ventaAcum":104.53,"tendencia":339.71,"avance":1.406,"mediaReal":13.07,"mediaNecesaria":7.62,"visita7":12.91,"visita14":7.96},{"n":"NARVAEZ","objetivo":187.81,"ventaAcum":33.67,"tendencia":109.44,"avance":0.5827,"mediaReal":4.21,"mediaNecesaria":8.56,"visita7":9.95,"visita14":10.23},{"n":"OLMEDO","objetivo":154.49,"ventaAcum":33.61,"tendencia":109.24,"avance":0.7071,"mediaReal":4.2,"mediaNecesaria":6.72,"visita7":8.78,"visita14":4.8},{"n":"RIOS","objetivo":152.88,"ventaAcum":31.79,"tendencia":103.32,"avance":0.6758,"mediaReal":3.97,"mediaNecesaria":6.73,"visita7":5.85,"visita14":8.46},{"n":"STAERKLE","objetivo":134.97,"ventaAcum":40.1,"tendencia":130.34,"avance":0.9656,"mediaReal":5.01,"mediaNecesaria":5.27,"visita7":3.68,"visita14":3.13},{"n":"ZUBELZU","objetivo":372.55,"ventaAcum":197.35,"tendencia":641.4,"avance":1.7216,"mediaReal":24.67,"mediaNecesaria":9.73,"visita7":54.75,"visita14":47.37}],"total":{"objetivo":1836.08,"ventaAcum":557.81,"tendencia":1812.89,"avance":0.9874,"mediaReal":69.73,"mediaNecesaria":71.01,"visita7":112.86,"visita14":98.62}},{"nombre":"Foco 2 - Above core 2026","tipo":"conjunta","vendedores":[{"n":"BRIZUELA","objetivo":19.7,"ventaAcum":11.64,"tendencia":37.84,"avance":1.9207,"mediaReal":1.46,"mediaNecesaria":0.45,"visita7":1.33,"visita14":1.18},{"n":"CUBILLOS","objetivo":67.12,"ventaAcum":10.21,"tendencia":33.2,"avance":0.4946,"mediaReal":1.28,"mediaNecesaria":3.16,"visita7":3.16,"visita14":1.14},{"n":"MANZANO","objetivo":47.86,"ventaAcum":14.82,"tendencia":48.16,"avance":1.0064,"mediaReal":1.85,"mediaNecesaria":1.84,"visita7":2.14,"visita14":1.85},{"n":"NARVAEZ","objetivo":26.04,"ventaAcum":5.48,"tendencia":17.83,"avance":0.6845,"mediaReal":0.69,"mediaNecesaria":1.14,"visita7":1.48,"visita14":1.64},{"n":"OLMEDO","objetivo":20.89,"ventaAcum":5.74,"tendencia":18.67,"avance":0.8936,"mediaReal":0.72,"mediaNecesaria":0.84,"visita7":2.79,"visita14":1.2},{"n":"RIOS","objetivo":22.45,"ventaAcum":3.64,"tendencia":11.84,"avance":0.5274,"mediaReal":0.46,"mediaNecesaria":1.04,"visita7":0.66,"visita14":0.73},{"n":"STAERKLE","objetivo":24.86,"ventaAcum":7.57,"tendencia":24.61,"avance":0.9898,"mediaReal":0.95,"mediaNecesaria":0.96,"visita7":1.38,"visita14":0.88},{"n":"ZUBELZU","objetivo":41.56,"ventaAcum":22.5,"tendencia":73.13,"avance":1.7596,"mediaReal":2.81,"mediaNecesaria":1.06,"visita7":2.84,"visita14":1.7}],"total":{"objetivo":270.48,"ventaAcum":81.62,"tendencia":265.27,"avance":0.9807,"mediaReal":10.2,"mediaNecesaria":10.49,"visita7":15.78,"visita14":10.33}},{"nombre":"Foco 3 - Total UNG 2026","tipo":"conjunta","vendedores":[{"n":"BRIZUELA","objetivo":136.56,"ventaAcum":25.9,"tendencia":84.19,"avance":0.6165,"mediaReal":3.24,"mediaNecesaria":6.15,"visita7":4.99,"visita14":7.18},{"n":"CUBILLOS","objetivo":316.62,"ventaAcum":33.23,"tendencia":108,"avance":0.3411,"mediaReal":4.15,"mediaNecesaria":15.74,"visita7":2.97,"visita14":4.4},{"n":"MANZANO","objetivo":130.51,"ventaAcum":36.62,"tendencia":119.03,"avance":0.912,"mediaReal":4.58,"mediaNecesaria":5.22,"visita7":3.87,"visita14":1.92},{"n":"NARVAEZ","objetivo":64.31,"ventaAcum":19.07,"tendencia":61.97,"avance":0.9637,"mediaReal":2.38,"mediaNecesaria":2.51,"visita7":1.49,"visita14":2.55},{"n":"OLMEDO","objetivo":73.24,"ventaAcum":13.58,"tendencia":44.14,"avance":0.6026,"mediaReal":1.7,"mediaNecesaria":3.31,"visita7":1.81,"visita14":3.46},{"n":"RIOS","objetivo":86.34,"ventaAcum":18.71,"tendencia":60.82,"avance":0.7044,"mediaReal":2.34,"mediaNecesaria":3.76,"visita7":1.12,"visita14":2.86},{"n":"STAERKLE","objetivo":60.36,"ventaAcum":16.46,"tendencia":53.48,"avance":0.8861,"mediaReal":2.06,"mediaNecesaria":2.44,"visita7":1.93,"visita14":1.63},{"n":"ZUBELZU","objetivo":116.92,"ventaAcum":35.21,"tendencia":114.43,"avance":0.9787,"mediaReal":4.4,"mediaNecesaria":4.54,"visita7":3.56,"visita14":4.34}],"total":{"objetivo":984.86,"ventaAcum":198.78,"tendencia":646.05,"avance":0.656,"mediaReal":24.85,"mediaNecesaria":43.67,"visita7":21.76,"visita14":28.36}},{"nombre":"Foco 4 - Total Aguas 2026","tipo":"conjunta","vendedores":[{"n":"BRIZUELA","objetivo":4.85,"ventaAcum":0.78,"tendencia":2.54,"avance":0.5229,"mediaReal":0.1,"mediaNecesaria":0.23,"visita7":0.18,"visita14":0.87},{"n":"CUBILLOS","objetivo":4.47,"ventaAcum":0.66,"tendencia":2.15,"avance":0.4803,"mediaReal":0.08,"mediaNecesaria":0.21,"visita7":0,"visita14":0},{"n":"MANZANO","objetivo":4.46,"ventaAcum":1.2,"tendencia":3.9,"avance":0.875,"mediaReal":0.15,"mediaNecesaria":0.18,"visita7":0.15,"visita14":-0.15},{"n":"NARVAEZ","objetivo":3.47,"ventaAcum":0.96,"tendencia":3.12,"avance":0.899,"mediaReal":0.12,"mediaNecesaria":0.14,"visita7":0,"visita14":0.15},{"n":"OLMEDO","objetivo":2.12,"ventaAcum":1.5,"tendencia":4.88,"avance":2.2989,"mediaReal":0.19,"mediaNecesaria":0.03,"visita7":0.24,"visita14":0},{"n":"RIOS","objetivo":8.96,"ventaAcum":2.52,"tendencia":8.19,"avance":0.9139,"mediaReal":0.32,"mediaNecesaria":0.36,"visita7":0.72,"visita14":0.15},{"n":"STAERKLE","objetivo":1.42,"ventaAcum":0.36,"tendencia":1.17,"avance":0.8213,"mediaReal":0.05,"mediaNecesaria":0.06,"visita7":0.15,"visita14":0},{"n":"ZUBELZU","objetivo":3.58,"ventaAcum":1.74,"tendencia":5.66,"avance":1.5818,"mediaReal":0.22,"mediaNecesaria":0.1,"visita7":0,"visita14":0.09}],"total":{"objetivo":33.32,"ventaAcum":9.72,"tendencia":31.59,"avance":0.948,"mediaReal":1.22,"mediaNecesaria":1.31,"visita7":1.44,"visita14":1.11}}],"totalSupervisor":{"objetivo":3124.75,"ventaAcum":847.94,"tendencia":2755.8,"avance":0.8819,"mediaReal":105.99,"mediaNecesaria":126.49,"visita7":151.83,"visita14":138.42}},"guillen":{"informeAl":"09-sep-26","grupos":[{"nombre":"2020 Aguas","tipo":"ref","vendedores":[{"n":"DANIELI","objetivo":12.34,"ventaAcum":3.18,"tendencia":10.34,"avance":0.8373,"mediaReal":0.4,"mediaNecesaria":0.51,"visita7":0.63,"visita14":0.63},{"n":"SALATINO","objetivo":46.78,"ventaAcum":15.09,"tendencia":49.04,"avance":1.0485,"mediaReal":1.89,"mediaNecesaria":1.76,"visita7":3.75,"visita14":1.5}],"total":{"objetivo":59.12,"ventaAcum":18.27,"tendencia":59.38,"avance":1.0044,"mediaReal":2.28,"mediaNecesaria":2.27,"visita7":4.38,"visita14":2.13}},{"nombre":"2020 Cervezas Core Plus (con Bud)","tipo":"ref","vendedores":[{"n":"DANIELI","objetivo":16.86,"ventaAcum":2.69,"tendencia":8.75,"avance":0.5187,"mediaReal":0.34,"mediaNecesaria":0.79,"visita7":0.5,"visita14":0.61},{"n":"SALATINO","objetivo":72.02,"ventaAcum":10.42,"tendencia":33.87,"avance":0.4702,"mediaReal":1.3,"mediaNecesaria":3.42,"visita7":2.66,"visita14":6.61}],"total":{"objetivo":88.89,"ventaAcum":13.11,"tendencia":42.61,"avance":0.4794,"mediaReal":1.64,"mediaNecesaria":4.21,"visita7":3.16,"visita14":7.22}},{"nombre":"2020 Total UNG","tipo":"ref","vendedores":[{"n":"DANIELI","objetivo":101.89,"ventaAcum":30.16,"tendencia":98.03,"avance":0.9621,"mediaReal":3.77,"mediaNecesaria":3.99,"visita7":2.44,"visita14":3.84},{"n":"SALATINO","objetivo":157.49,"ventaAcum":40.18,"tendencia":130.57,"avance":0.8291,"mediaReal":5.02,"mediaNecesaria":6.52,"visita7":5.81,"visita14":9.01}],"total":{"objetivo":259.38,"ventaAcum":70.34,"tendencia":228.61,"avance":0.8813,"mediaReal":8.79,"mediaNecesaria":10.5,"visita7":8.26,"visita14":12.85}},{"nombre":"2020-21 Czas HE y Vinos","tipo":"ref","vendedores":[{"n":"DANIELI","objetivo":25.88,"ventaAcum":6.58,"tendencia":21.4,"avance":0.827,"mediaReal":0.82,"mediaNecesaria":1.07,"visita7":1.01,"visita14":0.87},{"n":"SALATINO","objetivo":156.44,"ventaAcum":42.31,"tendencia":137.5,"avance":0.8789,"mediaReal":5.29,"mediaNecesaria":6.34,"visita7":10.01,"visita14":6.88}],"total":{"objetivo":182.32,"ventaAcum":48.89,"tendencia":158.9,"avance":0.8715,"mediaReal":6.11,"mediaNecesaria":7.41,"visita7":11.02,"visita14":7.74}},{"nombre":"2021 Total UNG (sin Vol Top, SS, Premium, Innov)vf","tipo":"ref","vendedores":[{"n":"DANIELI","objetivo":15.09,"ventaAcum":3.24,"tendencia":10.53,"avance":0.6979,"mediaReal":0.41,"mediaNecesaria":0.66,"visita7":0.27,"visita14":0.36},{"n":"SALATINO","objetivo":14.11,"ventaAcum":2.34,"tendencia":7.61,"avance":0.5389,"mediaReal":0.29,"mediaNecesaria":0.65,"visita7":0.72,"visita14":0.63}],"total":{"objetivo":29.2,"ventaAcum":5.58,"tendencia":18.14,"avance":0.6211,"mediaReal":0.7,"mediaNecesaria":1.31,"visita7":0.99,"visita14":0.99}},{"nombre":"2021 UNG Vol Top, SS, Premium, Innov vf","tipo":"ref","vendedores":[{"n":"DANIELI","objetivo":8.45,"ventaAcum":3.48,"tendencia":11.29,"avance":1.3369,"mediaReal":0.43,"mediaNecesaria":0.28,"visita7":0.3,"visita14":0.57},{"n":"SALATINO","objetivo":14.7,"ventaAcum":5.11,"tendencia":16.59,"avance":1.1288,"mediaReal":0.64,"mediaNecesaria":0.53,"visita7":0.9,"visita14":0.99}],"total":{"objetivo":23.15,"ventaAcum":8.58,"tendencia":27.89,"avance":1.2048,"mediaReal":1.07,"mediaNecesaria":0.81,"visita7":1.2,"visita14":1.56}},{"nombre":"2022 Total Cervezas","tipo":"ref","vendedores":[{"n":"DANIELI","objetivo":118.17,"ventaAcum":29.33,"tendencia":95.32,"avance":0.8066,"mediaReal":3.67,"mediaNecesaria":4.94,"visita7":6.2,"visita14":5.12},{"n":"SALATINO","objetivo":924.78,"ventaAcum":221.55,"tendencia":720.03,"avance":0.7786,"mediaReal":27.69,"mediaNecesaria":39.07,"visita7":37.92,"visita14":19.48}],"total":{"objetivo":1042.96,"ventaAcum":250.88,"tendencia":815.35,"avance":0.7818,"mediaReal":31.36,"mediaNecesaria":44,"visita7":44.12,"visita14":24.6}},{"nombre":"FOCO 1 - VF TOTAL CERVEZAS 2026","tipo":"conjunta","vendedores":[{"n":"ANZORENA","objetivo":115.88,"ventaAcum":26.38,"tendencia":85.73,"avance":0.7398,"mediaReal":3.3,"mediaNecesaria":4.97,"visita7":4.73,"visita14":4.82},{"n":"BILYK","objetivo":125.24,"ventaAcum":31.05,"tendencia":100.92,"avance":0.8058,"mediaReal":3.88,"mediaNecesaria":5.23,"visita7":4.4,"visita14":3.84},{"n":"GARCIA","objetivo":155.69,"ventaAcum":45.36,"tendencia":147.44,"avance":0.947,"mediaReal":5.67,"mediaNecesaria":6.13,"visita7":7.27,"visita14":6.13},{"n":"QUIROGA","objetivo":189.9,"ventaAcum":52.91,"tendencia":171.95,"avance":0.9055,"mediaReal":6.61,"mediaNecesaria":7.61,"visita7":4.63,"visita14":6.62},{"n":"RAMIREZ","objetivo":183.74,"ventaAcum":75.84,"tendencia":246.48,"avance":1.3415,"mediaReal":9.48,"mediaNecesaria":5.99,"visita7":17.5,"visita14":4.03},{"n":"VICENS","objetivo":2497.2,"ventaAcum":826.61,"tendencia":2686.47,"avance":1.0758,"mediaReal":103.33,"mediaNecesaria":92.81,"visita7":112.4,"visita14":29.7},{"n":"VILLEGAS","objetivo":142.18,"ventaAcum":34.64,"tendencia":112.59,"avance":0.7919,"mediaReal":4.33,"mediaNecesaria":5.97,"visita7":4.19,"visita14":4.8}],"total":{"objetivo":3409.82,"ventaAcum":1092.79,"tendencia":3551.58,"avance":1.0416,"mediaReal":136.6,"mediaNecesaria":128.72,"visita7":155.12,"visita14":59.94}},{"nombre":"Foco 2 - Above core 2026","tipo":"conjunta","vendedores":[{"n":"ANZORENA","objetivo":15.83,"ventaAcum":3.6,"tendencia":11.69,"avance":0.7385,"mediaReal":0.45,"mediaNecesaria":0.68,"visita7":1.03,"visita14":1.05},{"n":"BILYK","objetivo":13.91,"ventaAcum":4.64,"tendencia":15.08,"avance":1.0845,"mediaReal":0.58,"mediaNecesaria":0.51,"visita7":0.58,"visita14":0.29},{"n":"GARCIA","objetivo":42.89,"ventaAcum":12.24,"tendencia":39.78,"avance":0.9274,"mediaReal":1.53,"mediaNecesaria":1.7,"visita7":3.32,"visita14":2.38},{"n":"QUIROGA","objetivo":25.48,"ventaAcum":6.73,"tendencia":21.86,"avance":0.858,"mediaReal":0.84,"mediaNecesaria":1.04,"visita7":1.47,"visita14":1.58},{"n":"RAMIREZ","objetivo":26.46,"ventaAcum":12.2,"tendencia":39.66,"avance":1.4989,"mediaReal":1.53,"mediaNecesaria":0.79,"visita7":3.33,"visita14":0.9},{"n":"VICENS","objetivo":267.98,"ventaAcum":112.67,"tendencia":366.17,"avance":1.3664,"mediaReal":14.08,"mediaNecesaria":8.63,"visita7":2.38,"visita14":11.7},{"n":"VILLEGAS","objetivo":23.6,"ventaAcum":6.67,"tendencia":21.69,"avance":0.9189,"mediaReal":0.83,"mediaNecesaria":0.94,"visita7":0.74,"visita14":1.2}],"total":{"objetivo":416.15,"ventaAcum":158.75,"tendencia":515.93,"avance":1.2398,"mediaReal":19.84,"mediaNecesaria":14.3,"visita7":12.86,"visita14":19.11}},{"nombre":"Foco 3 - Total UNG 2026","tipo":"conjunta","vendedores":[{"n":"ANZORENA","objetivo":63.74,"ventaAcum":26.15,"tendencia":84.98,"avance":1.3331,"mediaReal":3.27,"mediaNecesaria":2.09,"visita7":1.94,"visita14":0.84},{"n":"BILYK","objetivo":66.74,"ventaAcum":22.2,"tendencia":72.14,"avance":1.0809,"mediaReal":2.77,"mediaNecesaria":2.47,"visita7":1.51,"visita14":3.66},{"n":"GARCIA","objetivo":83.36,"ventaAcum":29.04,"tendencia":94.37,"avance":1.1321,"mediaReal":3.63,"mediaNecesaria":3.02,"visita7":6.28,"visita14":3.8},{"n":"QUIROGA","objetivo":75.84,"ventaAcum":20.62,"tendencia":67.01,"avance":0.8835,"mediaReal":2.58,"mediaNecesaria":3.07,"visita7":1.96,"visita14":1.84},{"n":"RAMIREZ","objetivo":80.69,"ventaAcum":26.13,"tendencia":84.92,"avance":1.0524,"mediaReal":3.27,"mediaNecesaria":3.03,"visita7":2.33,"visita14":1.17},{"n":"VICENS","objetivo":2231.38,"ventaAcum":607.56,"tendencia":1974.56,"avance":0.8849,"mediaReal":75.94,"mediaNecesaria":90.21,"visita7":15.01,"visita14":82.96},{"n":"VILLEGAS","objetivo":82.16,"ventaAcum":20.65,"tendencia":67.11,"avance":0.8168,"mediaReal":2.58,"mediaNecesaria":3.42,"visita7":2.01,"visita14":1.55}],"total":{"objetivo":2683.91,"ventaAcum":752.33,"tendencia":2445.08,"avance":0.911,"mediaReal":94.04,"mediaNecesaria":107.31,"visita7":31.03,"visita14":95.83}},{"nombre":"Foco 4 - Total Aguas 2026","tipo":"conjunta","vendedores":[{"n":"ANZORENA","objetivo":2.79,"ventaAcum":1.56,"tendencia":5.07,"avance":1.819,"mediaReal":0.2,"mediaNecesaria":0.07,"visita7":0.15,"visita14":0},{"n":"BILYK","objetivo":2.45,"ventaAcum":1.44,"tendencia":4.66,"avance":1.9031,"mediaReal":0.18,"mediaNecesaria":0.06,"visita7":0.09,"visita14":0.48},{"n":"GARCIA","objetivo":4.05,"ventaAcum":1.11,"tendencia":3.61,"avance":0.8905,"mediaReal":0.14,"mediaNecesaria":0.16,"visita7":0.3,"visita14":0.45},{"n":"QUIROGA","objetivo":1.73,"ventaAcum":0.36,"tendencia":1.17,"avance":0.6756,"mediaReal":0.05,"mediaNecesaria":0.08,"visita7":0,"visita14":0},{"n":"RAMIREZ","objetivo":2.48,"ventaAcum":2.22,"tendencia":7.22,"avance":2.91,"mediaReal":0.28,"mediaNecesaria":0.01,"visita7":0.21,"visita14":0.21},{"n":"VICENS","objetivo":6.49,"ventaAcum":15.6,"tendencia":50.7,"avance":7.8151,"mediaReal":1.95,"mediaNecesaria":-0.51,"visita7":0,"visita14":0},{"n":"VILLEGAS","objetivo":3.24,"ventaAcum":0.66,"tendencia":2.15,"avance":0.6615,"mediaReal":0.08,"mediaNecesaria":0.14,"visita7":0.3,"visita14":0.39}],"total":{"objetivo":23.23,"ventaAcum":22.95,"tendencia":74.57,"avance":3.2101,"mediaReal":2.87,"mediaNecesaria":0.02,"visita7":1.05,"visita14":1.53}},{"nombre":"Total Non Sugar (Zuppa)","tipo":"ref","vendedores":[{"n":"DANIELI","objetivo":11.5,"ventaAcum":5.6,"tendencia":18.2,"avance":1.5821,"mediaReal":0.7,"mediaNecesaria":0.33,"visita7":0.75,"visita14":0.82},{"n":"SALATINO","objetivo":17.29,"ventaAcum":7.17,"tendencia":23.31,"avance":1.3479,"mediaReal":0.9,"mediaNecesaria":0.56,"visita7":0.97,"visita14":2.24}],"total":{"objetivo":28.79,"ventaAcum":12.77,"tendencia":41.5,"avance":1.4414,"mediaReal":1.6,"mediaNecesaria":0.89,"visita7":1.71,"visita14":3.05}},{"nombre":"Vinos (Zuppa)","tipo":"ref","vendedores":[{"n":"DANIELI","objetivo":0.48,"ventaAcum":0,"tendencia":0,"avance":0,"mediaReal":0,"mediaNecesaria":0.03,"visita7":0,"visita14":0},{"n":"SALATINO","objetivo":0.28,"ventaAcum":0.05,"tendencia":0.15,"avance":0.5312,"mediaReal":0.01,"mediaNecesaria":0.01,"visita7":0,"visita14":0.05}],"total":{"objetivo":0.75,"ventaAcum":0.05,"tendencia":0.15,"avance":0.1947,"mediaReal":0.01,"mediaNecesaria":0.04,"visita7":0,"visita14":0.05}}],"totalSupervisor":{"objetivo":8247.67,"ventaAcum":2455.28,"tendencia":7979.66,"avance":0.9675,"mediaReal":306.91,"mediaNecesaria":321.8,"visita7":274.9,"visita14":236.6}}};
+
+// ===== PAS (Resultados) =====
+let pasCurrentSup = 'sans';
+let pasDiaData = {};
+let pasLoaded = false;
+
+function pasKey_(sup, grupo, vendedor) { return sup + '|||' + grupo + '|||' + vendedor; }
+
+async function initPas() {
+  if (pasLoaded) { renderPasPanel(); return; }
+  pasLoaded = true;
+  await pasCargarDia();
+  renderPasPanel();
+}
+
+function pasSetSup(sup) {
+  pasCurrentSup = sup;
+  document.getElementById('pasPillSans').classList.toggle('active', sup === 'sans');
+  document.getElementById('pasPillGuillen').classList.toggle('active', sup === 'guillen');
+  renderPasPanel();
+}
+
+async function pasCargarDia() {
+  const hoy = hoyArgentina();
+  pasDiaData = {};
+  if (!SUP_API_URL || SUP_API_URL.indexOf('PENDIENTE') !== -1) return;
+  try {
+    const resp = await fetch(SUP_API_URL + '?action=getPasDia&fecha=' + hoy);
+    const json = await resp.json();
+    if (json.ok) {
+      json.data.forEach(r => {
+        pasDiaData[pasKey_(r.supervisor, r.grupo, r.vendedor)] = { objetivoDia: r.objetivoDia, realDia: r.realDia };
+      });
+    }
+  } catch (err) {
+    console.error('No se pudo cargar Objetivo/Real Día de PAS', err);
+  }
+}
+
+function renderPasPanel() {
+  const el = document.getElementById('pasContent');
+  const infoEl = document.getElementById('pasInformeAl');
+  const data = (typeof PAS_DATA !== 'undefined') ? PAS_DATA : null;
+  const sup = data ? data[pasCurrentSup] : null;
+  if (!sup) {
+    infoEl.textContent = '';
+    el.innerHTML = '<div class="stock-empty">Todavía no se pegó el informe PAS de hoy para ' + (pasCurrentSup === 'sans' ? 'SANS' : 'GUILLÉN') + '.</div>';
+    return;
+  }
+  infoEl.textContent = sup.informeAl ? ('Informe al: ' + sup.informeAl) : '';
+
+  const gruposRef = sup.grupos.filter(g => g.tipo === 'ref');
+  const gruposConjunta = sup.grupos.filter(g => g.tipo === 'conjunta');
+
+  let html = '';
+  if (gruposRef.length) {
+    html += '<div class="section-title">REF (promotores especiales)</div>';
+    gruposRef.forEach(g => { html += pasRenderGrupo_(g); });
+  }
+  if (gruposConjunta.length) {
+    html += '<div class="section-title">Vendedores conjunta</div>';
+    gruposConjunta.forEach(g => { html += pasRenderGrupo_(g); });
+  }
+  if (sup.totalSupervisor) {
+    html += pasRenderTotalSupervisor_(sup.totalSupervisor);
+  }
+  el.innerHTML = html;
+}
+
+function pasFilaVendedor_(g, v) {
+  const foto = FOTOS_PV[v.n.toUpperCase()];
+  const fotoHtml = foto ? `<img class="sens-avatar" src="${foto}" alt="${esc(v.n)}">` : '';
+  const dia = pasDiaData[pasKey_(pasCurrentSup, g.nombre, v.n)] || {};
+  const objArgs = JSON.stringify(g.nombre) + ',' + JSON.stringify(v.n) + ',"objetivoDia",this.value';
+  const realArgs = JSON.stringify(g.nombre) + ',' + JSON.stringify(v.n) + ',"realDia",this.value';
+  return `<tr>
+      <td><div class="sens-name-cell">${fotoHtml}<span>${esc(v.n)}</span></div></td>
+      <td>${sensFmt(v.objetivo,1)}</td>
+      <td>${sensFmt(v.ventaAcum,1)}</td>
+      <td class="dim">${sensFmt(v.tendencia,1)}</td>
+      <td class="dim">${v.avance!=null?sensFmt(v.avance*100,1)+'%':'—'}</td>
+      <td class="dim">${sensFmt(v.mediaReal,1)}</td>
+      <td class="dim">${sensFmt(v.mediaNecesaria,1)}</td>
+      <td class="dim">${sensFmt(v.visita7,1)}</td>
+      <td class="dim">${sensFmt(v.visita14,1)}</td>
+      <td><input type="number" step="any" class="sens-hl-input" value="${dia.objetivoDia!=null?dia.objetivoDia:''}" onchange='pasInputChange(${objArgs})'></td>
+      <td><input type="number" step="any" class="sens-hl-input" value="${dia.realDia!=null?dia.realDia:''}" onchange='pasInputChange(${realArgs})'></td>
+    </tr>`;
+}
+
+function pasFilaTotal_(nombre, t) {
+  return `<tr style="font-weight:700;">
+      <td>${esc(nombre)}</td>
+      <td>${sensFmt(t.objetivo,1)}</td>
+      <td>${sensFmt(t.ventaAcum,1)}</td>
+      <td class="dim">${sensFmt(t.tendencia,1)}</td>
+      <td class="dim">${t.avance!=null?sensFmt(t.avance*100,1)+'%':'—'}</td>
+      <td class="dim">${sensFmt(t.mediaReal,1)}</td>
+      <td class="dim">${sensFmt(t.mediaNecesaria,1)}</td>
+      <td class="dim">${sensFmt(t.visita7,1)}</td>
+      <td class="dim">${sensFmt(t.visita14,1)}</td>
+      <td></td><td></td>
+    </tr>`;
+}
+
+function pasRenderGrupo_(g) {
+  let rows = '';
+  g.vendedores.forEach(v => { rows += pasFilaVendedor_(g, v); });
+  const totalRow = g.total ? pasFilaTotal_(esc(g.nombre) + ' — Total', g.total) : '';
+  return `<div style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700;margin:14px 0 6px;">${esc(g.nombre)}</div>
+    <div class="sens-table-scroll"><table class="sens-table">
+      <thead><tr><th>Vendedor</th><th>Objetivo</th><th>Venta Acum.</th><th>Tendencia</th><th>Avance</th><th>Media Real</th><th>Media Nec.</th><th>Visita-7</th><th>Visita-14</th><th>Objetivo Día</th><th>Real Día</th></tr></thead>
+      <tbody>${rows}${totalRow}</tbody>
+    </table></div>`;
+}
+
+function pasRenderTotalSupervisor_(t) {
+  return `<div class="section-title">Total Supervisor</div>
+    <div class="sens-table-scroll"><table class="sens-table">
+      <thead><tr><th>Objetivo</th><th>Venta Acum.</th><th>Tendencia</th><th>Avance</th><th>Media Real</th><th>Media Nec.</th><th>Visita-7</th><th>Visita-14</th></tr></thead>
+      <tbody><tr>
+        <td>${sensFmt(t.objetivo,1)}</td>
+        <td>${sensFmt(t.ventaAcum,1)}</td>
+        <td class="dim">${sensFmt(t.tendencia,1)}</td>
+        <td class="dim">${t.avance!=null?sensFmt(t.avance*100,1)+'%':'—'}</td>
+        <td class="dim">${sensFmt(t.mediaReal,1)}</td>
+        <td class="dim">${sensFmt(t.mediaNecesaria,1)}</td>
+        <td class="dim">${sensFmt(t.visita7,1)}</td>
+        <td class="dim">${sensFmt(t.visita14,1)}</td>
+      </tr></tbody>
+    </table></div>`;
+}
+
+async function pasInputChange(grupo, vendedor, field, value) {
+  const val = value === '' ? null : Number(value);
+  const key = pasKey_(pasCurrentSup, grupo, vendedor);
+  pasDiaData[key] = pasDiaData[key] || {};
+  pasDiaData[key][field] = val;
+  if (!SUP_API_URL || SUP_API_URL.indexOf('PENDIENTE') !== -1) return;
+  const hoy = hoyArgentina();
+  try {
+    await fetch(SUP_API_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify({action:'setPasDia', fecha: hoy, supervisor: pasCurrentSup, grupo: grupo, vendedor: vendedor, field: field, value: val})
+    });
+  } catch (err) {
+    console.error('No se pudo guardar Objetivo/Real Día de PAS', err);
+  }
+}
+
 </script>
 </div></div><!-- /tabCCC -->
 
@@ -6389,6 +6550,16 @@ async function sensInit(){
   </div>
 
 </div></div>
+
+<div id="tabPas" class="tab-panel" style="display:none!important">
+  <div class="pill-row" style="margin-bottom:10px;">
+    <div class="pill active" id="pasPillSans" onclick="pasSetSup('sans')">SANS</div>
+    <div class="pill" id="pasPillGuillen" onclick="pasSetSup('guillen')">GUILLÉN</div>
+  </div>
+  <div class="sup-note">Objetivo, Venta Acumulada y el resto de las columnas vienen del informe diario de Portal D+ (PAS) que se pega en la planilla. "Objetivo Día" y "Real Día" se completan a mano acá — cualquiera puede cargarlos, aunque el supervisor no esté.</div>
+  <div id="pasInformeAl" style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin:-6px 0 16px;"></div>
+  <div id="pasContent"></div>
+</div>
 
 <div class="modal-ventas-overlay" id="tsDetailModal" onclick="if(event.target===this)closeTsDetail()">
   <div class="modal-ventas-box" style="max-width:440px;">
