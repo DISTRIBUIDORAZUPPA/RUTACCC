@@ -903,6 +903,11 @@ a.chofer-badge:hover{background:#1a5c8a;color:#fff;}
 .pas-avance-green{color:#4caf6e;}
 .pas-total-row td{background:var(--paper);}
 .pas-total-block{border:1.5px solid var(--gold);border-radius:12px;padding:14px 14px 4px;margin:18px 0 6px;background:var(--card);}
+.pas-pilar-block{border-radius:10px;padding:10px 12px 2px;margin:14px 0 6px;}
+.pas-pilar-cvza{background:var(--paper);}
+.pas-pilar-core{background:#efe6f5;}
+.pas-pilar-ung{background:#e8eef3;}
+.pas-pilar-agua{background:#e3f0f7;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -5916,6 +5921,16 @@ let pasLoaded = false;
 
 function pasKey_(sup, grupo, vendedor) { return sup + '|||' + grupo + '|||' + vendedor; }
 
+const PAS_REF_GRUPOS_VISIBLES_ = ['2022 TOTAL CERVEZAS', '2020 TOTAL UNG'];
+function pasPilarClass_(nombre) {
+  const n = (nombre || '').toUpperCase();
+  if (n.indexOf('CERVEZA') !== -1) return 'pas-pilar-cvza';
+  if (n.indexOf('ABOVE CORE') !== -1) return 'pas-pilar-core';
+  if (n.indexOf('UNG') !== -1) return 'pas-pilar-ung';
+  if (n.indexOf('AGUA') !== -1) return 'pas-pilar-agua';
+  return '';
+}
+
 async function initPas() {
   if (pasLoaded) { renderPasPanel(); return; }
   pasLoaded = true;
@@ -5961,7 +5976,7 @@ function renderPasPanel() {
   }
   infoEl.textContent = sup.informeAl ? ('Informe al: ' + sup.informeAl) : '';
 
-  const gruposRef = sup.grupos.filter(g => g.tipo === 'ref');
+  const gruposRef = sup.grupos.filter(g => g.tipo === 'ref' && PAS_REF_GRUPOS_VISIBLES_.indexOf((g.nombre||'').trim().toUpperCase()) !== -1);
   const gruposConjunta = sup.grupos.filter(g => g.tipo === 'conjunta');
 
   let html = '';
@@ -6029,11 +6044,14 @@ function pasRenderGrupo_(g, supOverride) {
   let rows = '';
   g.vendedores.forEach(v => { rows += pasFilaVendedor_(g, v, supOverride); });
   const totalRow = g.total ? pasFilaTotal_(esc(g.nombre) + ' — Total', g.total) : '';
-  return `<div style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700;margin:14px 0 6px;">${esc(g.nombre)}</div>
+  const pilarCls = pasPilarClass_(g.nombre);
+  return `<div class="pas-pilar-block ${pilarCls}">
+    <div style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700;margin:0 0 6px;">${esc(g.nombre)}</div>
     <div class="sens-table-scroll"><table class="sens-table">
       <thead><tr><th>Vendedor</th><th>Objetivo</th><th>Venta Acum.</th><th>Tendencia</th><th>Avance</th><th>Media Real</th><th>Media Nec.</th><th>Visita-7</th><th>Visita-14</th><th>Objetivo Día</th><th>Real Día</th></tr></thead>
       <tbody>${rows}${totalRow}</tbody>
-    </table></div>`;
+    </table></div>
+  </div>`;
 }
 
 function pasRenderTotalSupervisor_(t) {
@@ -6081,7 +6099,7 @@ function pasBloqueHtml_(supKey) {
   if (!sup) {
     return { informeAl: '', html: '<div class="stock-empty">Todavía no se pegó el informe PAS de hoy para ' + (supKey === 'sans' ? 'SANS' : 'GUILLÉN') + '.</div>' };
   }
-  const gruposRef = sup.grupos.filter(g => g.tipo === 'ref');
+  const gruposRef = sup.grupos.filter(g => g.tipo === 'ref' && PAS_REF_GRUPOS_VISIBLES_.indexOf((g.nombre||'').trim().toUpperCase()) !== -1);
   const gruposConjunta = sup.grupos.filter(g => g.tipo === 'conjunta');
   let html = '';
   if (gruposRef.length) {
