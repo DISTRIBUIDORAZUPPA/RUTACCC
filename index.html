@@ -904,7 +904,7 @@ a.chofer-badge:hover{background:#1a5c8a;color:#fff;}
 .pas-total-row td{background:var(--paper);}
 .pas-total-block{border:1.5px solid var(--gold);border-radius:12px;padding:14px 14px 4px;margin:18px 0 6px;background:var(--card);}
 .pas-pilar-block{border-radius:10px;padding:10px 12px 2px;margin:14px 0 6px;}
-.pas-pilar-cvza{background:var(--paper);}
+.pas-pilar-cvza{background:#d9f0e1;}
 .pas-pilar-core{background:#efe6f5;}
 .pas-pilar-ung{background:#e8eef3;}
 .pas-pilar-agua{background:#e3f0f7;}
@@ -5922,6 +5922,7 @@ let pasLoaded = false;
 function pasKey_(sup, grupo, vendedor) { return sup + '|||' + grupo + '|||' + vendedor; }
 
 const PAS_REF_GRUPOS_VISIBLES_ = ['2022 TOTAL CERVEZAS', '2020 TOTAL UNG'];
+const PAS_SUP_PILARES_OCULTOS_ = ['pas-pilar-core', 'pas-pilar-agua'];
 function pasPilarClass_(nombre) {
   const n = (nombre || '').toUpperCase();
   if (n.indexOf('CERVEZA') !== -1) return 'pas-pilar-cvza';
@@ -5976,7 +5977,7 @@ function renderPasPanel() {
   }
   infoEl.textContent = sup.informeAl ? ('Informe al: ' + sup.informeAl) : '';
 
-  const gruposRef = sup.grupos.filter(g => g.tipo === 'ref' && PAS_REF_GRUPOS_VISIBLES_.indexOf((g.nombre||'').trim().toUpperCase()) !== -1);
+  const gruposRef = sup.grupos.filter(g => g.tipo === 'ref');
   const gruposConjunta = sup.grupos.filter(g => g.tipo === 'conjunta');
 
   let html = '';
@@ -6100,7 +6101,7 @@ function pasBloqueHtml_(supKey) {
     return { informeAl: '', html: '<div class="stock-empty">Todavía no se pegó el informe PAS de hoy para ' + (supKey === 'sans' ? 'SANS' : 'GUILLÉN') + '.</div>' };
   }
   const gruposRef = sup.grupos.filter(g => g.tipo === 'ref' && PAS_REF_GRUPOS_VISIBLES_.indexOf((g.nombre||'').trim().toUpperCase()) !== -1);
-  const gruposConjunta = sup.grupos.filter(g => g.tipo === 'conjunta');
+  const gruposConjunta = sup.grupos.filter(g => g.tipo === 'conjunta' && PAS_SUP_PILARES_OCULTOS_.indexOf(pasPilarClass_(g.nombre)) === -1);
   let html = '';
   if (gruposRef.length) {
     html += '<div class="section-title">REF (promotores especiales)</div>';
