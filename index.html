@@ -2274,6 +2274,7 @@ function supSetView(view){
   document.getElementById('supViewSensBtn').classList.toggle('active', view==='sens');
   document.getElementById('supViewSalidasBtn').classList.toggle('active', view==='salidas');
   document.getElementById('supViewPasBtn').classList.toggle('active', view==='pas');
+  document.getElementById('supViewAgendaBtn').classList.toggle('active', view==='agenda');
   document.getElementById('supViewPlan').style.display = view==='plan' ? 'block' : 'none';
   document.getElementById('supViewObj').style.display = view==='obj' ? 'block' : 'none';
   document.getElementById('supViewCcc').style.display = view==='ccc' ? 'block' : 'none';
@@ -2289,6 +2290,7 @@ function supSetView(view){
   document.getElementById('supViewSens').style.display = view==='sens' ? 'block' : 'none';
   document.getElementById('supViewSalidas').style.display = view==='salidas' ? 'block' : 'none';
   document.getElementById('supViewPas').style.display = view==='pas' ? 'block' : 'none';
+  document.getElementById('supViewAgenda').style.display = view==='agenda' ? 'block' : 'none';
   if(view==='obj') renderSupObjTable();
   if(view==='ccc') renderSupCccTable();
   if(view==='trade') renderTradeSpend();
@@ -4447,7 +4449,7 @@ function showSupContent(){
   if(opEl) opEl.style.display = supAuthData.role==='gerencia' ? 'none' : 'contents';
   if(supAuthData.role==='liderbb'){
     document.getElementById('supViewSensBtn').style.display = 'none';
-    ['supViewPlanBtn','supViewObjBtn','supViewCccBtn','supViewGalaxiaBtn','supViewRmvBtn','supViewCncRutaBtn','supViewCoachingBtn','supViewCoachSpvBtn','supViewSalidasBtn','supViewPasBtn'].forEach(id=>{
+    ['supViewPlanBtn','supViewObjBtn','supViewCccBtn','supViewGalaxiaBtn','supViewRmvBtn','supViewCncRutaBtn','supViewCoachingBtn','supViewCoachSpvBtn','supViewSalidasBtn','supViewPasBtn','supViewAgendaBtn'].forEach(id=>{
       const el = document.getElementById(id);
       if(el) el.style.display = 'none';
     });
@@ -6325,6 +6327,7 @@ function supPasRenderPanel() {
       <div class="pill" id="supViewVrBtn" onclick="supSetView('vr')">📈 VR — Avance de Venta</div>
       <div class="pill" id="supViewSensBtn" onclick="supSetView('sens')">🎯 Sensibilización</div>
       <div class="pill" id="supViewTradeBtn" onclick="supSetView('trade')">💰 Trade Spend</div>
+      <div class="pill" id="supViewAgendaBtn" onclick="supSetView('agenda')">🗓️ Agenda Matinal</div>
       <div id="supPillsOperativas" style="display:contents">
       <div class="pill active" id="supViewPlanBtn" onclick="supSetView('plan')">📋 Planificación CNC</div>
       <div class="pill" id="supViewObjBtn" onclick="supSetView('obj')">🎯 Objetivos y Venta</div>
@@ -6651,6 +6654,10 @@ function supPasRenderPanel() {
       <div class="sup-note">Objetivo, Venta Acumulada y el resto de las columnas vienen del informe diario de Portal D+ (PAS) que se pega en la planilla. "Objetivo Día" y "Real Día" se completan a mano acá — cualquiera puede cargarlos, aunque el supervisor no esté.</div>
       <div id="supPasInformeAl" style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin:-6px 0 16px;"></div>
       <div id="supPasContent"></div>
+    </div>
+
+    <div id="supViewAgenda" style="display:none">
+      <iframe src="https://agendamatinal.netlify.app/" style="width:100%;height:82vh;border:none;border-radius:12px;background:#fff;" title="Agenda Matinal"></iframe>
     </div>
 
   </div>
