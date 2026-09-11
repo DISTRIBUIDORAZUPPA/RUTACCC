@@ -3515,6 +3515,62 @@ function renderTsResumenCategorias(){
   panel.style.display = 'grid';
 }
 
+const DESCENTRALIZADAS_OBJ_DATA = [{"codigo":"P5520","nombre":"VOLUMEN QC ADICIONAL (ZUPPA/CMQ)","producto":"QUILMES - X12 1000RET","vigencia":"18/ago - 19/ago","tsTotal":8882250.0,"objZuppa":4441125.0,"objQuilmes":4441125.0},{"codigo":"P5521","nombre":"VOLUMEN ANDES ADICIONAL (ZUPPA/CMQ)","producto":"ANDES - X12 1000RET","vigencia":"18/ago - 19/ago","tsTotal":3386500.0,"objZuppa":1693250.0,"objQuilmes":1693250.0},{"codigo":"P5528","nombre":"OP FRESCURA LITRO/ BRAHMA","producto":"BRAHMA - X12 1000RET#","vigencia":"24/ago - 31/ago","tsTotal":2175208.0,"objZuppa":1087604.0,"objQuilmes":1087604.0},{"codigo":"P5529","nombre":"OP FRESCURA PAT. IPA","producto":"PATAGONIA IPA OW X6 730","vigencia":"24/ago - 31/ago","tsTotal":348747.0,"objZuppa":174373.5,"objQuilmes":174373.5},{"codigo":"P5531","nombre":"OP FRESCURA STELLA 0.0 REF (CMQ/ZUPPA)","producto":"STELLA ARTOIS 0.0% OW 4X6 330CC","vigencia":"24/ago - 31/ago","tsTotal":347168.0,"objZuppa":173584.0,"objQuilmes":173584.0},{"codigo":"P5546","nombre":"ADICIONAL STELLA LITRO (ZUPPA/CMQ)","producto":"STELLA ARTOIS PM RET X12 975CC","vigencia":"26/ago - 31/ago","tsTotal":2080152.0,"objZuppa":1040076.0,"objQuilmes":1040076.0},{"codigo":"P5562","nombre":"OP. VOLUMEN ANDES (ZUPPA/CMQ)","producto":"ANDES - X12 1000RET","vigencia":"03/sep - 04/sep","tsTotal":1952808.0,"objZuppa":976404.0,"objQuilmes":976404.0},{"codigo":"P5561","nombre":"OP. VOLUMEN QC (ZUPPA/CMQ)","producto":"QUILMES - X12 1000RET","vigencia":"03/sep - 04/sep","tsTotal":4092906.0,"objZuppa":2046453.0,"objQuilmes":2046453.0},{"codigo":"P5564","nombre":"OP STELLA 710 OW (ZUPPA/CMQ)","producto":"STELLA ARTOIS OW PM X6 710CC","vigencia":"04/sep - 30/sep","tsTotal":1951430.0,"objZuppa":975715.0,"objQuilmes":975715.0},{"codigo":"P5569","nombre":"OP. FRESCURA STELLA 710 (ZUPPA/CMQ)","producto":"STELLA ARTOIS CAN 4X4 710CC","vigencia":"04/sep - 30/sep","tsTotal":3201900.0,"objZuppa":1600950.0,"objQuilmes":1600950.0},{"codigo":"P5570","nombre":"OP. FRESCURA BUDWEISER 710 (ZUPPA/CMQ)","producto":"BUDWEISER CAN 4X4 710CC","vigencia":"04/sep - 30/sep","tsTotal":1553700.0,"objZuppa":776850.0,"objQuilmes":776850.0}];
+
+function renderTsDescentralizadasObjetivo(){
+  const panel = document.getElementById('tsDescentralizadasPanel');
+  if(!panel) return;
+  const items = (typeof DESCENTRALIZADAS_OBJ_DATA !== 'undefined' ? DESCENTRALIZADAS_OBJ_DATA : []);
+  if(!items.length){ panel.style.display = 'none'; panel.innerHTML = ''; return; }
+
+  const accionesMap = {};
+  (TRADE_SPEND_DATA.acciones || []).forEach(a => { accionesMap[a.codigo] = a; });
+
+  let totalObjZuppa = 0, totalGastoZuppa = 0;
+  const rows = items.map(it => {
+    const match = accionesMap[it.codigo];
+    const gastoTotal = match ? match.gasto : 0;
+    const pctZuppaSplit = it.tsTotal > 0 ? (it.objZuppa / it.tsTotal) : 0;
+    const gastoZuppa = gastoTotal * pctZuppaSplit;
+    const resta = it.objZuppa - gastoZuppa;
+    const pctConsumido = it.objZuppa > 0 ? (gastoZuppa / it.objZuppa * 100) : 0;
+    totalObjZuppa += it.objZuppa;
+    totalGastoZuppa += gastoZuppa;
+    const color = pctConsumido >= 100 ? 'var(--red)' : (pctConsumido >= 80 ? 'var(--amber)' : 'var(--green)');
+    return { it, gastoZuppa, resta, pctConsumido, color };
+  });
+
+  const totalResta = totalObjZuppa - totalGastoZuppa;
+  const totalPct = totalObjZuppa > 0 ? (totalGastoZuppa / totalObjZuppa * 100) : 0;
+  const totalColor = totalPct >= 100 ? 'var(--red)' : (totalPct >= 80 ? 'var(--amber)' : 'var(--green)');
+  const totalEmoji = totalPct >= 100 ? '🔴' : (totalPct >= 80 ? '🟡' : '🟢');
+
+  let out = `<div class="alert-btn" style="border-color:${totalColor};cursor:default;margin-bottom:10px;">
+      <span class="ab-emoji">${totalEmoji}</span>
+      <div class="ab-body">
+        <div class="ab-num" style="font-size:1.1rem">$ ${Math.round(totalGastoZuppa).toLocaleString('es-AR')} de $ ${Math.round(totalObjZuppa).toLocaleString('es-AR')}</div>
+        <div class="ab-lbl">Gastado Zuppa en Acciones Descentralizadas — resta $ ${Math.round(totalResta).toLocaleString('es-AR')} (${totalPct.toFixed(0)}% consumido)</div>
+      </div>
+    </div>`;
+
+  out += `<div class="sens-table-scroll"><table class="sens-table">
+      <thead><tr><th>Acción</th><th>Producto</th><th>Vigencia</th><th>Objetivo Zuppa</th><th>Gastado Zuppa</th><th>Resta</th><th>% consumido</th></tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td>${esc(r.it.nombre)}</td>
+        <td>${esc(r.it.producto)}</td>
+        <td>${esc(r.it.vigencia)}</td>
+        <td>$ ${Math.round(r.it.objZuppa).toLocaleString('es-AR')}</td>
+        <td>$ ${Math.round(r.gastoZuppa).toLocaleString('es-AR')}</td>
+        <td style="color:${r.color}">$ ${Math.round(r.resta).toLocaleString('es-AR')}</td>
+        <td style="color:${r.color}">${r.pctConsumido.toFixed(0)}%</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+
+  panel.innerHTML = out;
+  panel.style.display = 'block';
+}
+
+
 function renderTradeSpend(){
   const periodoNote = document.getElementById('tsPeriodoNote');
   if(periodoNote){
@@ -3527,6 +3583,7 @@ function renderTradeSpend(){
     }
   }
   renderTsResumenCategorias();
+  renderTsDescentralizadasObjetivo();
 
   const search = (document.getElementById('tsSearchBox').value||'').trim().toLowerCase();
   let data = tsScopedClientes();
@@ -6458,6 +6515,8 @@ function supPasRenderPanel() {
       <div class="alert-panel" id="tsCategoriaResumenPanel" style="display:none"></div>
 
       <div class="sup-note" id="tsPeriodoNote" style="display:none"></div>
+
+      <div id="tsDescentralizadasPanel" style="display:none"></div>
 
       <div class="pill-row" style="margin-bottom:14px;">
         <div class="pill active" id="tsViewClienteBtn" onclick="tsSetView('cliente')">👤 Por Cliente</div>
