@@ -3526,41 +3526,45 @@ function renderTsDescentralizadasObjetivo(){
   const accionesMap = {};
   (TRADE_SPEND_DATA.acciones || []).forEach(a => { accionesMap[a.codigo] = a; });
 
-  let totalObjZuppa = 0, totalGastoZuppa = 0;
+  let totalTs = 0, totalGasto = 0;
   const rows = items.map(it => {
     const match = accionesMap[it.codigo];
     const gastoTotal = match ? match.gasto : 0;
-    const pctZuppaSplit = it.tsTotal > 0 ? (it.objZuppa / it.tsTotal) : 0;
-    const gastoZuppa = gastoTotal * pctZuppaSplit;
-    const resta = it.objZuppa - gastoZuppa;
-    const pctConsumido = it.objZuppa > 0 ? (gastoZuppa / it.objZuppa * 100) : 0;
-    totalObjZuppa += it.objZuppa;
-    totalGastoZuppa += gastoZuppa;
+    const pctZuppa = it.tsTotal > 0 ? (it.objZuppa / it.tsTotal * 100) : 0;
+    const pctQuilmes = it.tsTotal > 0 ? (it.objQuilmes / it.tsTotal * 100) : 0;
+    const resta = it.tsTotal - gastoTotal;
+    const pctConsumido = it.tsTotal > 0 ? (gastoTotal / it.tsTotal * 100) : 0;
+    totalTs += it.tsTotal;
+    totalGasto += gastoTotal;
     const color = pctConsumido >= 100 ? 'var(--red)' : (pctConsumido >= 80 ? 'var(--amber)' : 'var(--green)');
-    return { it, gastoZuppa, resta, pctConsumido, color };
+    return { it, gastoTotal, pctZuppa, pctQuilmes, resta, pctConsumido, color };
   });
 
-  const totalResta = totalObjZuppa - totalGastoZuppa;
-  const totalPct = totalObjZuppa > 0 ? (totalGastoZuppa / totalObjZuppa * 100) : 0;
+  const totalResta = totalTs - totalGasto;
+  const totalPct = totalTs > 0 ? (totalGasto / totalTs * 100) : 0;
   const totalColor = totalPct >= 100 ? 'var(--red)' : (totalPct >= 80 ? 'var(--amber)' : 'var(--green)');
   const totalEmoji = totalPct >= 100 ? '🔴' : (totalPct >= 80 ? '🟡' : '🟢');
 
   let out = `<div class="alert-btn" style="border-color:${totalColor};cursor:default;margin-bottom:10px;">
       <span class="ab-emoji">${totalEmoji}</span>
       <div class="ab-body">
-        <div class="ab-num" style="font-size:1.1rem">$ ${Math.round(totalGastoZuppa).toLocaleString('es-AR')} de $ ${Math.round(totalObjZuppa).toLocaleString('es-AR')}</div>
-        <div class="ab-lbl">Gastado Zuppa en Acciones Descentralizadas — resta $ ${Math.round(totalResta).toLocaleString('es-AR')} (${totalPct.toFixed(0)}% consumido)</div>
+        <div class="ab-num" style="font-size:1.1rem">$ ${Math.round(totalGasto).toLocaleString('es-AR')} de $ ${Math.round(totalTs).toLocaleString('es-AR')}</div>
+        <div class="ab-lbl">TS gastado en Acciones Descentralizadas — resta $ ${Math.round(totalResta).toLocaleString('es-AR')} (${totalPct.toFixed(0)}% consumido)</div>
       </div>
     </div>`;
 
   out += `<div class="sens-table-scroll"><table class="sens-table">
-      <thead><tr><th>Acción</th><th>Producto</th><th>Vigencia</th><th>Objetivo Zuppa</th><th>Gastado Zuppa</th><th>Resta</th><th>% consumido</th></tr></thead>
+      <thead><tr><th>Acción</th><th>Producto</th><th>Vigencia</th><th>TS Total</th><th>% Zuppa</th><th>% CMQ</th><th>OBJ $ Zuppa</th><th>OBJ $ CMQ</th><th>TS Gastado</th><th>Resta</th><th>% consumido</th></tr></thead>
       <tbody>${rows.map(r => `<tr>
         <td>${esc(r.it.nombre)}</td>
         <td>${esc(r.it.producto)}</td>
         <td>${esc(r.it.vigencia)}</td>
+        <td>$ ${Math.round(r.it.tsTotal).toLocaleString('es-AR')}</td>
+        <td>${r.pctZuppa.toFixed(0)}%</td>
+        <td>${r.pctQuilmes.toFixed(0)}%</td>
         <td>$ ${Math.round(r.it.objZuppa).toLocaleString('es-AR')}</td>
-        <td>$ ${Math.round(r.gastoZuppa).toLocaleString('es-AR')}</td>
+        <td>$ ${Math.round(r.it.objQuilmes).toLocaleString('es-AR')}</td>
+        <td>$ ${Math.round(r.gastoTotal).toLocaleString('es-AR')}</td>
         <td style="color:${r.color}">$ ${Math.round(r.resta).toLocaleString('es-AR')}</td>
         <td style="color:${r.color}">${r.pctConsumido.toFixed(0)}%</td>
       </tr>`).join('')}</tbody>
