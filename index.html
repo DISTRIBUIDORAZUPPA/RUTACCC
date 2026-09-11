@@ -5634,6 +5634,52 @@ function sensDescargarExcelD_(){
   setTimeout(()=>URL.revokeObjectURL(url), 2000);
 }
 
+const SENS_DABCORE_LABEL_ = 'Foco 2 - Above Core 2026 (Publico)';
+
+function sensRenderExportDAbCorePanel_(){
+  const headCells = SENS_DORDER.map(n=>`<th>${SENS_DCODES[n]}-${n}</th>`).join('');
+  const cells = SENS_DORDER.map(n=>{
+    const v = sensNuevoObjDePromotor('abcore', n);
+    return `<td>${v!=null?sensFmt(v,2):'—'}</td>`;
+  }).join('');
+  const rows = `<tr><td class="sens-dexp-label">${esc(SENS_DABCORE_LABEL_)}</td>${cells}</tr>`;
+  return `<div class="sens-panel sens-dexp">
+    <div class="sens-panel-head">
+      <div class="sens-panel-title" style="display:block;">📤 Above Core a impactar en D+</div>
+    </div>
+    <p class="sens-dexp-note">Valores para pegar sobre tu planilla de D+ (fila Above Core, columnas de promotor con código adelante). Se actualiza en vivo con los ajustes de arriba.</p>
+    <div class="cd-download-row"><button class="cd-download-btn" onclick="sensDescargarExcelDAbCore_()">⬇️ Descargar Excel</button></div>
+    <div class="sens-table-scroll">
+      <table class="sens-table sens-dexp-table">
+        <thead><tr><th>Foco</th>${headCells}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function sensDescargarExcelDAbCore_(){
+  let html = '<html><head><meta charset="UTF-8"></head><body><table border="1"><tr><th>Foco</th>';
+  SENS_DORDER.forEach(n=>{ html += `<th>${SENS_DCODES[n]}-${n}</th>`; });
+  html += '</tr>';
+  html += `<tr><td>${SENS_DABCORE_LABEL_}</td>`;
+  SENS_DORDER.forEach(n=>{
+    const v = sensNuevoObjDePromotor('abcore', n);
+    html += `<td>${v!=null?v.toFixed(2):''}</td>`;
+  });
+  html += '</tr>';
+  html += '</table></body></html>';
+  const blob = new Blob(['﻿'+html], {type:'application/vnd.ms-excel'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Sensibilizacion_AboveCore_para_D+_' + sensMesActual_().replace(' ','_') + '.xls';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
 function sensRenderResumenCierreHtml_(){
   const mesActual = sensMesActual_();
   let html = `<div style="font-weight:700;font-size:.95rem;margin-bottom:10px;">Objetivos sensibilizados — ${esc(mesActual)}</div>`;
@@ -5739,7 +5785,7 @@ function sensRenderPanels(){
     html += '<p class="sens-cascade-note">↓ el objetivo que le asigna el Jefe de Ventas a cada supervisor es la base que se prorratea entre sus promotores acá abajo.</p>';
     html += sensSupervisorPanel(sensPilarActivo,'guillen','GUILLEN IGNACIO', d.guillen, false);
     html += sensSupervisorPanel(sensPilarActivo,'sans','SANS LUCAS', d.sans, false);
-    if(supAuthData.role!=='gerencia') html += sensRenderExportDPanel();
+    if(supAuthData.role!=='gerencia') html += sensRenderExportDPanel(); html += sensRenderExportDAbCorePanel_();
     html += sensRenderMailCierrePanel_();
   } else if(ownKey){
     const lista = d[ownKey];
