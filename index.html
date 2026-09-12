@@ -2291,6 +2291,7 @@ function supSetView(view){
   document.getElementById('supViewAgendaBtn').classList.toggle('active', view==='agenda');
   document.getElementById('supViewPasMensualBtn').classList.toggle('active', view==='pasmensual');
   document.getElementById('supViewStockBtn').classList.toggle('active', view==='stock');
+  document.getElementById('supViewPlanificadorCncBtn').classList.toggle('active', view==='planificadorcnc');
   document.getElementById('supViewPlan').style.display = view==='plan' ? 'block' : 'none';
   document.getElementById('supViewObj').style.display = view==='obj' ? 'block' : 'none';
   document.getElementById('supViewCcc').style.display = view==='ccc' ? 'block' : 'none';
@@ -2309,6 +2310,8 @@ function supSetView(view){
   document.getElementById('supViewAgenda').style.display = view==='agenda' ? 'block' : 'none';
   document.getElementById('supViewPasMensual').style.display = view==='pasmensual' ? 'block' : 'none';
   document.getElementById('supViewStock').style.display = view==='stock' ? 'block' : 'none';
+  document.getElementById('supViewPlanificadorCnc').style.display = view==='planificadorcnc' ? 'block' : 'none';
+  if(view==='plan') renderPlanAyerPills();
   if(view==='obj') renderSupObjTable();
   if(view==='ccc') renderSupCccTable();
   if(view==='trade') renderTradeSpend();
@@ -4540,12 +4543,13 @@ function showSupContent(){
   document.querySelectorAll('.sup-pill-operativa').forEach(el=>{ el.style.display = supAuthData.role==='gerencia' ? 'none' : ''; });
   if(supAuthData.role==='liderbb'){
     document.getElementById('supViewSensBtn').style.display = 'none';
-    ['supViewPlanBtn','supViewObjBtn','supViewCccBtn','supViewGalaxiaBtn','supViewRmvBtn','supViewCncRutaBtn','supViewCoachingBtn','supViewCoachSpvBtn','supViewSalidasBtn','supViewPasBtn','supViewAgendaBtn','supViewPasMensualBtn','supViewStockBtn'].forEach(id=>{
+    ['supViewPlanBtn','supViewObjBtn','supViewCccBtn','supViewGalaxiaBtn','supViewRmvBtn','supViewCncRutaBtn','supViewCoachingBtn','supViewCoachSpvBtn','supViewSalidasBtn','supViewPasBtn','supViewAgendaBtn','supViewPasMensualBtn','supViewStockBtn','supViewPlanificadorCncBtn'].forEach(id=>{
       const el = document.getElementById(id);
       if(el) el.style.display = 'none';
     });
   }
   renderSupIndicatorPills();
+  renderPlanAyerPills();
   if(supAuthData.role==='gerencia' || supAuthData.role==='liderbb') supSetView('vr');
 }
 
@@ -6737,6 +6741,7 @@ function supPasRenderPanel() {
       <div class="pill sup-pill-operativa" id="supViewPasMensualBtn" onclick="supSetView('pasmensual')">📅 Resultados Mensuales</div>
       <div class="pill sup-pill-operativa" id="supViewStockBtn" onclick="supSetView('stock')">📦 Stock</div>
       <div class="pill sup-pill-operativa" id="supViewPasBtn" onclick="supSetView('pas')">📊 Planificador Mensual Volumen</div>
+      <div class="pill sup-pill-operativa" id="supViewPlanificadorCncBtn" onclick="supSetView('planificadorcnc')">✏️ Planificador CNC</div>
     </div>
 
     <div class="section-title">Gestión/Procesos</div>
@@ -6756,33 +6761,26 @@ function supPasRenderPanel() {
     </div>
 
     <div id="supViewPlan">
-      <div class="pill-row" style="margin-bottom:14px;">
-        <div class="pill active" id="planVistaHoyBtn" onclick="setPlanVista('hoy')">✏️ Hoy (en vivo)</div>
-        <div class="pill" id="planVistaAyerBtn" onclick="setPlanVista('ayer')">📅 Cierre de ayer</div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>Indicador CCC</label>
+        <div class="pill-row" id="planAyerIndicatorPills"></div>
       </div>
 
-      <div id="planVistaHoy">
-        <div class="field" style="margin-bottom:16px;">
-          <label>Indicador CCC</label>
-          <div class="pill-row" id="supIndicatorPills"></div>
-        </div>
+      <div class="sup-note">Cierre del día anterior: lo que cada supervisor cargó como Planificado y Real por punto de venta.</div>
 
-        <div class="sup-note">Se planifica según performance de los 2 KPI's. La planificación de los promotores debe ser mayor al 60% de los clientes no compradores del día. La columna "Clientes" muestra solo los que visitan <b id="cncHoyLabel"></b> (hoy).</div>
+      <div class="cd-download-row"><button class="cd-download-btn" onclick="descargarCierreComoImagen(this,'planAyerContent','Cierre_de_ayer_planificacion_cnc')">⬇️ Descargar imagen</button></div>
+      <div id="planAyerContent"></div>
+    </div>
 
-        <div id="supPlanTable"></div>
+    <div id="supViewPlanificadorCnc" style="display:none">
+      <div class="field" style="margin-bottom:16px;">
+        <label>Indicador CCC</label>
+        <div class="pill-row" id="supIndicatorPills"></div>
       </div>
 
-      <div id="planVistaAyer" style="display:none">
-        <div class="field" style="margin-bottom:16px;">
-          <label>Indicador CCC</label>
-          <div class="pill-row" id="planAyerIndicatorPills"></div>
-        </div>
+      <div class="sup-note">Se planifica según performance de los 2 KPI's. La planificación de los promotores debe ser mayor al 60% de los clientes no compradores del día. La columna "Clientes" muestra solo los que visitan <b id="cncHoyLabel"></b> (hoy).</div>
 
-        <div class="sup-note">Cierre del día anterior: lo que cada supervisor cargó como Planificado y Real por punto de venta.</div>
-
-        <div class="cd-download-row"><button class="cd-download-btn" onclick="descargarCierreComoImagen(this,'planAyerContent','Cierre_de_ayer_planificacion_cnc')">⬇️ Descargar imagen</button></div>
-        <div id="planAyerContent"></div>
-      </div>
+      <div id="supPlanTable"></div>
     </div>
 
     <div id="supViewObj" style="display:none">
