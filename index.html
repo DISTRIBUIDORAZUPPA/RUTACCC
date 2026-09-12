@@ -5029,9 +5029,9 @@ function renderPlanAyer(ayer){
 }
 
 function supPctClass(pct){
-  if(pct >= 60) return 'hi';
-  if(pct >= 40) return 'mid';
-  return 'lo';
+  if(pct <= 65) return 'lo';
+  if(pct <= 95) return 'mid';
+  return 'hi';
 }
 
 function renderSupTable(){
