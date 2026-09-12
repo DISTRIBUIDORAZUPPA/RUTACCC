@@ -2289,6 +2289,8 @@ function supSetView(view){
   document.getElementById('supViewSalidasBtn').classList.toggle('active', view==='salidas');
   document.getElementById('supViewPasBtn').classList.toggle('active', view==='pas');
   document.getElementById('supViewAgendaBtn').classList.toggle('active', view==='agenda');
+  document.getElementById('supViewPasMensualBtn').classList.toggle('active', view==='pasmensual');
+  document.getElementById('supViewStockBtn').classList.toggle('active', view==='stock');
   document.getElementById('supViewPlan').style.display = view==='plan' ? 'block' : 'none';
   document.getElementById('supViewObj').style.display = view==='obj' ? 'block' : 'none';
   document.getElementById('supViewCcc').style.display = view==='ccc' ? 'block' : 'none';
@@ -2305,6 +2307,8 @@ function supSetView(view){
   document.getElementById('supViewSalidas').style.display = view==='salidas' ? 'block' : 'none';
   document.getElementById('supViewPas').style.display = view==='pas' ? 'block' : 'none';
   document.getElementById('supViewAgenda').style.display = view==='agenda' ? 'block' : 'none';
+  document.getElementById('supViewPasMensual').style.display = view==='pasmensual' ? 'block' : 'none';
+  document.getElementById('supViewStock').style.display = view==='stock' ? 'block' : 'none';
   if(view==='obj') renderSupObjTable();
   if(view==='ccc') renderSupCccTable();
   if(view==='trade') renderTradeSpend();
@@ -2319,6 +2323,8 @@ function supSetView(view){
   if(view==='sens') sensInit();
   if(view==='salidas') smInit();
   if(view==='pas') supPasInit();
+  if(view==='pasmensual') supPasMensualInit();
+  if(view==='stock') renderSupStock();
 }
 
 // ================================================================
@@ -4531,11 +4537,10 @@ function showSupContent(){
   const texto = supAuthData.role==='gerencia' ? '👋 Hola, Gerencia' : (supAuthData.role==='liderbb' ? '👋 Hola, Líder Beyond Beer' : (supAuthData.scope==='all' ? '👋 Hola, Jefe de Ventas' : ('👋 Hola, ' + supAuthData.name)));
   document.getElementById('supWelcome').innerHTML = `${fotoHtml}<span>${texto}</span>`;
   document.getElementById('supViewExecBtn').style.display = (supAuthData.scope==='all' && supAuthData.role!=='gerencia' && supAuthData.role!=='liderbb') ? '' : 'none';
-  const opEl = document.getElementById('supPillsOperativas');
-  if(opEl) opEl.style.display = supAuthData.role==='gerencia' ? 'none' : 'contents';
+  document.querySelectorAll('.sup-pill-operativa').forEach(el=>{ el.style.display = supAuthData.role==='gerencia' ? 'none' : ''; });
   if(supAuthData.role==='liderbb'){
     document.getElementById('supViewSensBtn').style.display = 'none';
-    ['supViewPlanBtn','supViewObjBtn','supViewCccBtn','supViewGalaxiaBtn','supViewRmvBtn','supViewCncRutaBtn','supViewCoachingBtn','supViewCoachSpvBtn','supViewSalidasBtn','supViewPasBtn','supViewAgendaBtn'].forEach(id=>{
+    ['supViewPlanBtn','supViewObjBtn','supViewCccBtn','supViewGalaxiaBtn','supViewRmvBtn','supViewCncRutaBtn','supViewCoachingBtn','supViewCoachSpvBtn','supViewSalidasBtn','supViewPasBtn','supViewAgendaBtn','supViewPasMensualBtn','supViewStockBtn'].forEach(id=>{
       const el = document.getElementById(id);
       if(el) el.style.display = 'none';
     });
@@ -6319,6 +6324,176 @@ function pasCompromisoHtml_(sans, guillen) {
   '</div>';
 }
 
+function pasFilaVendedorSinPlan_(v) {
+  const foto = FOTOS_PV[v.n.toUpperCase()];
+  const fotoHtml = foto ? `<img class="sens-avatar" src="${foto}" alt="${esc(v.n)}">` : '';
+  const avanceCls = pasAvanceClass_(v.avance);
+  return `<tr>
+      <td><div class="sens-name-cell">${fotoHtml}<span>${esc(v.n)}</span></div></td>
+      <td class="pas-num-strong">${sensFmt(v.objetivo,1)}</td>
+      <td class="pas-num-strong">${sensFmt(v.ventaAcum,1)}</td>
+      <td class="dim">${sensFmt(v.tendencia,1)}</td>
+      <td><span class="pas-avance-badge ${avanceCls}">${v.avance!=null?sensFmt(v.avance*100,1)+'%':'—'}</span></td>
+      <td class="dim">${sensFmt(v.mediaReal,1)}</td>
+      <td class="dim">${sensFmt(v.mediaNecesaria,1)}</td>
+      <td class="dim">${sensFmt(v.visita7,1)}</td>
+      <td class="dim">${sensFmt(v.visita14,1)}</td>
+    </tr>`;
+}
+function pasFilaTotalSinPlan_(nombre, t) {
+  const avanceCls = pasAvanceClass_(t.avance);
+  return `<tr class="pas-total-row" style="font-weight:700;">
+      <td>${esc(nombre)}</td>
+      <td class="pas-num-strong">${sensFmt(t.objetivo,1)}</td>
+      <td class="pas-num-strong">${sensFmt(t.ventaAcum,1)}</td>
+      <td class="dim">${sensFmt(t.tendencia,1)}</td>
+      <td><span class="pas-avance-badge ${avanceCls}">${t.avance!=null?sensFmt(t.avance*100,1)+'%':'—'}</span></td>
+      <td class="dim">${sensFmt(t.mediaReal,1)}</td>
+      <td class="dim">${sensFmt(t.mediaNecesaria,1)}</td>
+      <td class="dim">${sensFmt(t.visita7,1)}</td>
+      <td class="dim">${sensFmt(t.visita14,1)}</td>
+    </tr>`;
+}
+function pasRenderGrupoSinPlan_(g) {
+  let rows = '';
+  g.vendedores.forEach(function(v) { rows += pasFilaVendedorSinPlan_(v); });
+  const totalRow = g.total ? pasFilaTotalSinPlan_(esc(g.nombre) + ' — Total', g.total) : '';
+  const pilarCls = pasPilarClass_(g.nombre);
+  return `<div class="pas-pilar-block ${pilarCls}">
+    <div style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700;margin:0 0 6px;">${esc(g.nombre)}</div>
+    <div class="sens-table-scroll"><table class="sens-table">
+      <thead><tr><th>Vendedor</th><th>Objetivo</th><th>Venta Acum.</th><th>Tendencia</th><th>Avance</th><th>Media Real</th><th>Media Nec.</th><th>Visita-7</th><th>Visita-14</th></tr></thead>
+      <tbody>${rows}${totalRow}</tbody>
+    </table></div>
+  </div>`;
+}
+function pasRenderCombinadoSinPlan_(combo, cls, emoji) {
+  if (!combo) return '';
+  const avanceCls = pasAvanceClass_(combo.avance);
+  return '<div class="pas-combo-block ' + cls + '">' +
+    '<div style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700;margin:0 0 6px;">' + emoji + ' ' + esc(combo.label) + ' (REF + Conjunta)</div>' +
+    '<div class="sens-table-scroll"><table class="sens-table">' +
+    '<thead><tr><th>Objetivo</th><th>Venta Acum.</th><th>Tendencia</th><th>Avance</th><th>Media Real</th><th>Media Nec.</th><th>Visita-7</th><th>Visita-14</th></tr></thead>' +
+    '<tbody><tr>' +
+    '<td class="pas-num-strong pas-num-big">' + sensFmt(combo.objetivo,1) + '</td>' +
+    '<td class="pas-num-strong pas-num-big">' + sensFmt(combo.ventaAcum,1) + '</td>' +
+    '<td class="dim">' + sensFmt(combo.tendencia,1) + '</td>' +
+    '<td><span class="pas-avance-badge pas-num-big ' + avanceCls + '">' + (combo.avance!=null?sensFmt(combo.avance*100,1)+'%':'—') + '</span></td>' +
+    '<td class="dim">' + sensFmt(combo.mediaReal,1) + '</td>' +
+    '<td class="dim">' + sensFmt(combo.mediaNecesaria,1) + '</td>' +
+    '<td class="dim">' + sensFmt(combo.visita7,1) + '</td>' +
+    '<td class="dim">' + sensFmt(combo.visita14,1) + '</td>' +
+    '</tr></tbody>' +
+    '</table></div>' +
+  '</div>';
+}
+function pasBloqueHtmlSinPlan_(supKey) {
+  const data = (typeof PAS_DATA !== 'undefined') ? PAS_DATA : null;
+  const sup = data ? data[supKey] : null;
+  if (!sup) {
+    return { informeAl: '', html: '<div class="stock-empty">Todavía no se pegó el informe PAS de hoy para ' + (supKey === 'sans' ? 'SANS' : 'GUILLÉN') + '.</div>' };
+  }
+  const gruposRef = sup.grupos.filter(function(g){ return g.tipo === 'ref' && PAS_REF_GRUPOS_VISIBLES_.indexOf((g.nombre||'').trim().toUpperCase()) !== -1; });
+  const gruposConjunta = sup.grupos.filter(function(g){ return g.tipo === 'conjunta' && PAS_SUP_PILARES_OCULTOS_.indexOf(pasPilarClass_(g.nombre)) === -1; });
+  let html = '';
+  if (gruposRef.length) {
+    html += '<div class="section-title">REF (promotores especiales)</div>';
+    gruposRef.forEach(function(g) { html += pasRenderGrupoSinPlan_(g); });
+  }
+  if (gruposConjunta.length) {
+    html += '<div class="section-title">Vendedores conjunta</div>';
+    gruposConjunta.forEach(function(g) { html += pasRenderGrupoSinPlan_(g); });
+  }
+  const comboCvza = pasCombinadoPilar_(supKey, sup, 'pas-pilar-cvza', 'Total Cervezas + VF Total Cervezas');
+  const comboUng = pasCombinadoPilar_(supKey, sup, 'pas-pilar-ung', 'Total UNG');
+  if (comboCvza || comboUng) {
+    html += '<div class="section-title">🎯 Totales combinados</div>';
+    html += pasRenderCombinadoSinPlan_(comboCvza, 'pas-combo-cvza', '🍺');
+    html += pasRenderCombinadoSinPlan_(comboUng, 'pas-combo-ung', '🥤');
+  }
+  if (sup.totalSupervisor) html += pasRenderTotalSupervisor_(sup.totalSupervisor);
+  return { informeAl: sup.informeAl || '', html: html };
+}
+function supPasMensualRenderPanel() {
+  const el = document.getElementById('supPasMensualContent');
+  const infoEl = document.getElementById('supPasMensualInformeAl');
+  if (!el) return;
+  if (supAuthData.scope === 'all') {
+    const sans = pasBloqueHtmlSinPlan_('sans');
+    const guillen = pasBloqueHtmlSinPlan_('guillen');
+    if (infoEl) infoEl.textContent = '';
+    el.innerHTML =
+      '<div class="section-title" style="font-size:.82rem;">🔵 SANS' + (sans.informeAl ? ' — Informe al: ' + esc(sans.informeAl) : '') + '</div>' + sans.html +
+      '<div class="section-title" style="font-size:.82rem;margin-top:22px;">🟢 GUILLÉN' + (guillen.informeAl ? ' — Informe al: ' + esc(guillen.informeAl) : '') + '</div>' + guillen.html;
+  } else {
+    const supKey = PAS_NAME_TO_KEY_[supAuthData.name];
+    if (!supKey) { el.innerHTML = '<div class="stock-empty">No se encontró información de PAS para este usuario.</div>'; if (infoEl) infoEl.textContent = ''; return; }
+    const b = pasBloqueHtmlSinPlan_(supKey);
+    if (infoEl) infoEl.textContent = b.informeAl ? ('Informe al: ' + b.informeAl) : '';
+    el.innerHTML = b.html;
+  }
+}
+function supPasMensualInit() {
+  supPasMensualRenderPanel();
+}
+function renderSupStock(){
+  const q = (document.getElementById('supStockSearch').value||'').trim().toLowerCase();
+  const el = document.getElementById('supStockResults');
+  if(!q){
+    el.innerHTML = '<div class="stock-hint"><div class="sh-icon">📦</div><div class="sh-text">Ingresá un código o descripción para buscar stock</div></div>';
+    return;
+  }
+  const matches = STOCK_DATA.filter(function(r){ return r.articulo.toLowerCase().includes(q) || r.descripcion.toLowerCase().includes(q); });
+  if(!matches.length){
+    el.innerHTML = '<div class="stock-empty">Sin resultados para "' + q + '"</div>';
+    return;
+  }
+  const grupos = {};
+  matches.forEach(function(r){
+    const k = r.articulo;
+    if(!grupos[k]) grupos[k] = {articulo:r.articulo, descripcion:r.descripcion, lotes:[]};
+    grupos[k].lotes.push({vencimiento:r.vencimiento, bultos:r.bultos});
+  });
+  const hoy = new Date();
+  el.innerHTML = Object.values(grupos)
+    .sort(function(a,b){
+      const totA = a.lotes.reduce(function(x,l){return x+l.bultos;},0);
+      const totB = b.lotes.reduce(function(x,l){return x+l.bultos;},0);
+      if(totA>0 && totB===0) return -1;
+      if(totA===0 && totB>0) return 1;
+      return totB - totA;
+    })
+    .map(function(g){
+    const total = g.lotes.reduce(function(a,l){return a+l.bultos;},0);
+    const loteRows = g.lotes
+      .filter(function(l){return l.bultos!==0;})
+      .sort(function(a,b){return (a.vencimiento||'').localeCompare(b.vencimiento||'')||0;})
+      .map(function(l){
+        let cls='lote-venc-ok';
+        if(l.vencimiento){
+          const diff=(new Date(l.vencimiento)-hoy)/(1000*60*60*24);
+          if(diff<0) cls='lote-venc-exp';
+          else if(diff<90) cls='lote-venc-warn';
+        }
+        const vStr = l.vencimiento ? new Date(l.vencimiento+'T00:00:00').toLocaleDateString('es-AR') : '—';
+        return `<div class="stock-lote-row">
+          <span class="lote-venc ${cls}">📅 Vence: ${vStr}</span>
+          <span class="lote-bultos">${l.bultos.toLocaleString('es-AR')} bultos</span>
+        </div>`;
+      }).join('');
+    return `<div class="stock-art-card">
+      <div class="stock-art-header">
+        <div>
+          <div class="art-code"># ${g.articulo}</div>
+          <div class="art-desc">${g.descripcion}</div>
+        </div>
+        <div class="art-total">${total.toLocaleString('es-AR')} bultos</div>
+      </div>
+      ${loteRows}
+    </div>`;
+  }).join('');
+}
+
 function pasBloqueHtml_(supKey) {
   const data = (typeof PAS_DATA !== 'undefined') ? PAS_DATA : null;
   const sup = data ? data[supKey] : null;
@@ -6554,25 +6729,30 @@ function supPasRenderPanel() {
       <button class="sup-logout-btn" onclick="supLogout()">Cerrar sesión</button>
     </div>
 
+    <div class="section-title" style="margin-top:0;">Resultados</div>
+    <div class="pill-row" style="margin-bottom:14px;">
+      <div class="pill sup-pill-operativa" id="supViewCierreBtn" onclick="supSetView('cierre')">🌇 Cierre Vespertina</div>
+      <div class="pill sup-pill-operativa active" id="supViewPlanBtn" onclick="supSetView('plan')">📋 Planificación CNC</div>
+      <div class="pill sup-pill-operativa" id="supViewRmvBtn" onclick="supSetView('rmv')">📈 RMV Supervisor</div>
+      <div class="pill sup-pill-operativa" id="supViewPasMensualBtn" onclick="supSetView('pasmensual')">📅 Resultados Mensuales</div>
+      <div class="pill sup-pill-operativa" id="supViewStockBtn" onclick="supSetView('stock')">📦 Stock</div>
+      <div class="pill sup-pill-operativa" id="supViewPasBtn" onclick="supSetView('pas')">📊 Planificador Mensual Volumen</div>
+    </div>
+
+    <div class="section-title">Gestión/Procesos</div>
     <div class="pill-row" style="margin-bottom:20px;">
       <div class="pill" id="supViewVrBtn" onclick="supSetView('vr')">📈 VR — Avance de Venta</div>
       <div class="pill" id="supViewSensBtn" onclick="supSetView('sens')">🎯 Sensibilización</div>
       <div class="pill" id="supViewTradeBtn" onclick="supSetView('trade')">💰 Trade Spend</div>
       <div class="pill" id="supViewAgendaBtn" onclick="supSetView('agenda')">🗓️ Agenda Matinal</div>
-      <div id="supPillsOperativas" style="display:contents">
-      <div class="pill active" id="supViewPlanBtn" onclick="supSetView('plan')">📋 Planificación CNC</div>
-      <div class="pill" id="supViewObjBtn" onclick="supSetView('obj')">🎯 Objetivos y Venta</div>
-      <div class="pill" id="supViewCccBtn" onclick="supSetView('ccc')">📊 Consolidado CCC</div>
-      <div class="pill" id="supViewCierreBtn" onclick="supSetView('cierre')">🌇 Cierre Vespertina</div>
-      <div class="pill" id="supViewExecBtn" onclick="supSetView('exec')" style="display:none">🏆 Resumen Ejecutivo</div>
-      <div class="pill" id="supViewGalaxiaBtn" onclick="supSetView('galaxia')">🏅 KPI's Galaxia</div>
-      <div class="pill" id="supViewRmvBtn" onclick="supSetView('rmv')">📈 RMV Supervisor</div>
-      <div class="pill" id="supViewCncRutaBtn" onclick="supSetView('cncruta')">🗓️ Planificación Ruta CNC</div>
-      <div class="pill" id="supViewCoachingBtn" onclick="supSetView('coaching')">🎓 Coaching</div>
-      <div class="pill" id="supViewCoachSpvBtn" onclick="supSetView('coachspv')">🎯 Coaching Supervisores</div>
-      <div class="pill" id="supViewSalidasBtn" onclick="supSetView('salidas')">🧭 Salidas al mercado</div>
-      <div class="pill" id="supViewPasBtn" onclick="supSetView('pas')">📊 Resultados PAS</div>
-      </div>
+      <div class="pill sup-pill-operativa" id="supViewObjBtn" onclick="supSetView('obj')">🎯 Objetivos y Venta</div>
+      <div class="pill sup-pill-operativa" id="supViewCccBtn" onclick="supSetView('ccc')">📊 Consolidado CCC</div>
+      <div class="pill sup-pill-operativa" id="supViewExecBtn" onclick="supSetView('exec')" style="display:none">🏆 Resumen Ejecutivo</div>
+      <div class="pill sup-pill-operativa" id="supViewGalaxiaBtn" onclick="supSetView('galaxia')">🏅 KPI's Galaxia</div>
+      <div class="pill sup-pill-operativa" id="supViewCncRutaBtn" onclick="supSetView('cncruta')">🗓️ Planificación Ruta CNC</div>
+      <div class="pill sup-pill-operativa" id="supViewCoachingBtn" onclick="supSetView('coaching')">🎓 Coaching</div>
+      <div class="pill sup-pill-operativa" id="supViewCoachSpvBtn" onclick="supSetView('coachspv')">🎯 Coaching Supervisores</div>
+      <div class="pill sup-pill-operativa" id="supViewSalidasBtn" onclick="supSetView('salidas')">🧭 Salidas al mercado</div>
     </div>
 
     <div id="supViewPlan">
@@ -6890,6 +7070,24 @@ function supPasRenderPanel() {
       <div class="sup-note">Objetivo, Venta Acumulada y el resto de las columnas vienen del informe diario de Portal D+ (PAS) que se pega en la planilla. "Objetivo Día" y "Real Día" se completan a mano acá — cualquiera puede cargarlos, aunque el supervisor no esté.</div>
       <div id="supPasInformeAl" style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin:-6px 0 16px;"></div>
       <div id="supPasContent"></div>
+    </div>
+
+    <div id="supViewPasMensual" style="display:none">
+      <div class="sup-note">Objetivo, Venta Acumulada y el resto de las columnas vienen del informe diario de Portal D+ (PAS). Vista de solo lectura, sin planificador — para cargar el Objetivo Día / Real Día de hoy usá "📊 Planificador Mensual Volumen".</div>
+      <div id="supPasMensualInformeAl" style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin:-6px 0 16px;"></div>
+      <div id="supPasMensualContent"></div>
+    </div>
+
+    <div id="supViewStock" style="display:none">
+      <div class="stock-search-wrap">
+        <input type="text" id="supStockSearch" placeholder="🔍  Buscar por código o descripción..." oninput="renderSupStock()" autocomplete="off">
+      </div>
+      <div class="stock-results" id="supStockResults">
+        <div class="stock-hint">
+          <div class="sh-icon">📦</div>
+          <div class="sh-text">Ingresá un código o descripción para buscar stock</div>
+        </div>
+      </div>
     </div>
 
     <div id="supViewAgenda" style="display:none">
