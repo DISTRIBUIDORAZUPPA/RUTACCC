@@ -908,6 +908,14 @@ a.chofer-badge:hover{background:#1a5c8a;color:#fff;}
 .pas-pilar-core{background:#efe6f5;}
 .pas-pilar-ung{background:#e8eef3;}
 .pas-pilar-agua{background:#e3f0f7;}
+.pas-combo-block{border-radius:12px;padding:14px 14px 10px;margin:14px 0 6px;border:2px solid var(--gold);background:linear-gradient(135deg,#fff8ea,#fff);}
+.pas-combo-cvza{border-color:#2d7a3e;}
+.pas-combo-ung{border-color:#2f6f9c;}
+.pas-plan-badge{display:inline-block;padding:4px 12px;border-radius:20px;background:var(--beer1);color:#fff;font-weight:800;font-variant-numeric:tabular-nums;}
+.pas-plan-incompleto{background:var(--muted);opacity:.75;}
+.pas-compromiso-card{margin:22px 0 6px;padding:18px 16px;border-radius:14px;background:linear-gradient(135deg,#fff4d6,#ffe9c2);border:2px solid var(--beer2);text-align:center;}
+.pas-compromiso-card .pas-compromiso-title{font-family:var(--serif);font-size:1.05rem;font-weight:800;color:var(--amber-deep);margin-bottom:6px;}
+.pas-compromiso-card .pas-compromiso-num{font-size:1.3rem;font-weight:800;color:var(--ink);margin-top:2px;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -6205,6 +6213,7 @@ async function pasInputChange(sup, grupo, vendedor, field, value) {
   const key = pasKey_(sup, grupo, vendedor);
   pasDiaData[key] = pasDiaData[key] || {};
   pasDiaData[key][field] = val;
+  if (typeof supPasRenderPanel === 'function') supPasRenderPanel();
   if (!SUP_API_URL || SUP_API_URL.indexOf('PENDIENTE') !== -1) return;
   const hoy = hoyArgentina();
   try {
@@ -6220,11 +6229,101 @@ async function pasInputChange(sup, grupo, vendedor, field, value) {
 
 const PAS_NAME_TO_KEY_ = { 'SANS LUCAS': 'sans', 'GUILLEN IGNACIO': 'guillen' };
 
+function pasSumaCampo_(a, b, campo) {
+  const va = a && a[campo] != null ? a[campo] : null;
+  const vb = b && b[campo] != null ? b[campo] : null;
+  if (va == null && vb == null) return null;
+  return (va || 0) + (vb || 0);
+}
+function pasPlanificadoGrupo_(supKey, g) {
+  let suma = 0, completos = 0;
+  (g.vendedores || []).forEach(function(v) {
+    const dia = pasDiaData[pasKey_(supKey, g.nombre, v.n)];
+    if (dia && dia.objetivoDia != null) { suma += dia.objetivoDia; completos++; }
+  });
+  return { suma: suma, completos: completos, totalProm: (g.vendedores || []).length };
+}
+function pasCombinadoPilar_(supKey, sup, pilarClass, label) {
+  const gRef = (sup.grupos || []).find(function(g){ return g.tipo === 'ref' && pasPilarClass_(g.nombre) === pilarClass; });
+  const gConj = (sup.grupos || []).find(function(g){ return g.tipo === 'conjunta' && pasPilarClass_(g.nombre) === pilarClass; });
+  if (!gRef && !gConj) return null;
+  const tRef = gRef ? gRef.total : null;
+  const tConj = gConj ? gConj.total : null;
+  const objetivo = pasSumaCampo_(tRef, tConj, 'objetivo');
+  const ventaAcum = pasSumaCampo_(tRef, tConj, 'ventaAcum');
+  const tendencia = pasSumaCampo_(tRef, tConj, 'tendencia');
+  const mediaReal = pasSumaCampo_(tRef, tConj, 'mediaReal');
+  const mediaNecesaria = pasSumaCampo_(tRef, tConj, 'mediaNecesaria');
+  const visita7 = pasSumaCampo_(tRef, tConj, 'visita7');
+  const visita14 = pasSumaCampo_(tRef, tConj, 'visita14');
+  const avance = (objetivo != null && objetivo > 0 && ventaAcum != null) ? (ventaAcum / objetivo) : null;
+  const planRef = gRef ? pasPlanificadoGrupo_(supKey, gRef) : { suma: 0, completos: 0, totalProm: 0 };
+  const planConj = gConj ? pasPlanificadoGrupo_(supKey, gConj) : { suma: 0, completos: 0, totalProm: 0 };
+  return {
+    label: label, objetivo: objetivo, ventaAcum: ventaAcum, tendencia: tendencia, avance: avance,
+    mediaReal: mediaReal, mediaNecesaria: mediaNecesaria, visita7: visita7, visita14: visita14,
+    planificado: planRef.suma + planConj.suma,
+    completos: planRef.completos + planConj.completos,
+    totalProm: planRef.totalProm + planConj.totalProm
+  };
+}
+function pasRenderCombinado_(combo, cls, emoji) {
+  if (!combo) return '';
+  const avanceCls = pasAvanceClass_(combo.avance);
+  const completo = combo.totalProm > 0 && combo.completos === combo.totalProm;
+  const planCls = completo ? '' : 'pas-plan-incompleto';
+  const planLabel = completo ? (sensFmt(combo.planificado,1) + ' HL ✅') : (sensFmt(combo.planificado,1) + ' HL (' + combo.completos + '/' + combo.totalProm + ')');
+  return '<div class="pas-combo-block ' + cls + '">' +
+    '<div style="font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700;margin:0 0 6px;">' + emoji + ' ' + esc(combo.label) + ' (REF + Conjunta)</div>' +
+    '<div class="sens-table-scroll"><table class="sens-table">' +
+    '<thead><tr><th>Objetivo</th><th>Venta Acum.</th><th>Tendencia</th><th>Avance</th><th>Media Real</th><th>Media Nec.</th><th>Visita-7</th><th>Visita-14</th><th>📋 Planificado (Obj. Día)</th></tr></thead>' +
+    '<tbody><tr>' +
+    '<td class="pas-num-strong pas-num-big">' + sensFmt(combo.objetivo,1) + '</td>' +
+    '<td class="pas-num-strong pas-num-big">' + sensFmt(combo.ventaAcum,1) + '</td>' +
+    '<td class="dim">' + sensFmt(combo.tendencia,1) + '</td>' +
+    '<td><span class="pas-avance-badge pas-num-big ' + avanceCls + '">' + (combo.avance!=null?sensFmt(combo.avance*100,1)+'%':'—') + '</span></td>' +
+    '<td class="dim">' + sensFmt(combo.mediaReal,1) + '</td>' +
+    '<td class="dim">' + sensFmt(combo.mediaNecesaria,1) + '</td>' +
+    '<td class="dim">' + sensFmt(combo.visita7,1) + '</td>' +
+    '<td class="dim">' + sensFmt(combo.visita14,1) + '</td>' +
+    '<td><span class="pas-plan-badge ' + planCls + '">' + planLabel + '</span></td>' +
+    '</tr></tbody>' +
+    '</table></div>' +
+  '</div>';
+}
+function pasFechaHoyDisplay_() {
+  const h = (typeof hoyArgentina === 'function') ? hoyArgentina() : '';
+  const partes = h.split('-');
+  return partes.length === 3 ? (partes[2] + '/' + partes[1] + '/' + partes[0]) : h;
+}
+function pasCompromisoHtml_(sans, guillen) {
+  function combinar(a, b) {
+    if (!a && !b) return null;
+    const suma = (a ? a.planificado : 0) + (b ? b.planificado : 0);
+    const completos = (a ? a.completos : 0) + (b ? b.completos : 0);
+    const totalProm = (a ? a.totalProm : 0) + (b ? b.totalProm : 0);
+    return { suma: suma, completos: completos, totalProm: totalProm };
+  }
+  const cvza = combinar(sans.comboCvza, guillen.comboCvza);
+  const ung = combinar(sans.comboUng, guillen.comboUng);
+  const cvzaListo = !!(cvza && cvza.totalProm > 0 && cvza.completos === cvza.totalProm);
+  const ungListo = !!(ung && ung.totalProm > 0 && ung.completos === ung.totalProm);
+  if (!cvzaListo || !ungListo) return '';
+  const fecha = pasFechaHoyDisplay_();
+  return '<div class="pas-compromiso-card">' +
+    '<div class="pas-compromiso-title">🍻🥤 ¡PLANIFICACIÓN COMPLETA DEL DÍA!</div>' +
+    '<div>IGNACIO Y LUCAS, SU COMPROMISO DE HOY' + (fecha ? ' (' + esc(fecha) + ')' : '') + ' ES DE</div>' +
+    '<div class="pas-compromiso-num">🍺 ' + sensFmt(cvza.suma,1) + ' HL de Cerveza</div>' +
+    '<div class="pas-compromiso-num">🥤 ' + sensFmt(ung.suma,1) + ' HL de UNG</div>' +
+    '<div style="margin-top:6px;font-size:1.2rem;">🎯✅</div>' +
+  '</div>';
+}
+
 function pasBloqueHtml_(supKey) {
   const data = (typeof PAS_DATA !== 'undefined') ? PAS_DATA : null;
   const sup = data ? data[supKey] : null;
   if (!sup) {
-    return { informeAl: '', html: '<div class="stock-empty">Todavía no se pegó el informe PAS de hoy para ' + (supKey === 'sans' ? 'SANS' : 'GUILLÉN') + '.</div>' };
+    return { informeAl: '', html: '<div class="stock-empty">Todavía no se pegó el informe PAS de hoy para ' + (supKey === 'sans' ? 'SANS' : 'GUILLÉN') + '.</div>', comboCvza: null, comboUng: null };
   }
   const gruposRef = sup.grupos.filter(g => g.tipo === 'ref' && PAS_REF_GRUPOS_VISIBLES_.indexOf((g.nombre||'').trim().toUpperCase()) !== -1);
   const gruposConjunta = sup.grupos.filter(g => g.tipo === 'conjunta' && PAS_SUP_PILARES_OCULTOS_.indexOf(pasPilarClass_(g.nombre)) === -1);
@@ -6237,8 +6336,15 @@ function pasBloqueHtml_(supKey) {
     html += '<div class="section-title">Vendedores conjunta</div>';
     gruposConjunta.forEach(g => { html += pasRenderGrupo_(g, supKey); });
   }
+  const comboCvza = pasCombinadoPilar_(supKey, sup, 'pas-pilar-cvza', 'Total Cervezas + VF Total Cervezas');
+  const comboUng = pasCombinadoPilar_(supKey, sup, 'pas-pilar-ung', 'Total UNG');
+  if (comboCvza || comboUng) {
+    html += '<div class="section-title">🎯 Totales combinados</div>';
+    html += pasRenderCombinado_(comboCvza, 'pas-combo-cvza', '🍺');
+    html += pasRenderCombinado_(comboUng, 'pas-combo-ung', '🥤');
+  }
   if (sup.totalSupervisor) html += pasRenderTotalSupervisor_(sup.totalSupervisor);
-  return { informeAl: sup.informeAl || '', html: html };
+  return { informeAl: sup.informeAl || '', html: html, comboCvza: comboCvza, comboUng: comboUng };
 }
 
 async function supPasInit() {
@@ -6262,7 +6368,8 @@ function supPasRenderPanel() {
     if (infoEl) infoEl.textContent = '';
     el.innerHTML =
       '<div class="section-title" style="font-size:.82rem;">🔵 SANS' + (sans.informeAl ? ' — Informe al: ' + esc(sans.informeAl) : '') + '</div>' + sans.html +
-      '<div class="section-title" style="font-size:.82rem;margin-top:22px;">🟢 GUILLÉN' + (guillen.informeAl ? ' — Informe al: ' + esc(guillen.informeAl) : '') + '</div>' + guillen.html;
+      '<div class="section-title" style="font-size:.82rem;margin-top:22px;">🟢 GUILLÉN' + (guillen.informeAl ? ' — Informe al: ' + esc(guillen.informeAl) : '') + '</div>' + guillen.html +
+      pasCompromisoHtml_(sans, guillen);
   } else {
     const supKey = PAS_NAME_TO_KEY_[supAuthData.name];
     if (!supKey) { el.innerHTML = '<div class="stock-empty">No se encontró información de PAS para este usuario.</div>'; if (infoEl) infoEl.textContent = ''; return; }
