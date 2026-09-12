@@ -3267,7 +3267,9 @@ function renderCncRuta(){
 }
 
 function initSupRmv(){
-  const nombres = supAuthData.scope==='all' ? SUP_PROMOTER_NAMES : [supAuthData.name];
+  const supNombres = supAuthData.scope==='all' ? SUP_PROMOTER_NAMES : [supAuthData.name];
+  const promotores = listaPromotoresSup().filter(({pv})=>RMV_DATA[pv]).map(({pv})=>pv);
+  const nombres = supNombres.concat(promotores);
   const pillsEl = document.getElementById('supRmvPills');
   pillsEl.innerHTML = '';
   nombres.forEach((nombre, idx)=>{
@@ -3282,6 +3284,7 @@ function initSupRmv(){
     pillsEl.appendChild(pill);
   });
   if(nombres.length) renderRMV2(nombres[0], 'supRmvContent');
+  else document.getElementById('supRmvContent').innerHTML = '<div class="stock-empty">Todavía no hay datos de RMV cargados para tu equipo.</div>';
 }
 
 // TRADE SPEND
