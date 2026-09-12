@@ -3653,10 +3653,12 @@ function tsSetView(view){
   document.getElementById('tsViewAccionBtn').classList.toggle('active', view==='accion');
   document.getElementById('tsViewCategoriaBtn').classList.toggle('active', view==='categoria');
   document.getElementById('tsViewCanalBtn').classList.toggle('active', view==='canal');
+  document.getElementById('tsViewDescentralizadasBtn').classList.toggle('active', view==='descentralizadas');
   document.getElementById('tsViewCliente').style.display = view==='cliente' ? 'block' : 'none';
   document.getElementById('tsViewAccion').style.display = view==='accion' ? 'block' : 'none';
   document.getElementById('tsViewCategoria').style.display = view==='categoria' ? 'block' : 'none';
   document.getElementById('tsViewCanal').style.display = view==='canal' ? 'block' : 'none';
+  document.getElementById('tsViewDescentralizadas').style.display = view==='descentralizadas' ? 'block' : 'none';
   if(view==='accion') renderTsAccion();
   if(view==='categoria') tsCerrarCategoria();
   if(view==='canal') tsCerrarCanal();
@@ -6520,13 +6522,12 @@ function supPasRenderPanel() {
 
       <div class="sup-note" id="tsPeriodoNote" style="display:none"></div>
 
-      <div id="tsDescentralizadasPanel" style="display:none"></div>
-
       <div class="pill-row" style="margin-bottom:14px;">
         <div class="pill active" id="tsViewClienteBtn" onclick="tsSetView('cliente')">👤 Por Cliente</div>
         <div class="pill" id="tsViewAccionBtn" onclick="tsSetView('accion')">🏷️ Por Acción</div>
         <div class="pill" id="tsViewCategoriaBtn" onclick="tsSetView('categoria')">🗂️ Por Categoría</div>
         <div class="pill" id="tsViewCanalBtn" onclick="tsSetView('canal')">🚚 Por Canal</div>
+        <div class="pill" id="tsViewDescentralizadasBtn" onclick="tsSetView('descentralizadas')">🎯 Descentralizadas</div>
       </div>
 
       <div id="tsViewCliente">
@@ -6588,6 +6589,10 @@ function supPasRenderPanel() {
           <div class="sup-note">Gasto de trade spend de este canal, agrupado por categoría.</div>
           <div id="tsCanalCategoriasList"></div>
         </div>
+      </div>
+
+      <div id="tsViewDescentralizadas" style="display:none">
+        <div id="tsDescentralizadasPanel"></div>
       </div>
     </div>
 
