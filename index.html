@@ -6266,7 +6266,7 @@ function pasPlanificadoGrupo_(supKey, g) {
   return { suma: suma, completos: completos, totalProm: (g.vendedores || []).length };
 }
 function pasCombinadoPilar_(supKey, sup, pilarClass, label) {
-  const gRef = (sup.grupos || []).find(function(g){ return g.tipo === 'ref' && pasPilarClass_(g.nombre) === pilarClass; });
+  const gRef = (sup.grupos || []).find(function(g){ return g.tipo === 'ref' && PAS_REF_GRUPOS_VISIBLES_.indexOf((g.nombre||'').trim().toUpperCase()) !== -1 && pasPilarClass_(g.nombre) === pilarClass; });
   const gConj = (sup.grupos || []).find(function(g){ return g.tipo === 'conjunta' && pasPilarClass_(g.nombre) === pilarClass; });
   if (!gRef && !gConj) return null;
   const tRef = gRef ? gRef.total : null;
