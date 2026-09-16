@@ -3544,7 +3544,12 @@ function renderTsDescentralizadasObjetivo(){
   const panel = document.getElementById('tsDescentralizadasPanel');
   if(!panel) return;
   const allItems = (typeof DESCENTRALIZADAS_OBJ_DATA !== 'undefined' ? DESCENTRALIZADAS_OBJ_DATA : []);
-  const items = allItems.filter(it => /sep/i.test(it.vigencia));
+  const mesesAbrev_ = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const mesesNombre_ = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const mesIdx_ = parseInt(hoyArgentina().slice(5,7),10) - 1;
+  const mesAbrev_ = mesesAbrev_[mesIdx_] || 'sep';
+  const mesNombre_ = mesesNombre_[mesIdx_] || 'este mes';
+  const items = allItems.filter(it => new RegExp(mesAbrev_, 'i').test(it.vigencia));
   if(!items.length){ panel.style.display = 'none'; panel.innerHTML = ''; return; }
 
   const accionesMap = {};
@@ -3578,11 +3583,11 @@ function renderTsDescentralizadasObjetivo(){
       <span class="ab-emoji">${totalEstado.emoji}</span>
       <div class="ab-body">
         <div class="ab-num" style="font-size:1.1rem;color:${totalEstado.fg}">$ ${Math.round(totalGasto).toLocaleString('es-AR')} de $ ${Math.round(totalTs).toLocaleString('es-AR')}</div>
-        <div class="ab-lbl">TS gastado en Acciones Descentralizadas (septiembre) — resta $ ${Math.round(totalResta).toLocaleString('es-AR')} (${totalPct.toFixed(0)}% consumido)</div>
+        <div class="ab-lbl">TS gastado en Acciones Descentralizadas (${mesNombre_}) — resta $ ${Math.round(totalResta).toLocaleString('es-AR')} (${totalPct.toFixed(0)}% consumido)</div>
       </div>
     </div>`;
 
-  out += `<div class="sup-note">Mostrando solo acciones vigentes en septiembre.</div>`;
+  out += `<div class="sup-note">Mostrando solo acciones vigentes en ${mesNombre_}.</div>`;
 
   out += `<div class="sens-table-scroll"><table class="sens-table">
       <thead><tr><th>Estado</th><th>Acción</th><th>Producto</th><th>Vigencia</th><th>TS Total</th><th>% Zuppa</th><th>% CMQ</th><th>OBJ $ Zuppa</th><th>OBJ $ CMQ</th><th>TS Gastado</th><th>Resta</th><th>% consumido</th></tr></thead>
