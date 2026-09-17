@@ -6591,6 +6591,30 @@ function initAbcRanking(){
   abcPopulateSelect_('supAbcDivisionSelect');
 }
 
+function abcKpiTile_(value, label, bg, fg){
+  return '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;min-width:84px;">' +
+    '<div style="width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:900;font-size:1.3rem;background:' + bg + ';color:' + fg + ';box-shadow:0 2px 6px rgba(0,0,0,.10);text-align:center;line-height:1.05;">' + value + '</div>' +
+    '<div style="font-family:var(--mono);font-size:.6rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);text-align:center;max-width:96px;">' + label + '</div>' +
+  '</div>';
+}
+
+function abcStackBar_(okCount, bajoCount, sinCount){
+  const total = okCount + bajoCount + sinCount;
+  if(!total) return '';
+  const okPct = okCount / total * 100, bajoPct = bajoCount / total * 100, sinPct = sinCount / total * 100;
+  let bar = '<div style="display:flex;height:14px;border-radius:8px;overflow:hidden;background:var(--line);">';
+  if(okCount) bar += '<div style="width:' + okPct + '%;background:#16a34a;' + ((bajoCount || sinCount) ? 'border-right:2px solid #fff;' : '') + '" title="OK: ' + okCount + '"></div>';
+  if(bajoCount) bar += '<div style="width:' + bajoPct + '%;background:#d97706;' + (sinCount ? 'border-right:2px solid #fff;' : '') + '" title="Stock bajo: ' + bajoCount + '"></div>';
+  if(sinCount) bar += '<div style="width:' + sinPct + '%;background:#dc2626;" title="Sin stock: ' + sinCount + '"></div>';
+  bar += '</div>';
+  const legend = '<div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;font-size:.72rem;color:var(--muted);">' +
+    '<span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle;background:#16a34a;"></i>OK (' + okCount + ')</span>' +
+    '<span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle;background:#d97706;"></i>Stock bajo (' + bajoCount + ')</span>' +
+    '<span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle;background:#dc2626;"></i>Sin stock (' + sinCount + ')</span>' +
+  '</div>';
+  return '<div style="margin-bottom:16px;">' + bar + legend + '</div>';
+}
+
 function abcRenderInto_(divSelId, claseSelId, summaryId, listId, searchInputId, searchRenderFn){
   const divSel = document.getElementById(divSelId);
   const claseSel = document.getElementById(claseSelId);
@@ -6610,16 +6634,19 @@ function abcRenderInto_(divSelId, claseSelId, summaryId, listId, searchInputId, 
 
   const sinStock = ranking.filter(function(r){ return r.estado.key === 'sin'; }).length;
   const bajoStock = ranking.filter(function(r){ return r.estado.key === 'bajo'; }).length;
+  const okCount = ranking.length - sinStock - bajoStock;
 
   if(summaryEl){
-    if(sinStock || bajoStock){
-      summaryEl.innerHTML = '<div class="alert-panel">' +
-        (sinStock ? '<div class="alert-btn" style="border-color:#dc2626"><span class="ab-emoji">🔴</span><div class="ab-body"><div class="ab-num" style="color:#dc2626">' + sinStock + '</div><div class="ab-lbl">Sin stock (Clase ' + esc(clase) + ')</div></div></div>' : '') +
-        (bajoStock ? '<div class="alert-btn" style="border-color:#d97706"><span class="ab-emoji">🟠</span><div class="ab-body"><div class="ab-num" style="color:#d97706">' + bajoStock + '</div><div class="ab-lbl">Stock bajo (&lt; ' + ABC_STOCK_BAJO_UMBRAL_ + ' bultos)</div></div></div>' : '') +
-        '</div>';
-    } else {
-      summaryEl.innerHTML = '<div class="sup-note">✅ Todos los productos Clase ' + esc(clase) + (division ? ' de ' + esc(division) : '') + ' tienen stock OK.</div>';
-    }
+    const coberturaPct = Math.round(okCount / ranking.length * 100);
+    summaryEl.innerHTML =
+      '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;">' +
+        abcKpiTile_(ranking.length, 'Productos Clase ' + esc(clase) + (division ? (' · ' + esc(division)) : ''), '#1a1d29', '#fff') +
+        abcKpiTile_(sinStock, '🔴 Sin stock', '#fee2e2', '#dc2626') +
+        abcKpiTile_(bajoStock, '🟠 Stock bajo', '#fef3c7', '#d97706') +
+        abcKpiTile_(coberturaPct + '%', '🟢 Cobertura OK', '#dcfce7', '#16a34a') +
+      '</div>' +
+      abcStackBar_(okCount, bajoStock, sinStock) +
+      (sinStock || bajoStock ? '' : '<div class="sup-note">✅ Todos los productos tienen stock OK para este filtro.</div>');
   }
 
   const VISIBLE = 15;
