@@ -961,6 +961,7 @@ a.chofer-badge:hover{background:#1a5c8a;color:#fff;}
     <button class="tab-btn" onclick="switchTab('rechazos')"><span class="tab-full">🚫 Rechazos</span><span class="tab-short">🚫 Rech.</span></button>
     <button class="tab-btn" onclick="switchTab('sup')"><span class="tab-full">🔐 Supervisores</span><span class="tab-short">🔐 Superv.</span></button>
     <button class="tab-btn" onclick="switchTab('pas')"><span class="tab-full">📊 Resultados PAS</span><span class="tab-short">📊 PAS</span></button>
+    <button class="tab-btn" id="tabBtnBaseCli" onclick="switchTab('basecli')"><span class="tab-full">🔄 Base Clientes</span><span class="tab-short">🔄 Base</span></button>
     
   </div>
 </div>
@@ -2058,6 +2059,7 @@ function renderRMV2(pv, targetId){
 
 // ── TABS ──────────────────────────────────────────────────────────
 function switchTab(tab){
+  if(document.getElementById('tabBaseCli')){ document.getElementById('tabBaseCli').classList.toggle('active', tab==='basecli'); if(tab==='basecli'){ var bcf=document.getElementById('bcFrame'); if(bcf && !bcf.getAttribute('src')) bcf.setAttribute('src', bcf.getAttribute('data-src')); } }
   document.getElementById('tabCCC').classList.toggle('active', tab==='ccc');
   document.getElementById('tabRMV').classList.toggle('active', tab==='rmv');
   document.getElementById('tabStock').classList.toggle('active', tab==='stock');
@@ -2110,6 +2112,10 @@ function switchTab(tab){
     sub.textContent  = 'Indicadores por Promotor';
     const rp = document.getElementById('rankingPills');
     if(rp && rp.children.length === 0) initRanking();
+  } else if(tab==='basecli'){
+    mark.textContent = '🔄 Base Clientes';
+    sub.textContent  = 'Cambios de subcanal y visitas';
+    var bcb = document.getElementById('tabBtnBaseCli'); if(bcb) bcb.classList.add('active');
   } else if(tab==='mapa'){
     mark.textContent = '🗺️ Mapa de rutas';
     sub.textContent  = 'My Maps · Zuppa';
@@ -7319,6 +7325,10 @@ function supPasRenderPanel() {
   </div>
 
 </div></div>
+
+<div id="tabBaseCli" class="tab-panel">
+  <iframe id="bcFrame" data-src="https://script.google.com/macros/s/AKfycbyPwRnRtHbDsewHSmJpzC2-vBNTF8CGxyjf2oTASw77JCJTnBr2m3NiXc1vPsMtHziiIQ/exec" style="width:100%;height:calc(100vh - 140px);min-height:640px;border:none;border-radius:12px;background:#f5f2eb;" title="Base de clientes"></iframe>
+</div>
 
 <div id="tabPas" class="tab-panel">
   <div class="pill-row" style="margin-bottom:10px;">
