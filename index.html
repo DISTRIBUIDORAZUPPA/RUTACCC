@@ -7461,5 +7461,54 @@ function supPasRenderPanel() {
     <div id="rmv2Content"></div>
   </div>
 </div>
+<script id="gcncSupPatch">
+(function(){
+  var URL_CNC = "https://distribuidorazuppa.github.io/GESTION-CNC/";
+  function crear(){
+    if(document.getElementById("supViewGcncBtn")) return;
+    var ref = document.getElementById("supViewSalidasBtn"); if(!ref) return;
+    var pill = document.createElement("div");
+    pill.className = "pill"; pill.id = "supViewGcncBtn"; pill.textContent = "🚫 Gestión de CNC";
+    pill.onclick = function(){ supSetView("gcnc"); };
+    ref.parentNode.appendChild(pill);
+    var vista = document.createElement("div");
+    vista.id = "supViewGcnc"; vista.style.display = "none";
+    vista.innerHTML = '<div class="sup-note">Gestión de clientes no compradores (Galaxia · 100 pts): horizonte U3M/U6M/U12M por negocio, motivos BEES Force, planes de acción y tus visitas a CNC. <a id="gcncAbrirLink" href="'+URL_CNC+'" target="_blank" rel="noopener" style="font-weight:700">Abrir en pantalla completa ↗</a></div>'+
+      '<iframe id="gcncFrame" title="Gestión de CNC" style="width:100%;height:85vh;border:1px solid var(--line);border-radius:12px;background:#fff" loading="lazy"></iframe>';
+    var planif = document.getElementById("supViewPlanificadorCnc") || document.getElementById("supViewPlan");
+    planif.parentNode.insertBefore(vista, planif);
+  }
+  function src(){
+    var a = (typeof supAuthData!=="undefined" && supAuthData) ? supAuthData : {};
+    return URL_CNC + "?embed=1&spv=" + encodeURIComponent(a.name||"") + "&rol=" + encodeURIComponent(a.role||"") + "&scope=" + encodeURIComponent(a.scope||"");
+  }
+  var origSet = window.supSetView;
+  window.supSetView = function(view){
+    crear();
+    var btn = document.getElementById("supViewGcncBtn"), vis = document.getElementById("supViewGcnc");
+    if(view==="gcnc"){
+      try{ origSet("__gcnc"); }catch(e){}
+      btn.classList.add("active"); vis.style.display = "block";
+      var f = document.getElementById("gcncFrame"), s = src();
+      if(f.getAttribute("data-src")!==s){ f.setAttribute("data-src", s); f.src = s; }
+      document.getElementById("gcncAbrirLink").href = s.replace("embed=1&","");
+      return;
+    }
+    if(btn){ btn.classList.remove("active"); vis.style.display = "none"; }
+    return origSet.apply(this, arguments);
+  };
+  var origShow = window.showSupContent;
+  window.showSupContent = function(){
+    var r = origShow.apply(this, arguments); crear();
+    var b = document.getElementById("supViewGcncBtn");
+    if(b && typeof supAuthData!=="undefined" && supAuthData) b.style.display = supAuthData.role==="liderbb" ? "none" : "";
+    return r;
+  };
+  window.addEventListener("message", function(e){
+    if(e.data && e.data.gcncAlto){ var f = document.getElementById("gcncFrame"); if(f) f.style.height = Math.max(600, e.data.gcncAlto + 20) + "px"; }
+  });
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", crear); else crear();
+})();
+</script>
 </body>
 </html>
