@@ -7510,5 +7510,47 @@ function supPasRenderPanel() {
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", crear); else crear();
 })();
 </script>
+<script id="abmSupPatch">
+(function(){
+  var URL_ABM = "https://distribuidorazuppa.github.io/ABM-GALAXIA/";
+  function crear(){
+    if(document.getElementById("supViewAbmBtn")) return;
+    var ref = document.getElementById("supViewGcncBtn") || document.getElementById("supViewSalidasBtn"); if(!ref) return;
+    var pill = document.createElement("div"); pill.className = "pill"; pill.id = "supViewAbmBtn"; pill.textContent = "📋 Gestión de Altas y Bajas";
+    pill.onclick = function(){ supSetView("abm"); }; ref.parentNode.appendChild(pill);
+    var vista = document.createElement("div"); vista.id = "supViewAbm"; vista.style.display = "none";
+    vista.innerHTML = '<div class="sup-note">Gestión de altas y bajas de PDV (Galaxia 2.1.2.4 / 2.1.2.6): altas en 3 días, bajas en 45 días hábiles, planes de acción y evidencias. <a id="abmAbrirLink" href="'+URL_ABM+'" target="_blank" rel="noopener" style="font-weight:700">Abrir en pantalla completa ↗</a></div>'+
+      '<iframe id="abmFrame" title="Gestión de Altas y Bajas" style="width:100%;height:85vh;border:1px solid var(--line);border-radius:12px;background:#fff" loading="lazy"></iframe>';
+    var ancla = document.getElementById("supViewGcnc") || document.getElementById("supViewPlanificadorCnc") || document.getElementById("supViewPlan");
+    ancla.parentNode.insertBefore(vista, ancla);
+  }
+  function auth(){ return (typeof supAuthData!=="undefined" && supAuthData) ? supAuthData : {}; }
+  function clave(){ try{ var a = auth(); for(var k in SUP_AUTH){ if(SUP_AUTH[k]===a || (SUP_AUTH[k].name===a.name && SUP_AUTH[k].role===a.role)) return k; } }catch(e){} return ""; }
+  function src(){ var a = auth(); return URL_ABM + "?embed=1&spv=" + encodeURIComponent(a.name||"") + "&rol=" + encodeURIComponent(a.role||""); }
+  var origSet = window.supSetView;
+  window.supSetView = function(view){
+    crear(); var btn = document.getElementById("supViewAbmBtn"), vis = document.getElementById("supViewAbm");
+    if(view==="abm"){
+      try{ origSet("__abm"); }catch(e){}
+      btn.classList.add("active"); vis.style.display = "block";
+      var f = document.getElementById("abmFrame"), s = src();
+      if(f.getAttribute("data-src")!==s){ f.setAttribute("data-src", s); f.src = s; }
+      document.getElementById("abmAbrirLink").href = s.replace("embed=1&","");
+      return;
+    }
+    if(btn){ btn.classList.remove("active"); vis.style.display = "none"; }
+    return origSet.apply(this, arguments);
+  };
+  var origShow = window.showSupContent;
+  window.showSupContent = function(){ var r = origShow.apply(this, arguments); crear(); var b = document.getElementById("supViewAbmBtn"); if(b) b.style.display = auth().role==="liderbb" ? "none" : ""; return r; };
+  window.addEventListener("message", function(e){
+    if(!/distribuidorazuppa\.github\.io/.test(e.origin)) return;
+    var f = document.getElementById("abmFrame"); if(!f || e.source!==f.contentWindow) return;
+    if(e.data && e.data.abmAlto){ f.style.height = Math.max(600, e.data.abmAlto + 20) + "px"; }
+    if(e.data && e.data.abmListo){ var k = clave(); if(k && auth().role!=="gerencia") f.contentWindow.postMessage({ abmAuth: { clave: k } }, "https://distribuidorazuppa.github.io"); }
+  });
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", crear); else crear();
+})();
+</script>
 </body>
 </html>
