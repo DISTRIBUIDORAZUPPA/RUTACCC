@@ -794,7 +794,19 @@ a.chofer-badge:hover{background:#1a5c8a;color:#fff;}
 .cd-zuppa>div{padding:10px 8px;display:flex;align-items:center;justify-content:center;text-align:center;}
 .cd-zuppa>div:first-child{justify-content:flex-start;padding-left:14px;}
 @media(max-width:640px){.cd-banner{flex-direction:column;align-items:flex-start;}}.cd-grid-5{grid-template-columns:1fr repeat(5,58px);}
-.cd-zuppa-5{grid-template-columns:1fr repeat(5,58px);}.cd-banner-formal{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--ink);border-radius:12px;padding:14px 22px;margin-bottom:16px;flex-wrap:wrap;}
+.cd-zuppa-5{grid-template-columns:1fr repeat(5,58px);}
+.rcnc-det-btn{font:inherit;font-weight:700;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:3px 6px;cursor:pointer;display:inline-flex;align-items:center;gap:3px;}
+.rcnc-det-btn:hover,.rcnc-det-btn.open{background:var(--gold);border-color:var(--gold);}
+.rcnc-det-caret{font-size:.6rem;transition:transform .15s;}
+.rcnc-det-btn.open .rcnc-det-caret{transform:rotate(180deg);}
+.rcnc-det-row{grid-column:1/-1;background:var(--paper);border-bottom:1px solid var(--line);padding:8px 12px 10px;text-align:left;}
+.rcnc-det-title{font-family:var(--mono);font-size:.56rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700;margin-bottom:6px;}
+.rcnc-det-item{display:grid;grid-template-columns:52px 1fr auto;gap:8px;align-items:baseline;padding:3px 0;border-top:1px dashed var(--line);font-size:.66rem;}
+.rcnc-det-item:first-of-type{border-top:none;}
+.rcnc-det-cod{font-family:var(--mono);color:var(--muted);}
+.rcnc-det-nom{font-weight:600;color:var(--ink);overflow-wrap:anywhere;}
+.rcnc-det-vis{font-family:var(--mono);font-size:.58rem;color:var(--muted);white-space:nowrap;}
+.cd-banner-formal{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--ink);border-radius:12px;padding:14px 22px;margin-bottom:16px;flex-wrap:wrap;}
 .cd-banner-formal-brand{display:flex;align-items:center;gap:14px;}
 .cd-banner-logo{height:34px;width:auto;object-fit:contain;display:block;}
 .cd-banner-logo-zuppa{height:30px;}
@@ -4952,7 +4964,54 @@ async function loadAndRenderPlanAyer(){
       return;
     }
   }
+  await rcncDetCargar_(ayer);
   renderPlanAyer(ayer);
+}
+
+/* ===== Desplegable de clientes conquistados (Real CNC) ===== */
+let rcncDetDia = {};
+async function rcncDetCargar_(fecha){
+  rcncDetDia = {};
+  const urls = ['cnc_detalle.json', 'https://distribuidorazuppa.github.io/RUTACCC/cnc_detalle.json'];
+  for(const u of urls){
+    try{
+      const resp = await fetch(u + '?t=' + Date.now(), {cache:'no-store'});
+      if(!resp.ok) continue;
+      const json = await resp.json();
+      rcncDetDia = ((json && json.fechas) || {})[fecha] || {};
+      return;
+    }catch(err){ /* probar la siguiente */ }
+  }
+}
+function rcncDetLista_(pv){
+  const porFoco = rcncDetDia[String(planAyerIndicator).toLowerCase()] || {};
+  const lista = porFoco[pv] || porFoco[String(pv).toUpperCase()];
+  return Array.isArray(lista) ? lista : null;
+}
+function rcncDetRealCell_(pv, real){
+  const lista = rcncDetLista_(pv);
+  if(!lista || !lista.length) return `<div class="cd-cell">${planFmtNum_(real)}</div>`;
+  return `<div class="cd-cell"><button type="button" class="rcnc-det-btn" title="Ver clientes" onclick="rcncDetToggle(this)">${planFmtNum_(real)}<span class="rcnc-det-caret">▾</span></button></div>`;
+}
+function rcncDetRowHtml_(pv){
+  const lista = rcncDetLista_(pv);
+  if(!lista || !lista.length) return '';
+  const items = lista.map(c=>
+    `<div class="rcnc-det-item"><span class="rcnc-det-cod">${esc(String(c[0]))}</span><span class="rcnc-det-nom">${esc(String(c[1]||''))}</span><span class="rcnc-det-vis">${esc(String(c[2]||''))}</span></div>`
+  ).join('');
+  return `<div class="rcnc-det-row" style="display:none"><div class="rcnc-det-title">${esc(pv)} · ${lista.length} ${lista.length===1?'cliente conquistado':'clientes conquistados'}</div>${items}</div>`;
+}
+function rcncDetToggle(btn){
+  const cell = btn.closest('.cd-cell');
+  let n = cell ? cell.nextElementSibling : null;
+  while(n && !n.classList.contains('rcnc-det-row')){
+    if(n.classList.contains('cd-name') || n.classList.contains('cd-total')) return;
+    n = n.nextElementSibling;
+  }
+  if(!n) return;
+  const abrir = n.style.display === 'none';
+  n.style.display = abrir ? 'block' : 'none';
+  btn.classList.toggle('open', abrir);
 }
 
 function planPctClass_(pct){
@@ -4990,9 +5049,10 @@ function planAyerPanelHtml_(sup){
     html += `<div class="cd-cell cd-name cd-sticky">${esc(pv)}</div>`+
       `<div class="cd-cell">${planFmtNum_(clientes)}</div>`+
       `<div class="cd-cell">${planFmtNum_(planif)}</div>`+
-      `<div class="cd-cell">${planFmtNum_(real)}</div>`+
+      rcncDetRealCell_(pv, real)+
       `<div class="cd-cell"><span class="cd-pct ${planPctClass_(pctPlanif)}">${planFmtPct_(pctPlanif)}</span></div>`+
-      `<div class="cd-cell"><span class="cd-pct ${planPctClass_(pctReal)}">${planFmtPct_(pctReal)}</span></div>`;
+      `<div class="cd-cell"><span class="cd-pct ${planPctClass_(pctReal)}">${planFmtPct_(pctReal)}</span></div>`+
+      rcncDetRowHtml_(pv);
   });
   if(!huboFila){
     html += `<div class="cd-cell cd-sticky" style="grid-column:1/-1;justify-content:flex-start;color:var(--muted);">Sin datos cargados para ayer.</div>`;
