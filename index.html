@@ -4945,20 +4945,18 @@ function setPlanAyerIndicator(key){
 
 async function loadAndRenderPlanAyer(){
   const el = document.getElementById('planAyerContent');
-  el.innerHTML = '<div class="stock-empty">Cargando cierre de ayer…</div>';
-  const ayer = ayerArgentina();
+  el.innerHTML = '<div class="stock-empty">Cargando último cierre…</div>';
+  let ayer = ayerArgentina();
   planAyerData = {};
   if(SUP_API_URL && SUP_API_URL.indexOf('PENDIENTE') === -1){
     try{
-      const resp = await fetch(SUP_API_URL + '?action=getPlanificacion&fecha=' + ayer);
-      const json = await resp.json();
-      if(json.ok){
-        json.data.forEach(r=>{
-          if(r.indicador === planAyerIndicator){
-            planAyerData[r.pv] = {planif: r.planif, real: r.real, clientes: r.clientes};
-          }
-        });
-      }
+      const cierre = await rcncCierreBuscar_();
+      ayer = cierre.fecha;
+      cierre.rows.forEach(r=>{
+        if(r.indicador === planAyerIndicator){
+          planAyerData[r.pv] = {planif: r.planif, real: r.real, clientes: r.clientes};
+        }
+      });
     }catch(err){
       el.innerHTML = '<div class="stock-empty">⚠️ No se pudo conectar con la planilla.</div>';
       return;
@@ -4966,6 +4964,30 @@ async function loadAndRenderPlanAyer(){
   }
   await rcncDetCargar_(ayer);
   renderPlanAyer(ayer);
+}
+
+/* ===== Último cierre: muestra el del día apenas tiene Real cargado; si no, el último día que lo tenga ===== */
+let rcncCierreCache = {t:0, fecha:null, rows:[]};
+async function rcncCierreBuscar_(){
+  if(rcncCierreCache.fecha && Date.now() - rcncCierreCache.t < 60000) return rcncCierreCache;
+  const base = Date.now() - 3*60*60*1000;
+  let deAyer = null;
+  for(let i=0;i<6;i++){
+    const f = new Date(base - i*86400000).toISOString().slice(0,10);
+    const resp = await fetch(SUP_API_URL + '?action=getPlanificacion&fecha=' + f);
+    const json = await resp.json();
+    const rows = (json && json.ok && Array.isArray(json.data)) ? json.data : [];
+    const conReal = rows.some(r=> r.real!=='' && r.real!==null && r.real!==undefined);
+    if(conReal){ rcncCierreCache = {t:Date.now(), fecha:f, rows:rows}; return rcncCierreCache; }
+    if(i===1) deAyer = {fecha:f, rows:rows};
+  }
+  rcncCierreCache = {t:Date.now(), fecha:deAyer.fecha, rows:deAyer.rows};
+  return rcncCierreCache;
+}
+function rcncCierreTitulo_(fecha){
+  if(fecha === hoyArgentina()) return 'Cierre de hoy';
+  if(fecha === ayerArgentina()) return 'Cierre de ayer';
+  return 'Último cierre';
 }
 
 /* ===== Desplegable de clientes conquistados (Real CNC) ===== */
@@ -5086,7 +5108,7 @@ function renderPlanAyer(ayer){
     `<div class="cd-banner-formal-brand">`+
       `<img class="cd-banner-logo cd-banner-logo-zuppa" src="data:image/png;base64,${PLANAYER_LOGO_ZUPPA_B64_}" alt="Zuppa">`+
       `<div class="cd-banner-formal-text">`+
-        `<div class="cd-banner-formal-title">Cierre de ayer${field? ' · '+esc(field.label):''}</div>`+
+        `<div class="cd-banner-formal-title">${rcncCierreTitulo_(ayer)}${field? ' · '+esc(field.label):''}</div>`+
         `<div class="cd-banner-formal-date">${formatFechaEs_(ayer)}</div>`+
       `</div>`+
     `</div>`+
@@ -7047,7 +7069,7 @@ function supPasRenderPanel() {
         <div class="pill-row" id="planAyerIndicatorPills"></div>
       </div>
 
-      <div class="sup-note">Cierre del día anterior: lo que cada supervisor cargó como Planificado y Real por punto de venta.</div>
+      <div class="sup-note">Último cierre cargado: el del día aparece apenas se carga el Real y queda visible hasta el cierre siguiente.</div>
 
       <div class="cd-download-row"><button class="cd-download-btn" onclick="descargarCierreComoImagen(this,'planAyerContent','Cierre_de_ayer_planificacion_cnc')">⬇️ Descargar imagen</button></div>
       <div id="planAyerContent"></div>
