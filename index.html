@@ -7281,13 +7281,26 @@ function supPasRenderPanel() {
     <div id="supViewSens" style="display:none">
       <div class="sup-note">Sensibilización = ajuste del objetivo mensual por promotor y por supervisor, a partir del promedio de los últimos 3 meses. El objetivo que el Jefe de Ventas asigna a cada supervisor se prorratea entre sus promotores según su peso histórico; cada nivel puede agregar o sacar HL puntuales, dejando el motivo. Los ajustes quedan guardados por mes, con fecha y responsable.</div>
 
-      <details class="sens-crit">
+      <details class="sens-crit" data-crit="datos-partida-v1">
         <summary>ⓘ Criterio de sensibilización (60 pts. auditoría)</summary>
         <div class="sens-crit-body">
-          Se toman los <b>últimos 3 meses</b> para ver el cierre promedio de alcance de volumen de cada supervisor/promotor. La suma de los objetivos de los promotores tiene que coincidir con el objetivo del supervisor, y la suma de los supervisores con el objetivo del Jefe de Ventas.
-          <div class="sens-crit-rule"><span class="sens-tag up">+5%</span> Si el alcance del mes es <b>inferior</b> al promedio de los últimos 3 meses, se agrega un 5% al objetivo de volumen del mes a sensibilizar.</div>
-          <div class="sens-crit-rule"><span class="sens-tag down">−5%</span> Si el alcance <b>supera el 100%</b> de los últimos 3 meses, se reduce un 5% el objetivo del mes actual — beneficio para quien viene sobrecumpliendo.</div>
-          Motivos válidos para dejar asentados en los ajustes: ruta con alto volumen según tendencia, bajo avance del mes por poca venta, volumen por clientes potenciales, tendencia acorde al cierre.
+          <b>Datos de partida</b><br>
+          Cada mes se arma la planilla <b>"SENSIBILIZACION MESONES"</b> con estos datos por supervisor y por promotor, en cada pilar:
+          <div style="overflow-x:auto;margin:8px 0;">
+          <table style="width:100%;border-collapse:collapse;font-size:.74rem;">
+            <thead><tr style="text-align:left;color:var(--ink);"><th style="padding:6px 8px;border-bottom:1px solid var(--line);">Dato</th><th style="padding:6px 8px;border-bottom:1px solid var(--line);">Qué es</th><th style="padding:6px 8px;border-bottom:1px solid var(--line);">De dónde sale</th></tr></thead>
+            <tbody>
+              <tr><td style="padding:6px 8px;border-bottom:1px solid var(--line);"><b>Objetivo actual</b></td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Objetivo de volumen del mes en HL, sin sensibilizar</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Bajada de D+</td></tr>
+              <tr><td style="padding:6px 8px;border-bottom:1px solid var(--line);"><b>Peso</b></td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Participación del promotor en el objetivo de su supervisor</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Objetivo del promotor ÷ objetivo del supervisor</td></tr>
+              <tr><td style="padding:6px 8px;border-bottom:1px solid var(--line);"><b>Obj. mes anterior</b></td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Objetivo del mes pasado</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Planilla del mes anterior</td></tr>
+              <tr><td style="padding:6px 8px;border-bottom:1px solid var(--line);"><b>Cierre mes anterior</b></td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Volumen real que cerró el mes pasado (HL y %)</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Cierre de RMV del último mes</td></tr>
+              <tr><td style="padding:6px 8px;border-bottom:1px solid var(--line);"><b>Promedio 3M y Acum. 3M</b></td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Venta real de los últimos 3 meses, promedio y total</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Solapa "3 meses" (baja de RMV)</td></tr>
+              <tr><td style="padding:6px 8px;border-bottom:1px solid var(--line);"><b>VE al día</b></td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Venta acumulada del mes en curso</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Solapa "VE al día" (VR hasta la fecha)</td></tr>
+              <tr><td style="padding:6px 8px;"><b>Tendencia</b></td><td style="padding:6px 8px;">Venta diaria proyectada a todo el mes, sobre el objetivo</td><td style="padding:6px 8px;">(VE al día ÷ días transcurridos × días hábiles) ÷ objetivo actual</td></tr>
+            </tbody>
+          </table>
+          </div>
+          Para sensibilizar se miran tres referencias de cada supervisor y promotor: <b>el objetivo del mes anterior, la venta real del último mes y el promedio de los últimos 3 meses</b>. Con eso se decide si se agrega, se saca o se mantiene volumen.
         </div>
       </details>
 
