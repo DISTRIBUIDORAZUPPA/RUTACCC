@@ -8569,5 +8569,73 @@ const EDD_DATA = {"v":1,"it":1000,"n":18,"items":{"70989b66794961615ffd3da39f798
 })();
 
 </script>
+<script id="revSupPatch">
+(function(){
+  /* Bloque REVENUE en Supervisores: Seguimiento Trade Spend (vista propia) + Informe de Trade Spend 2.4.1.1 + Clientes TOP 2.4.1.3 + Negociaciones (tableros embebidos) */
+  var URL_REV = "https://distribuidorazuppa.github.io/TRADE-SPEND-/";
+  var VISTAS = {
+    revts:  { btn:"supViewRevTsBtn",  box:"supViewRevTs",  frame:"revTsFrame",  pill:"📑 Informe de Trade Spend", titulo:"Informe de Trade Spend",
+              src: URL_REV+"?embed=1&b=ts", full: URL_REV,
+              nota:"Informe de Trade Spend (Galaxia 2.4.1.1): gasto por canal y segmento, $TS/$FACT, acciones, reconocimiento CMQ, avance del mes por supervisor y promotor y planes mensuales." },
+    revtop: { btn:"supViewRevTopBtn", box:"supViewRevTop", frame:"revTopFrame", pill:"🏆 Clientes TOP", titulo:"Clientes TOP por volumen",
+              src: URL_REV+"?embed=1&b=top", full: URL_REV+"#top",
+              nota:"Clientes TOP por volumen (Galaxia 2.4.1.3): Top mensual de Cervezas y UNG por canal, R3, mismo mes 2025, mix, TS/FACT, topes, avance del mes y planes de acción." },
+    revneg: { btn:"supViewRevNegBtn", box:"supViewRevNeg", frame:"revNegFrame", pill:"🤝 Negociaciones", titulo:"Seguimiento Planes de Negociación",
+              src: "https://negociacioneszuppa.netlify.app/", full: "https://negociacioneszuppa.netlify.app/",
+              nota:"Seguimiento de Planes de Negociación · Cerveza (tablero del equipo de negociaciones)." }
+  };
+  function crear(){
+    if(document.getElementById("supRevRow")) return;
+    var trade = document.getElementById("supViewTradeBtn"); if(!trade) return;
+    var filaGestion = trade.parentNode;
+    var titulo = document.createElement("div"); titulo.className = "section-title"; titulo.id = "supRevTitle"; titulo.textContent = "Revenue";
+    var fila = document.createElement("div"); fila.className = "pill-row"; fila.id = "supRevRow"; fila.style.marginBottom = "20px";
+    filaGestion.parentNode.insertBefore(titulo, filaGestion.nextSibling);
+    titulo.parentNode.insertBefore(fila, titulo.nextSibling);
+    trade.textContent = "💰 Seguimiento Trade Spend";
+    fila.appendChild(trade);
+    var ancla = document.getElementById("supViewPlanificadorCnc") || document.getElementById("supViewPlan");
+    Object.keys(VISTAS).forEach(function(k){
+      var v = VISTAS[k];
+      var pill = document.createElement("div"); pill.className = "pill"; pill.id = v.btn; pill.textContent = v.pill;
+      pill.onclick = function(){ supSetView(k); }; fila.appendChild(pill);
+      var vista = document.createElement("div"); vista.id = v.box; vista.style.display = "none";
+      vista.innerHTML = '<div class="sup-note">'+v.nota+' <a href="'+v.full+'" target="_blank" rel="noopener" style="font-weight:700">Abrir en pantalla completa ↗</a></div>'+
+        '<iframe id="'+v.frame+'" title="'+v.titulo+'" style="width:100%;height:88vh;border:1px solid var(--line);border-radius:12px;background:#fff" loading="lazy" allow="fullscreen" allowfullscreen></iframe>';
+      if(ancla) ancla.parentNode.insertBefore(vista, ancla); else fila.parentNode.appendChild(vista);
+    });
+    filaGestion.style.marginBottom = "14px";
+  }
+  var origSet = window.supSetView;
+  if(typeof origSet !== "function") return;
+  window.supSetView = function(view){
+    crear();
+    Object.keys(VISTAS).forEach(function(k){
+      var v = VISTAS[k], btn = document.getElementById(v.btn), box = document.getElementById(v.box);
+      if(btn) btn.classList.toggle("active", k===view);
+      if(box) box.style.display = k===view ? "block" : "none";
+    });
+    if(VISTAS.hasOwnProperty(view)){
+      try{ origSet("__rev"); }catch(e){}
+      var v = VISTAS[view], f = document.getElementById(v.frame), btn = document.getElementById(v.btn);
+      btn.classList.add("active"); document.getElementById(v.box).style.display = "block";
+      if(f.getAttribute("data-src") !== v.src){ f.setAttribute("data-src", v.src); f.src = v.src; }
+      return;
+    }
+    return origSet.apply(this, arguments);
+  };
+  var origShow = window.showSupContent;
+  if(typeof origShow === "function") window.showSupContent = function(){ var r = origShow.apply(this, arguments); crear(); return r; };
+  // el tablero de Trade Spend embebido pide la clave de quien ya ingresó acá, para no pedirla dos veces al cargar planes
+  function claveActual(){ try{ var a = (typeof supAuthData!=="undefined" && supAuthData) ? supAuthData : null; if(!a) return ""; for(var k in SUP_AUTH){ if(SUP_AUTH[k]===a || (SUP_AUTH[k].name===a.name && SUP_AUTH[k].role===a.role)) return k; } }catch(e){} return ""; }
+  window.addEventListener("message", function(e){
+    if(!/distribuidorazuppa\.github\.io$/.test(e.origin) || !e.data || !e.data.revListo) return;
+    var k = claveActual(); if(!k) return;
+    ["revTsFrame","revTopFrame"].forEach(function(id){ var f = document.getElementById(id); if(f && e.source===f.contentWindow) f.contentWindow.postMessage({ revAuth: { clave: k } }, "https://distribuidorazuppa.github.io"); });
+  });
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", crear); else crear();
+})();
+</script>
+
 </body>
 </html>
