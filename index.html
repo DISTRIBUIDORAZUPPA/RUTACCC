@@ -8523,5 +8523,51 @@ const EDD_DATA = {"v":1,"it":1000,"n":18,"items":{"70989b66794961615ffd3da39f798
 })();
 
 </script>
+<script id="beesSupPatch">
+(function(){
+  var URL_BEES = "https://compromisobeeszuppa.netlify.app/";
+  function crear(){
+    if(document.getElementById("supViewBeesBtn")) return;
+    var ref = document.getElementById("supViewGcncBtn") || document.getElementById("supViewSalidasBtn");
+    if(!ref) return;
+    var pill = document.createElement("div");
+    pill.className = "pill"; pill.id = "supViewBeesBtn"; pill.textContent = "📲 Compromiso BEES";
+    pill.onclick = function(){ supSetView("beessup"); };
+    ref.parentNode.insertBefore(pill, ref.nextSibling);
+    var vista = document.createElement("div");
+    vista.id = "supViewBeesSup"; vista.style.display = "none";
+    vista.innerHTML = '<div class="sup-note">Tablero de Compromiso BEES (segmentación Perfecto · Avanzado · Asistido · Potencial · Básico · Cero). <a href="'+URL_BEES+'" target="_blank" rel="noopener" style="font-weight:700">Abrir en pantalla completa ↗</a></div>'+
+      '<iframe id="beesSupFrame" title="Compromiso BEES" style="width:100%;height:85vh;border:1px solid var(--line);border-radius:12px;background:#fff" loading="lazy" allow="fullscreen" allowfullscreen></iframe>';
+    var ancla = document.getElementById("supViewGcnc") || document.getElementById("supViewPlanificadorCnc") || document.getElementById("supViewPlan");
+    if(ancla) ancla.parentNode.insertBefore(vista, ancla); else pill.parentNode.parentNode.appendChild(vista);
+  }
+  var origSet = window.supSetView;
+  if(typeof origSet !== "function") return;
+  window.supSetView = function(view){
+    crear();
+    var btn = document.getElementById("supViewBeesBtn"), vis = document.getElementById("supViewBeesSup");
+    if(view === "beessup" && btn && vis){
+      try{ origSet("__beessup"); }catch(e){}
+      document.querySelectorAll(".pill.active").forEach(function(p){ if(p.parentNode === btn.parentNode) p.classList.remove("active"); });
+      btn.classList.add("active"); vis.style.display = "block";
+      var f = document.getElementById("beesSupFrame");
+      if(!f.getAttribute("src")) f.src = URL_BEES;
+      return;
+    }
+    if(btn){ btn.classList.remove("active"); vis.style.display = "none"; }
+    return origSet.apply(this, arguments);
+  };
+  var origShow = window.showSupContent;
+  if(typeof origShow === "function"){
+    window.showSupContent = function(){
+      var r = origShow.apply(this, arguments); crear();
+      var b = document.getElementById("supViewBeesBtn");
+      if(b && typeof supAuthData !== "undefined" && supAuthData) b.style.display = supAuthData.role === "liderbb" ? "none" : "";
+      return r;
+    };
+  }
+})();
+
+</script>
 </body>
 </html>
