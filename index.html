@@ -8966,5 +8966,57 @@ var bkVersion=2;
 })();
 
 </script>
+<style id="riesgoStyle">
+.rg-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:5px;font-weight:800;font-size:.6rem;letter-spacing:.02em;white-space:normal;max-width:100%;background:#efe9dc;color:#5a5245;}
+.rg-badge.rg-alto{background:#fdd9d3;color:#8f1d10;}
+.rg-badge.rg-medio{background:#ffe8c7;color:#8a4a00;}
+.rg-badge.rg-bajo{background:#e1f2e6;color:#1e5c2e;}
+.rg-det{grid-column:1/-1;font-size:.72rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.rg-det .rg-badge{font-size:.7rem;padding:3px 9px;}
+
+</style>
+<script id="riesgoPatch">
+var riesgoV=3;
+/* ===== Riesgo del cliente (Hoja1 columna X): se muestra en la información del cliente ===== */
+(function(){
+  function e(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function norm(s){ return String(s||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+  // Separa varios riesgos ("ZONA CRITICA (ROBO), ANIMALES SUELTOS") sin cortar dentro de paréntesis.
+  function partes(r){
+    var out = [], cur = '', depth = 0;
+    String(r||'').split('').forEach(function(ch){
+      if(ch==='(') depth++; else if(ch===')') depth = Math.max(0, depth-1);
+      if(ch===',' && depth===0){ if(cur.trim()) out.push(cur.trim()); cur = ''; } else cur += ch;
+    });
+    if(cur.trim()) out.push(cur.trim());
+    return out;
+  }
+  function nivel(p){
+    var s = norm(p);
+    if(/NO POSEE|SIN RIESGO/.test(s)) return 'bajo';
+    if(/ROBO|CRITIC|VIOLENT|DINERO|ALTO|GRAVE/.test(s)) return 'alto';
+    return 'medio';
+  }
+  function chips(r){
+    var ps = partes(r);
+    var conRiesgo = ps.filter(function(p){ return nivel(p)!=='bajo'; });
+    if(!conRiesgo.length) return '<span class="rg-badge rg-bajo" title="Riesgo del cliente">✓ Sin riesgo</span>';
+    return conRiesgo.map(function(p){ return '<span class="rg-badge rg-'+nivel(p)+'" title="Riesgo del cliente">⚠️ '+e(p)+'</span>'; }).join('');
+  }
+  if(typeof clientCardHTML==='function'){
+    var orig = clientCardHTML;
+    window.clientCardHTML = function(d){
+      var html = orig.apply(this, arguments);
+      if(!d || !d.riesgo) return html;
+      var i = html.indexOf('class="pv-tag"');
+      if(i!==-1){ var j = html.indexOf('</span>', i); if(j!==-1){ j += 7; html = html.slice(0,j) + chips(d.riesgo) + html.slice(j); } }
+      return html;
+    };
+  }
+  function init(){ try{ render(); }catch(err){} }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+
+</script>
 </body>
 </html>
