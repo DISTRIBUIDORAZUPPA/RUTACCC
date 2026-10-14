@@ -9031,5 +9031,62 @@ var riesgoV=3;
 })();
 
 </script>
+<script id="cncDiasPatch">
+/* ===== Cierre de Planificación CNC: desplegable con todos los días del mes ===== */
+(function(){
+  var DIAS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  var MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  window.rcncDiaElegido = '';
+  function opciones(){
+    var hoy = (typeof hoyArgentina==='function') ? hoyArgentina() : new Date().toISOString().slice(0,10);
+    var y = Number(hoy.slice(0,4)), m = Number(hoy.slice(5,7)), d = Number(hoy.slice(8,10));
+    var out = [];
+    for(var i=d;i>=1;i--){
+      var f = y+'-'+String(m).padStart(2,'0')+'-'+String(i).padStart(2,'0');
+      var dw = new Date(y, m-1, i).getDay();
+      out.push({f:f, t: DIAS[dw]+' '+String(i).padStart(2,'0')+'/'+String(m).padStart(2,'0')+(f===hoy?' (hoy)':'')});
+    }
+    return {mes: MESES[m-1], dias: out};
+  }
+  function crear(){
+    var pills = document.getElementById('planAyerIndicatorPills');
+    if(!pills || document.getElementById('rcncDiaSelect')) return;
+    var o = opciones();
+    var field = document.createElement('div'); field.className = 'field'; field.style.marginBottom = '12px';
+    field.innerHTML = '<label for="rcncDiaSelect">📅 Día del cierre</label>'+
+      '<select id="rcncDiaSelect" style="max-width:320px"><option value="">Último cierre cargado (automático)</option>'+
+      '<optgroup label="Días de '+o.mes+'">'+o.dias.map(function(x){ return '<option value="'+x.f+'">'+x.t+'</option>'; }).join('')+'</optgroup></select>';
+    var ref = pills.closest('.field') || pills;
+    ref.parentNode.insertBefore(field, ref);
+    document.getElementById('rcncDiaSelect').addEventListener('change', function(ev){
+      window.rcncDiaElegido = ev.target.value;
+      if(typeof loadAndRenderPlanAyer==='function') loadAndRenderPlanAyer();
+    });
+  }
+  if(typeof rcncCierreBuscar_==='function'){
+    var origBuscar = rcncCierreBuscar_;
+    window.rcncCierreBuscar_ = async function(){
+      var f = window.rcncDiaElegido;
+      if(!f) return origBuscar.apply(this, arguments);
+      var resp = await fetch(SUP_API_URL + '?action=getPlanificacion&fecha=' + f);
+      var json = await resp.json();
+      return {t:Date.now(), fecha:f, rows:(json && json.ok && Array.isArray(json.data)) ? json.data : []};
+    };
+  }
+  if(typeof rcncCierreTitulo_==='function'){
+    var origTit = rcncCierreTitulo_;
+    window.rcncCierreTitulo_ = function(fecha){
+      if(window.rcncDiaElegido && fecha!==hoyArgentina() && fecha!==ayerArgentina()) return 'Cierre del día';
+      return origTit.apply(this, arguments);
+    };
+  }
+  if(typeof renderPlanAyerPills==='function'){
+    var origPills = renderPlanAyerPills;
+    window.renderPlanAyerPills = function(){ crear(); return origPills.apply(this, arguments); };
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', crear); else crear();
+})();
+
+</script>
 </body>
 </html>
