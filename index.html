@@ -9143,5 +9143,84 @@ var riesgoV=3;
 })();
 
 </script>
+<style id="flagsStyle">
+.fl-chip{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:5px;font-weight:800;font-size:.6rem;white-space:nowrap;}
+.fl-may{background:#e3ecfb;color:#1f4a8a;}
+.fl-polo{background:#f6e4f3;color:#7a2f6c;}
+.fl-pot{background:#fff1c9;color:#7a5600;}
+.bc-aviso{max-width:1300px;margin:12px auto 12px;padding:0 16px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:10px;align-items:start;}
+@media(max-width:760px){.bc-aviso{grid-template-columns:1fr;}}
+.bc-aviso-alerta{display:flex;gap:10px;align-items:flex-start;background:#fdf1e7;border:2px solid #c8571c;border-radius:12px;padding:12px 14px;font-size:.8rem;line-height:1.4;color:#5c2508;}
+.bc-aviso-ico{font-size:1.4rem;line-height:1;}
+.bc-aviso-btn{display:table;margin-top:10px;background:#c8571c;color:#fff;font-weight:700;font-size:.78rem;text-decoration:none;padding:7px 14px;border-radius:9px;}
+.bc-aviso-btn:hover{background:#9c4515;}
+.bc-aviso-crit{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:.78rem;line-height:1.45;}
+.bc-aviso-tit{font-family:var(--serif);font-weight:900;font-size:.95rem;margin-bottom:4px;}
+.bc-aviso-crit ul{margin:0;padding-left:18px;}
+.bc-aviso-crit li{margin:2px 0;}
+
+</style>
+<script id="flagsPatch">
+const FLAGS_CLIENTES = {"155":["may"],"270":["may"],"722":["polo"],"1295":["may"],"1715":["polo"],"1763":["may"],"1830":["pot"],"1876":["may"],"1910":["may"],"1927":["may"],"2238":["may"],"2402":["may"],"2553":["may"],"2802":["may"],"2893":["pot"],"2920":["may"],"2953":["polo"],"3168":["may"],"3258":["may"],"3418":["pot"],"3463":["may"],"3559":["may"],"3573":["may"],"3692":["may"],"3905":["pot"],"3987":["polo"],"3989":["may"],"4029":["may"],"4057":["may","polo"],"4066":["may","polo"],"4094":["may","polo"],"4151":["polo"],"4153":["polo","pot"],"4423":["polo"],"4463":["may"],"4521":["may"],"4530":["may"],"4636":["may"],"4695":["may"],"4698":["may"],"4704":["may"],"4721":["may"],"4744":["may"],"4834":["may"],"4842":["may"],"4860":["polo"],"4974":["polo"],"5011":["may"],"5028":["may"],"5086":["may"],"5233":["may"],"5261":["may"],"5280":["polo"],"5321":["may"],"5353":["may"],"5398":["may"],"5433":["may"],"5511":["may"],"5549":["may"],"5573":["may"],"5604":["may"],"5609":["may"],"5663":["may"],"5672":["may"],"5683":["may"],"5725":["may"],"5753":["may"],"5768":["may"],"5802":["polo"],"5903":["may"],"5935":["polo"],"5952":["may"],"5954":["pot"],"5981":["may"],"5990":["may"],"5996":["may"],"6033":["may"],"6082":["may"],"6108":["may"],"6115":["may"],"6130":["pot"],"6135":["may"],"6141":["may"],"6144":["may"],"6157":["may"],"6192":["may"],"6213":["may"],"6240":["may"],"6281":["polo"],"6285":["polo"],"6286":["polo"],"6288":["may"],"6303":["polo"],"6305":["polo"],"6311":["may","polo"],"6322":["may"],"6323":["may"],"6333":["polo"],"6345":["may"],"6423":["may"],"6432":["may"],"6453":["may"],"6477":["may"],"6516":["may"],"6556":["may"],"6562":["may"],"6592":["pot"],"6607":["may"],"6628":["polo"],"6652":["may"],"6654":["polo"],"6665":["pot"],"6670":["pot"],"6677":["polo"],"6687":["may"],"6710":["may"],"6735":["may"],"6743":["polo"],"6792":["may"],"6848":["may"],"6868":["may"],"6925":["may"],"6968":["polo"],"6970":["may"],"7067":["may"],"7071":["polo"],"7084":["may"],"7119":["may"],"7151":["may"],"7167":["may"],"7183":["polo"],"7189":["may"],"7224":["may"],"7249":["polo"],"7250":["polo"],"7277":["may"],"7326":["may"],"7332":["polo","pot"],"7387":["may"],"7416":["may"],"7454":["may"],"7470":["may"],"7513":["may"],"7540":["may"],"7574":["may"],"7847":["polo"],"8284":["polo"],"8370":["may"],"8393":["may"],"8530":["may"],"8563":["may"],"10225":["may"],"10721":["may"],"11066":["may"],"11619":["may"],"12851":["may","polo"],"14045":["pot"],"30029":["may"],"30341":["may"],"30625":["polo"],"30714":["may"],"30933":["may"],"31911":["may","polo"],"32041":["may"],"32071":["may"],"32084":["may"],"32106":["may"],"32177":["may"],"32237":["may"],"32238":["may"],"32352":["may"],"32467":["polo"],"32485":["may"],"32558":["polo"],"32837":["may"],"32979":["may"],"33241":["may"],"33259":["may"],"33278":["polo"],"33299":["polo"],"33323":["polo","pot"],"33348":["may"],"548250":["may"]};
+/* ===== Flags de clientes (programas) + Tendencia % en PAS + aviso en Base Clientes ===== */
+(function(){
+  function e(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  // ---------- 1) Flags en la tarjeta del cliente ----------
+  var FLAG_DEF = {
+    may:  {t:'Comportamiento mayorista', i:'🏪', c:'fl-may'},
+    polo: {t:'Polo gastronómico',        i:'🍽️', c:'fl-polo'},
+    pot:  {t:'Cliente potencial',        i:'⭐', c:'fl-pot'}
+  };
+  if(typeof clientCardHTML==='function'){
+    var origCard = clientCardHTML;
+    window.clientCardHTML = function(d){
+      var html = origCard.apply(this, arguments);
+      var fl = d && FLAGS_CLIENTES[String(d.cod)];
+      if(!fl || !fl.length) return html;
+      var chips = fl.map(function(k){ var f = FLAG_DEF[k] || {t:k, i:'🏷️', c:''}; return '<span class="fl-chip '+f.c+'" title="Programa">'+f.i+' '+e(f.t)+'</span>'; }).join('');
+      var i = html.indexOf('class="pv-tag"');
+      if(i!==-1){ var j = html.indexOf('</span>', i); if(j!==-1){ j += 7; return html.slice(0,j) + chips + html.slice(j); } }
+      return html;
+    };
+  }
+  // ---------- 2) PAS: columna "Tend. %" (tendencia ÷ objetivo) en Totales combinados y Total Supervisor ----------
+  function conTendPct(html, obj){
+    if(!html || !obj || html.indexOf('<th>Tendencia</th>')===-1) return html;
+    var pct = (obj.objetivo && obj.tendencia!=null) ? obj.tendencia/obj.objetivo : null;
+    var cls = (pct!=null && typeof pasAvanceClass_==='function') ? pasAvanceClass_(pct) : '';
+    var txt = pct!=null ? ((typeof sensFmt==='function') ? sensFmt(pct*100,1) : (Math.round(pct*1000)/10)) + '%' : '—';
+    html = html.replace('<th>Tendencia</th>', '<th>Tendencia</th><th>Tend. %</th>');
+    var a = html.indexOf('<td class="dim">');
+    if(a===-1) return html;
+    var b = html.indexOf('</td>', a) + 5;
+    return html.slice(0,b) + '<td><span class="pas-avance-badge pas-num-big '+cls+'">'+txt+'</span></td>' + html.slice(b);
+  }
+  ['pasRenderCombinado_','pasRenderCombinadoSinPlan_','pasRenderTotalSupervisor_'].forEach(function(nombre){
+    var orig = window[nombre];
+    if(typeof orig!=='function') return;
+    window[nombre] = function(obj){ return conTendPct(orig.apply(this, arguments), obj); };
+  });
+  // ---------- 3) Base Clientes: aviso + link de lineamiento + criterios ----------
+  var URL_LINEAMIENTO = 'https://lineamientoxrolzuppa.netlify.app/';
+  function crearAviso(){
+    var tab = document.getElementById('tabBaseCli');
+    if(!tab || document.getElementById('bcAviso')) return;
+    var div = document.createElement('div'); div.id = 'bcAviso'; div.className = 'bc-aviso';
+    div.innerHTML =
+      '<div class="bc-aviso-alerta"><span class="bc-aviso-ico">⚠️</span><div><b>ANTES DE REALIZAR UN CAMBIO, REVISÁ CÓMO ESTÁ TU RUTA POR CLIENTES ENTRANDO A ESTE LINK.</b>'+
+      '<a class="bc-aviso-btn" href="'+URL_LINEAMIENTO+'" target="_blank" rel="noopener">Ver lineamiento por rol ↗</a></div></div>'+
+      '<div class="bc-aviso-crit"><div class="bc-aviso-tit">📋 Criterio Base de Clientes</div><ul>'+
+        '<li>Clientes con <b>EDF</b>: todos deben estar <b>semanales</b>.</li>'+
+        '<li>Clientes de <b>programa de mercado</b>: <b>semanales</b>.</li>'+
+        '<li>Clientes con <b>deuda comercial o activos (Baja Pendiente)</b>: colocarlos en día <b>Domingo</b>.</li>'+
+        '<li>Clientes <b>sin compra en los últimos 12 meses</b> en los negocios Cvza, UNG y Totales: <b>una vez al mes</b>.</li>'+
+      '</ul></div>';
+    tab.insertBefore(div, tab.firstChild);
+  }
+  function init(){ try{ crearAviso(); if(typeof render==='function') render(); }catch(err){ console.warn('flags', err); } }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+
+</script>
 </body>
 </html>
