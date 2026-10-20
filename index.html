@@ -9088,61 +9088,6 @@ var riesgoV=3;
 })();
 
 </script>
-<script id="cvPasPatch">
-/* ===== Cierre Vespertina › Todas las columnas: Media necesaria y Media real del PAS, al lado de Avance ===== */
-(function(){
-  if(typeof CIERRE_VESPERTINA_DATA==='undefined' || typeof CD_FIELDS_TODO==='undefined') return;
-  // 1) Orden: Avance → M.Nec → M.Real
-  var iNec = CD_FIELDS_TODO.findIndex(function(f){ return f.key==='media_nec'; });
-  var nec = iNec!==-1 ? CD_FIELDS_TODO.splice(iNec,1)[0] : null;
-  var iReal = CD_FIELDS_TODO.findIndex(function(f){ return f.key==='media_real'; });
-  var real = iReal!==-1 ? CD_FIELDS_TODO.splice(iReal,1)[0] : null;
-  var iAv = CD_FIELDS_TODO.findIndex(function(f){ return f.key==='avance'; });
-  var nuevos = [nec, real].filter(Boolean);
-  if(nec) nec.label = 'M.Nec';
-  if(real) real.label = 'M.Real';
-  CD_FIELDS_TODO.splice(iAv===-1 ? CD_FIELDS_TODO.length : iAv+1, 0, ...nuevos);
-
-  // 2) Valores del PAS (mismo criterio que "Totales combinados" del PAS: REF + vendedores conjunta)
-  if(typeof PAS_DATA==='undefined' || !PAS_DATA) return;
-  var PILAR_REF = {cervezas:'2022 TOTAL CERVEZAS', ung:'2020 TOTAL UNG'};
-  function esPilar(nombre, pilar){
-    var n = String(nombre||'').toUpperCase();
-    if(pilar==='cervezas') return n.indexOf('CERVEZA')!==-1 && n.indexOf('ABOVE')===-1;
-    return n.indexOf('UNG')!==-1;
-  }
-  function grupos(sup, pilar){
-    var s = PAS_DATA[String(sup||'').toLowerCase()]; if(!s || !s.grupos) return [];
-    return s.grupos.filter(function(g){
-      if(g.tipo==='ref') return String(g.nombre||'').trim().toUpperCase()===PILAR_REF[pilar];
-      return g.tipo==='conjunta' && esPilar(g.nombre, pilar);
-    });
-  }
-  function sumar(a, campo){ var t = null; a.forEach(function(x){ if(x && x[campo]!=null){ t = (t||0) + x[campo]; } }); return t; }
-  ['cervezas','ung'].forEach(function(pilar){
-    var bloque = CIERRE_VESPERTINA_DATA[pilar]; if(!bloque) return;
-    var totZuppa = [];
-    var sups = Array.from(new Set(Object.keys(bloque).map(function(k){ return bloque[k] && bloque[k].supervisor; }).filter(Boolean)));
-    sups.forEach(function(sup){
-      var gs = grupos(sup, pilar); if(!gs.length) return;
-      Object.keys(bloque).forEach(function(pv){
-        var v = bloque[pv]; if(!v || v.supervisor!==sup || pv.indexOf('_TOTAL')!==-1) return;
-        var vend = null;
-        gs.some(function(g){ vend = (g.vendedores||[]).find(function(x){ return String(x.n).toUpperCase()===pv.toUpperCase(); }); return !!vend; });
-        if(vend){ v.media_nec = vend.mediaNecesaria; v.media_real = vend.mediaReal; }
-      });
-      var totales = gs.map(function(g){ return g.total; });
-      var vt = bloque[sup + '_TOTAL'];
-      if(vt){ vt.media_nec = sumar(totales,'mediaNecesaria'); vt.media_real = sumar(totales,'mediaReal'); }
-      totZuppa = totZuppa.concat(totales);
-    });
-    var z = bloque['ZUPPA_TOTAL'];
-    if(z && totZuppa.length){ z.media_nec = sumar(totZuppa,'mediaNecesaria'); z.media_real = sumar(totZuppa,'mediaReal'); }
-  });
-  try{ if(typeof renderCierreCompleto==='function' && document.getElementById('cierreTable') && document.getElementById('cierreTable').innerHTML) renderCierreCompleto(); }catch(err){}
-})();
-
-</script>
 <style id="flagsStyle">
 .fl-chip{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:5px;font-weight:800;font-size:.6rem;white-space:nowrap;}
 .fl-may{background:#e3ecfb;color:#1f4a8a;}
@@ -9219,6 +9164,77 @@ const FLAGS_CLIENTES = {"155":["may"],"270":["may"],"722":["polo"],"1295":["may"
   }
   function init(){ try{ crearAviso(); if(typeof render==='function') render(); }catch(err){ console.warn('flags', err); } }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+
+</script>
+<script id="cvPasPatch">
+var cvPasV=2;
+/* ===== Cierre Vespertina › Todas las columnas: Media necesaria y Media real del PAS, al lado de Avance ===== */
+(function(){
+  if(typeof CIERRE_VESPERTINA_DATA==='undefined' || typeof CD_FIELDS_TODO==='undefined') return;
+  // 1) Orden: Avance → M.Nec → M.Real
+  var iNec = CD_FIELDS_TODO.findIndex(function(f){ return f.key==='media_nec'; });
+  var nec = iNec!==-1 ? CD_FIELDS_TODO.splice(iNec,1)[0] : null;
+  var iReal = CD_FIELDS_TODO.findIndex(function(f){ return f.key==='media_real'; });
+  var real = iReal!==-1 ? CD_FIELDS_TODO.splice(iReal,1)[0] : null;
+  var iAv = CD_FIELDS_TODO.findIndex(function(f){ return f.key==='avance'; });
+  var nuevos = [nec, real].filter(Boolean);
+  if(nec) nec.label = 'M.Nec';
+  if(real) real.label = 'M.Real';
+  CD_FIELDS_TODO.splice(iAv===-1 ? CD_FIELDS_TODO.length : iAv+1, 0, ...nuevos);
+
+  // 1b) Obj. Mes del total de cada supervisor: si la planilla lo trae vacío, suma de sus promotores
+  ['cervezas','ung'].forEach(function(pilar){
+    var bloque = CIERRE_VESPERTINA_DATA[pilar]; if(!bloque) return;
+    Object.keys(bloque).forEach(function(k){
+      if(!/_TOTAL$/.test(k) || k==='ZUPPA_TOTAL') return;
+      var t = bloque[k]; if(!t || (t.obj_mes!=null && t.obj_mes!=='')) return;
+      var sup = k.replace(/_TOTAL$/,''), suma = null;
+      Object.keys(bloque).forEach(function(pv){
+        var v = bloque[pv];
+        if(v && v.supervisor===sup && pv.indexOf('_TOTAL')===-1 && v.obj_mes!=null && v.obj_mes!=='' && !isNaN(v.obj_mes)) suma = (suma||0) + Number(v.obj_mes);
+      });
+      if(suma!==null) t.obj_mes = suma;
+    });
+  });
+
+  // 2) Valores del PAS (mismo criterio que "Totales combinados" del PAS: REF + vendedores conjunta)
+  if(typeof PAS_DATA==='undefined' || !PAS_DATA) return;
+  var PILAR_REF = {cervezas:'2022 TOTAL CERVEZAS', ung:'2020 TOTAL UNG'};
+  function esPilar(nombre, pilar){
+    var n = String(nombre||'').toUpperCase();
+    if(pilar==='cervezas') return n.indexOf('CERVEZA')!==-1 && n.indexOf('ABOVE')===-1;
+    return n.indexOf('UNG')!==-1;
+  }
+  function grupos(sup, pilar){
+    var s = PAS_DATA[String(sup||'').toLowerCase()]; if(!s || !s.grupos) return [];
+    return s.grupos.filter(function(g){
+      if(g.tipo==='ref') return String(g.nombre||'').trim().toUpperCase()===PILAR_REF[pilar];
+      return g.tipo==='conjunta' && esPilar(g.nombre, pilar);
+    });
+  }
+  function sumar(a, campo){ var t = null; a.forEach(function(x){ if(x && x[campo]!=null){ t = (t||0) + x[campo]; } }); return t; }
+  ['cervezas','ung'].forEach(function(pilar){
+    var bloque = CIERRE_VESPERTINA_DATA[pilar]; if(!bloque) return;
+    var totZuppa = [];
+    var sups = Array.from(new Set(Object.keys(bloque).map(function(k){ return bloque[k] && bloque[k].supervisor; }).filter(Boolean)));
+    sups.forEach(function(sup){
+      var gs = grupos(sup, pilar); if(!gs.length) return;
+      Object.keys(bloque).forEach(function(pv){
+        var v = bloque[pv]; if(!v || v.supervisor!==sup || pv.indexOf('_TOTAL')!==-1) return;
+        var vend = null;
+        gs.some(function(g){ vend = (g.vendedores||[]).find(function(x){ return String(x.n).toUpperCase()===pv.toUpperCase(); }); return !!vend; });
+        if(vend){ v.media_nec = vend.mediaNecesaria; v.media_real = vend.mediaReal; }
+      });
+      var totales = gs.map(function(g){ return g.total; });
+      var vt = bloque[sup + '_TOTAL'];
+      if(vt){ vt.media_nec = sumar(totales,'mediaNecesaria'); vt.media_real = sumar(totales,'mediaReal'); }
+      totZuppa = totZuppa.concat(totales);
+    });
+    var z = bloque['ZUPPA_TOTAL'];
+    if(z && totZuppa.length){ z.media_nec = sumar(totZuppa,'mediaNecesaria'); z.media_real = sumar(totZuppa,'mediaReal'); }
+  });
+  try{ if(typeof renderCierreCompleto==='function' && document.getElementById('cierreTable') && document.getElementById('cierreTable').innerHTML) renderCierreCompleto(); }catch(err){}
 })();
 
 </script>
