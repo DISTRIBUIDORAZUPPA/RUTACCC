@@ -9238,5 +9238,54 @@ var cvPasV=2;
 })();
 
 </script>
+<script id="rzEdfPatch">
+/* ===== Rechazos: filtro "Clientes con EDF" cruzado con la Ruta CCC (EDF de Hoja1) ===== */
+(function(){
+  if(typeof RECHAZOS_DATA==='undefined' || typeof DATA_RAW==='undefined') return;
+  var EDF = {};
+  DATA_RAW.forEach(function(d){ var n = parseInt(String(d.edf||'').replace(/\D/g,''),10); EDF[String(d.cod)] = isNaN(n) ? 0 : n; });
+  function edfDe(r){ var n = EDF[String(r.cliente_cod)]; return n==null ? null : n; }
+  // Marca visible al lado del nombre del cliente (ranking, detalle y modal)
+  RECHAZOS_DATA.forEach(function(r){
+    var n = edfDe(r);
+    if(n>0 && String(r.cliente).indexOf('❄️')===-1) r.cliente = r.cliente + ' · ❄️ ' + n + ' EDF';
+  });
+  var rzEdf = '';
+  function crear(){
+    var ref = document.getElementById('rzChoferSelect');
+    if(!ref || document.getElementById('rzEdfSelect')) return;
+    var fila = ref.closest('.fg2');
+    var div = document.createElement('div'); div.className = 'field'; div.style.marginTop = '12px';
+    div.innerHTML = '<label for="rzEdfSelect">❄️ Clientes con EDF (según Ruta CCC)</label>'+
+      '<select id="rzEdfSelect"><option value="">— Todos —</option><option value="con">Con EDF</option><option value="sin">Sin EDF</option>'+
+      '<option value="1">1 EDF</option><option value="2">2 EDF</option><option value="3">3 o más EDF</option></select>';
+    fila.parentNode.insertBefore(div, fila.nextSibling);
+    document.getElementById('rzEdfSelect').addEventListener('change', function(ev){ rzEdf = ev.target.value; renderRechazos(); });
+  }
+  if(typeof rzFilteredData==='function'){
+    var orig = rzFilteredData;
+    window.rzFilteredData = function(){
+      var data = orig.apply(this, arguments);
+      if(!rzEdf) return data;
+      return data.filter(function(r){
+        var n = edfDe(r) || 0;
+        if(rzEdf==='con') return n>0;
+        if(rzEdf==='sin') return n===0;
+        if(rzEdf==='3') return n>=3;
+        return n===Number(rzEdf);
+      });
+    };
+  }
+  if(typeof rzClearFilters==='function'){
+    var origClear = rzClearFilters;
+    window.rzClearFilters = function(){
+      rzEdf = ''; var s = document.getElementById('rzEdfSelect'); if(s) s.value = '';
+      return origClear.apply(this, arguments);
+    };
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', crear); else crear();
+})();
+
+</script>
 </body>
 </html>
