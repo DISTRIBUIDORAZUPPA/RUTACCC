@@ -9287,5 +9287,197 @@ var cvPasV=2;
 })();
 
 </script>
+<style id="pagStyle">
+/* PAG — Jefe de Ventas */
+#supViewPagBtn.active{background:var(--ink);border-color:var(--ink);color:var(--gold);}
+.pag-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;margin:6px 0 12px;}
+.pag-title{font-family:var(--serif);font-weight:900;font-size:1.3rem;line-height:1.15;}
+.pag-subt{font-family:var(--mono);font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:3px;}
+.pag-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:6px;}
+.pag-kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 13px;min-width:0;}
+.pag-kpi small{display:block;font-family:var(--mono);font-size:.56rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;}
+.pag-kpi b{display:block;font-family:var(--serif);font-size:1.35rem;font-weight:900;margin:3px 0 1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pag-kpi b i{font-style:normal;color:var(--muted);font-size:.9rem;}
+.pag-kpi span{font-family:var(--mono);font-size:.6rem;color:var(--muted);}
+.pag-kpi-main{background:var(--ink);border-color:var(--ink);}
+.pag-kpi-main small,.pag-kpi-main span{color:#cfc7b6;}
+.pag-kpi-main b{color:var(--gold);font-size:1.7rem;}
+.pag-kpi-main.lo b{color:#ff9b8a;} .pag-kpi-main.hi b{color:#8fdca5;}
+.pag-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;background:var(--card);border:1px solid var(--line);border-radius:12px;}
+.pag-table{width:100%;border-collapse:collapse;font-size:.76rem;min-width:560px;}
+.pag-table th{font-family:var(--mono);font-size:.57rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;text-align:right;padding:9px 8px;border-bottom:1.5px solid var(--line);background:#fbf8f1;white-space:nowrap;}
+.pag-table td{padding:7px 8px;border-bottom:1px solid #efe9dc;text-align:right;font-family:var(--mono);white-space:nowrap;}
+.pag-table th:first-child,.pag-table td.pag-name{text-align:left;position:sticky;left:0;z-index:1;}
+.pag-table td.pag-name{background:var(--card);font-family:var(--sans);font-weight:700;max-width:260px;overflow:hidden;text-overflow:ellipsis;}
+.pag-table tr.pag-sub td{color:var(--muted);font-size:.7rem;}
+.pag-table tr.pag-sub td.pag-name{font-weight:500;}
+.pag-table tr.pag-tot td{background:var(--ink);color:var(--gold);font-weight:800;border-top:1.5px solid var(--line);}
+.pag-table tr.pag-tot td small{color:#cfc7b6;}
+.pag-matrix th{text-align:center;}
+.pag-matrix th.pas-pilar-cvza-th{background:#d9f0e1;} .pag-matrix th.pas-pilar-core-th{background:#efe6f5;}
+.pag-matrix th.pas-pilar-ung-th{background:#e8eef3;} .pag-matrix th.pas-pilar-agua-th{background:#e3f0f7;}
+.pag-matrix td.pag-cell{text-align:center;line-height:1.2;}
+.pag-matrix td.pag-cell b{display:block;font-size:.85rem;}
+.pag-matrix td.pag-cell small{display:block;font-size:.56rem;opacity:.8;}
+.pag-matrix tr:not(.pag-tot) td.pag-cell.lo{background:#fbe3df;color:#9a2b1d;}
+.pag-matrix tr:not(.pag-tot) td.pag-cell.mid{background:#fff3d6;color:#8a6100;}
+.pag-matrix tr:not(.pag-tot) td.pag-cell.hi{background:#e7f3eb;color:#1e5c2e;}
+.pag-badge{display:inline-block;min-width:52px;text-align:center;padding:2px 7px;border-radius:10px;font-weight:800;}
+.pag-badge.lo{background:#fbe3df;color:#9a2b1d;} .pag-badge.mid{background:#fff3d6;color:#8a6100;} .pag-badge.hi{background:#e7f3eb;color:#1e5c2e;}
+.pag-gname{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700;margin:0 0 6px;}
+.pag-foot{font-size:.66rem;color:var(--muted);margin-top:7px;line-height:1.4;}
+.pag-ok{color:var(--green);font-weight:700;} .pag-neg{color:var(--red) !important;font-weight:700;}
+.pag-remtot{margin:10px 0 4px;padding:10px 13px;background:#f6f1e4;border:1px solid var(--line);border-radius:10px;font-size:.8rem;}
+.pag-remtot b{font-family:var(--mono);}
+
+</style>
+<script id="pagPatch">
+/* ===== PAG — Planeamiento Avance del Jefe de Ventas (Casa Central) ===== */
+const PAG_JEFE_DATA = {"info":{"informeAl":"20-oct-26","diasHabiles":26,"diasTrabajados":16,"visitas":6464,"visitasEfectivas":2485,"eficiencia":0.3844,"visitasTeoricas":442,"jefe":"100 - CABALLERO"},"grupos":[{"nombre":"FOCO 1 - VF TOTAL CERVEZAS 2026","sups":[{"objetivo":5100.81,"ventaAcum":2202.8,"tendencia":3579.54,"avance":0.7018,"mediaReal":137.67,"mediaNecesaria":289.8,"visita7":36.2,"visita14":198.47,"objDia":null,"realDia":null,"n":"GUILLEN IGNACIO"},{"objetivo":2051.19,"ventaAcum":915.63,"tendencia":1487.9,"avance":0.7254,"mediaReal":57.23,"mediaNecesaria":113.56,"visita7":55.83,"visita14":83.85,"objDia":null,"realDia":null,"n":"SANS LUCAS"}],"total":{"objetivo":7152,"ventaAcum":3118.43,"tendencia":5067.44,"avance":0.7085,"mediaReal":194.9,"mediaNecesaria":403.36,"visita7":92.03,"visita14":282.32,"objDia":null,"realDia":null}},{"nombre":"Foco 2 - Above core 2026","sups":[{"objetivo":580.05,"ventaAcum":207.51,"tendencia":337.2,"avance":0.5813,"mediaReal":12.97,"mediaNecesaria":37.25,"visita7":5.3,"visita14":18.73,"objDia":null,"realDia":null,"n":"GUILLEN IGNACIO"},{"objetivo":306.44,"ventaAcum":145.49,"tendencia":236.42,"avance":0.7715,"mediaReal":9.09,"mediaNecesaria":16.09,"visita7":10.47,"visita14":15.92,"objDia":null,"realDia":null,"n":"SANS LUCAS"}],"total":{"objetivo":886.48,"ventaAcum":353,"tendencia":573.62,"avance":0.6471,"mediaReal":22.06,"mediaNecesaria":53.35,"visita7":15.78,"visita14":34.65,"objDia":null,"realDia":null}},{"nombre":"Foco 3 - Total UNG 2026","sups":[{"objetivo":3430.33,"ventaAcum":1401.32,"tendencia":2277.14,"avance":0.6638,"mediaReal":87.58,"mediaNecesaria":202.9,"visita7":31.57,"visita14":379.16,"objDia":null,"realDia":null,"n":"GUILLEN IGNACIO"},{"objetivo":1157.69,"ventaAcum":510.29,"tendencia":829.22,"avance":0.7163,"mediaReal":31.89,"mediaNecesaria":64.74,"visita7":56.36,"visita14":27.03,"objDia":null,"realDia":null,"n":"SANS LUCAS"}],"total":{"objetivo":4588.02,"ventaAcum":1911.61,"tendencia":3106.36,"avance":0.6771,"mediaReal":119.48,"mediaNecesaria":267.64,"visita7":87.94,"visita14":406.2,"objDia":null,"realDia":null}},{"nombre":"Foco 4 - Total Aguas 2026","sups":[{"objetivo":99.76,"ventaAcum":68.39,"tendencia":111.13,"avance":1.1139,"mediaReal":4.27,"mediaNecesaria":3.14,"visita7":5.55,"visita14":22.26,"objDia":null,"realDia":null,"n":"GUILLEN IGNACIO"},{"objetivo":50.78,"ventaAcum":24.38,"tendencia":39.61,"avance":0.7799,"mediaReal":1.52,"mediaNecesaria":2.64,"visita7":2.25,"visita14":1.26,"objDia":null,"realDia":null,"n":"SANS LUCAS"}],"total":{"objetivo":150.54,"ventaAcum":92.76,"tendencia":150.74,"avance":1.0013,"mediaReal":5.8,"mediaNecesaria":5.78,"visita7":7.8,"visita14":23.52,"objDia":null,"realDia":null}}],"total":{"objetivo":12777.05,"ventaAcum":5475.79,"tendencia":8898.16,"avance":0.6964,"mediaReal":342.24,"mediaNecesaria":730.13,"visita7":203.55,"visita14":746.69,"objDia":null,"realDia":null},"rmv":[{"n":"FOCO 1 - VF TOTAL CERVEZAS 2026","objetivo":7152,"ventaAcum":3118.43,"tendencia":5067.44,"avance":0.7085,"mediaReal":194.9,"mediaNecesaria":403.36,"objPesos":318579.12,"tendPesos":143360.6},{"n":"Foco 2 - Above core 2026","objetivo":886.48,"ventaAcum":353,"tendencia":573.62,"avance":0.6471,"mediaReal":22.06,"mediaNecesaria":53.35,"objPesos":140474.4,"tendPesos":0},{"n":"CERVEZAS , GIFTPACK CERVEZAS , SIDRAS , POP","objetivo":7152,"ventaAcum":3118.43,"tendencia":5067.44,"avance":0.7085,"mediaReal":194.9,"mediaNecesaria":403.36,"objPesos":459053.52,"tendPesos":143360.6},{"n":"Foco 4 - Total Aguas 2026","objetivo":150.54,"ventaAcum":92.76,"tendencia":150.74,"avance":1.0013,"mediaReal":5.8,"mediaNecesaria":5.78,"objPesos":37447.66,"tendPesos":39694.52},{"n":"GASEOSAS , AGUAS , POP AGUAS","objetivo":150.54,"ventaAcum":92.76,"tendencia":150.74,"avance":1.0013,"mediaReal":5.8,"mediaNecesaria":5.78,"objPesos":37447.66,"tendPesos":39694.52},{"n":"Foco 3 - Total UNG 2026","objetivo":4588.02,"ventaAcum":1911.61,"tendencia":3106.36,"avance":0.6771,"mediaReal":119.48,"mediaNecesaria":267.64,"objPesos":112403.87,"tendPesos":50581.74},{"n":"GASEOSAS , AGUAS SABORIZADAS , AGUAS , ISOTONICAS , DEL VALLE , JUGOS , GIFTPACK CERVEZAS , POP GASEOSAS , SPIRITS ADYACENCIAS , BEBIDAS SABORIZADAS ,","objetivo":4588.02,"ventaAcum":1911.61,"tendencia":3106.36,"avance":0.6771,"mediaReal":119.48,"mediaNecesaria":267.64,"objPesos":112403.87,"tendPesos":50581.74}],"rmvTotal":{"n":"Total Jefe Ventas","objetivo":11890.56,"ventaAcum":5122.79,"tendencia":8324.54,"avance":0.7001,"mediaReal":320.17,"mediaNecesaria":676.78,"objPesos":608905.05,"tendPesos":233636.87},"ips":[{"n":"% TAREAS CREACION DE VALOR VALIDADAS HW","objetivo":0,"real":0,"avance":0,"objPesos":187346.03,"tendPesos":0},{"n":"% TAREAS EJEC,DIGIT, SC VALIDADAS HW","objetivo":0,"real":0,"avance":0,"objPesos":93673.02,"tendPesos":0},{"n":"GMV MKTP","objetivo":0,"real":0,"avance":0,"objPesos":46852.9,"tendPesos":0}],"totalRemuneraciones":233636.87,"hoja":"PAG JEFE"};
+(function(){
+  function D(){ return (typeof PAG_JEFE_DATA !== "undefined" && PAG_JEFE_DATA && PAG_JEFE_DATA.grupos) ? PAG_JEFE_DATA : null; }
+  function e(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function f(v, d){ if(v == null || isNaN(v)) return "—"; return Number(v).toLocaleString("es-AR", {minimumFractionDigits: d == null ? 1 : d, maximumFractionDigits: d == null ? 1 : d}); }
+  function pct(v){ return v == null || isNaN(v) ? "—" : f(v * 100, 1) + "%"; }
+  function pesos(v){ return v == null || isNaN(v) ? "—" : "$ " + f(v, 0); }
+  function cls(a){ if(a == null || isNaN(a)) return ""; return a < 0.6 ? "lo" : (a < 0.9 ? "mid" : "hi"); }
+  function badge(a){ return '<span class="pag-badge ' + cls(a) + '">' + pct(a) + "</span>"; }
+  function pilar(n){ n = String(n || "").toUpperCase(); if(n.indexOf("CERVEZA") !== -1) return "pas-pilar-cvza"; if(n.indexOf("ABOVE CORE") !== -1) return "pas-pilar-core"; if(n.indexOf("UNG") !== -1) return "pas-pilar-ung"; if(n.indexOf("AGUA") !== -1) return "pas-pilar-agua"; return ""; }
+  function corto(n){ return String(n || "").replace(/\s*20\d\d\s*$/, "").replace(/^FOCO\s*\d+\s*-\s*(VF\s*)?/i, "").trim(); }
+  function nombreSup(n){ var p = String(n || "").trim().split(/\s+/); return p[0] ? p[0].charAt(0) + p[0].slice(1).toLowerCase() : n; }
+  // Avance ideal del día = días trabajados / días hábiles
+  function ideal(d){ var i = d.info || {}; return (i.diasHabiles && i.diasTrabajados != null) ? i.diasTrabajados / i.diasHabiles : null; }
+
+  function kpis(d){
+    var i = d.info || {}, t = d.total || {}, id = ideal(d), h = "";
+    h += '<div class="pag-kpis">';
+    h += '<div class="pag-kpi pag-kpi-main ' + cls(t.avance) + '"><small>Avance total (tendencia)</small><b>' + pct(t.avance) + "</b><span>" + f(t.tendencia) + " / " + f(t.objetivo) + " HL</span></div>";
+    h += '<div class="pag-kpi"><small>Venta acumulada</small><b>' + f(t.ventaAcum) + '</b><span>HL · ' + (t.objetivo ? pct(t.ventaAcum / t.objetivo) + " del objetivo" : "") + "</span></div>";
+    h += '<div class="pag-kpi"><small>Media real → necesaria</small><b>' + f(t.mediaReal) + ' <i>→</i> ' + f(t.mediaNecesaria) + "</b><span>HL por día</span></div>";
+    h += '<div class="pag-kpi"><small>Días trabajados</small><b>' + (i.diasTrabajados != null ? i.diasTrabajados : "—") + " / " + (i.diasHabiles != null ? i.diasHabiles : "—") + "</b><span>" + (id != null ? "avance ideal " + pct(id) : "") + "</span></div>";
+    if(i.visitas != null || i.eficiencia != null)
+      h += '<div class="pag-kpi"><small>Visitas efectivas</small><b>' + f(i.visitasEfectivas, 0) + " / " + f(i.visitas, 0) + "</b><span>eficiencia " + pct(i.eficiencia) + "</span></div>";
+    if(d.totalRemuneraciones != null)
+      h += '<div class="pag-kpi"><small>Remuneración variable (tendencia)</small><b>' + pesos(d.totalRemuneraciones) + "</b><span>" + (d.rmvTotal && d.rmvTotal.objPesos ? "de " + pesos(d.rmvTotal.objPesos) + " posibles" : "") + "</span></div>";
+    return h + "</div>";
+  }
+
+  // Matriz gerencial: supervisor × foco (avance)
+  function matriz(d){
+    var sups = [];
+    d.grupos.forEach(function(g){ g.sups.forEach(function(s){ if(sups.indexOf(s.n) === -1) sups.push(s.n); }); });
+    var h = '<div class="section-title">Supervisores por foco</div><div class="pag-wrap"><table class="pag-table pag-matrix"><thead><tr><th>Supervisor</th>';
+    d.grupos.forEach(function(g){ h += '<th class="' + pilar(g.nombre) + '-th">' + e(corto(g.nombre)) + "</th>"; });
+    h += "</tr></thead><tbody>";
+    sups.forEach(function(n){
+      h += '<tr><td class="pag-name">' + e(n) + "</td>";
+      d.grupos.forEach(function(g){
+        var s = g.sups.filter(function(x){ return x.n === n; })[0];
+        h += s ? '<td class="pag-cell ' + cls(s.avance) + '"><b>' + pct(s.avance) + "</b><small>" + f(s.tendencia) + " / " + f(s.objetivo) + "</small></td>" : "<td>—</td>";
+      });
+      h += "</tr>";
+    });
+    h += '<tr class="pag-tot"><td class="pag-name">Total Jefe de Ventas</td>';
+    d.grupos.forEach(function(g){ var t = g.total || {}; h += '<td class="pag-cell ' + cls(t.avance) + '"><b>' + pct(t.avance) + "</b><small>" + f(t.tendencia) + " / " + f(t.objetivo) + "</small></td>"; });
+    h += "</tr></tbody></table></div>";
+    var id = ideal(d);
+    h += '<div class="pag-foot">Cada celda: <b>avance</b> (tendencia ÷ objetivo) y debajo tendencia / objetivo en HL. Verde ≥ 90% · amarillo 60–90% · rojo &lt; 60%' + (id != null ? " · avance ideal al día " + pct(id) : "") + ".</div>";
+    return h;
+  }
+
+  var COLS = '<th>Objetivo</th><th>Venta Acum.</th><th>Tendencia</th><th>Avance</th><th>Media Real</th><th>Media Nec.</th><th>Visita-7</th><th>Visita-14</th>';
+  function celdas(v){
+    return '<td class="pas-num-strong">' + f(v.objetivo) + '</td><td class="pas-num-strong">' + f(v.ventaAcum) + '</td><td class="dim">' + f(v.tendencia) + "</td><td>" + badge(v.avance) +
+      '</td><td class="dim">' + f(v.mediaReal) + '</td><td class="dim ' + (v.mediaNecesaria != null && v.mediaReal != null && v.mediaReal < v.mediaNecesaria ? "pag-neg" : "") + '">' + f(v.mediaNecesaria) + '</td><td class="dim">' + f(v.visita7) + '</td><td class="dim">' + f(v.visita14) + "</td>";
+  }
+  function detalle(d){
+    var h = '<div class="section-title">Detalle por foco</div>';
+    d.grupos.forEach(function(g){
+      h += '<div class="pas-pilar-block ' + pilar(g.nombre) + '"><div class="pag-gname">' + e(g.nombre) + '</div><div class="sens-table-scroll"><table class="sens-table"><thead><tr><th>Supervisor</th>' + COLS + "</tr></thead><tbody>";
+      g.sups.forEach(function(s){ h += "<tr><td><b>" + e(s.n) + "</b></td>" + celdas(s) + "</tr>"; });
+      if(g.total) h += '<tr class="pas-total-row" style="font-weight:700"><td>Total Mesa</td>' + celdas(g.total) + "</tr>";
+      h += "</tbody></table></div></div>";
+    });
+    if(d.total){
+      h += '<div class="pas-total-block"><div class="section-title" style="margin-top:0">🏁 Total Jefe de Ventas</div><div class="sens-table-scroll"><table class="sens-table"><thead><tr><th></th>' + COLS + '</tr></thead><tbody><tr class="pas-total-row" style="font-weight:700"><td>Casa Central</td>' + celdas(d.total) + "</tr></tbody></table></div></div>";
+    }
+    return h;
+  }
+
+  function remuneracion(d){
+    if(!d.rmv || !d.rmv.length) return "";
+    var h = '<div class="section-title">Remuneración variable / avance de volumen</div><div class="pag-wrap"><table class="pag-table"><thead><tr><th>Grupo de productos</th><th>Objetivo</th><th>Venta Acum.</th><th>Tendencia</th><th>Avance</th><th>Objetivo $</th><th>Tendencia $</th></tr></thead><tbody>';
+    d.rmv.forEach(function(r){
+      var foco = /^FOCO/i.test(r.n);
+      h += "<tr" + (foco ? "" : ' class="pag-sub"') + '><td class="pag-name" title="' + e(r.n) + '">' + e(foco ? r.n : (r.n.length > 46 ? r.n.slice(0, 44) + "…" : r.n)) + "</td><td>" + f(r.objetivo) + "</td><td>" + f(r.ventaAcum) + "</td><td>" + f(r.tendencia) + "</td><td>" + badge(r.avance) + "</td><td>" + pesos(r.objPesos) + '</td><td class="' + (r.tendPesos ? "pag-ok" : "pag-neg") + '">' + pesos(r.tendPesos) + "</td></tr>";
+    });
+    var t = d.rmvTotal;
+    if(t) h += '<tr class="pag-tot"><td class="pag-name">Total Jefe de Ventas</td><td>' + f(t.objetivo) + "</td><td>" + f(t.ventaAcum) + "</td><td>" + f(t.tendencia) + "</td><td>" + badge(t.avance) + "</td><td>" + pesos(t.objPesos) + "</td><td>" + pesos(t.tendPesos) + "</td></tr>";
+    h += "</tbody></table></div>";
+    if(d.ips && d.ips.length){
+      h += '<div class="section-title">Otros ítems de performance</div><div class="pag-wrap"><table class="pag-table"><thead><tr><th>Ítem</th><th>Objetivo</th><th>Real</th><th>Avance</th><th>Objetivo $</th><th>Tendencia $</th></tr></thead><tbody>';
+      d.ips.forEach(function(r){ h += '<tr><td class="pag-name">' + e(r.n) + "</td><td>" + f(r.objetivo) + "</td><td>" + f(r.real) + "</td><td>" + badge(r.avance) + "</td><td>" + pesos(r.objPesos) + '</td><td class="' + (r.tendPesos ? "pag-ok" : "pag-neg") + '">' + pesos(r.tendPesos) + "</td></tr>"; });
+      h += "</tbody></table></div>";
+    }
+    if(d.totalRemuneraciones != null) h += '<div class="pag-remtot">Total de remuneraciones (tendencia): <b>' + pesos(d.totalRemuneraciones) + "</b></div>";
+    return h;
+  }
+
+  function render(){
+    var el = document.getElementById("pagJefeContent"); if(!el) return;
+    var d = D();
+    if(!d){ el.innerHTML = '<div class="stock-empty">Todavía no se cargó el PAG del Jefe de Ventas. Pegá el informe "Zuppa - Casa Central" en la pestaña PAG JEFE y actualizá el dashboard.</div>'; return; }
+    var i = d.info || {};
+    var h = '<div class="pag-head"><div><div class="pag-title">Avance de venta — Jefe de Ventas</div><div class="pag-subt">' + e(i.jefe ? "Jefe de Ventas " + i.jefe : "Casa Central") + (i.informeAl ? " · Informe al " + e(i.informeAl) : "") + "</div></div>" + "</div>";
+    h += kpis(d) + matriz(d) + detalle(d) + remuneracion(d);
+    el.innerHTML = h;
+  }
+  window.pagJefeRender = render;
+
+  function crear(){
+    if(document.getElementById("supViewPagBtn")) return;
+    var ref = document.getElementById("supViewPasBtn");
+    if(!ref) return;
+    var pill = document.createElement("div");
+    pill.className = "pill"; pill.id = "supViewPagBtn"; pill.textContent = "🏢 PAG Jefe de Ventas"; pill.style.display = "none";
+    pill.onclick = function(){ supSetView("pagjefe"); };
+    ref.parentNode.insertBefore(pill, ref.nextSibling);
+    var vista = document.createElement("div");
+    vista.id = "supViewPagJefe"; vista.style.display = "none";
+    vista.innerHTML = '<div class="sup-note">Planeamiento Avance del Jefe de Ventas (PAG): el mismo esquema que el PAS, pero con los dos supervisores. Se actualiza con el informe "Zuppa - Casa Central".</div><div class="cd-download-row"><button class="cd-download-btn" onclick="descargarCierreComoImagen(this,\'pagJefeContent\',\'PAG_Jefe_de_Ventas\')">⬇️ Descargar imagen</button></div><div id="pagJefeContent"></div>';
+    var ancla = document.getElementById("supViewPlan");
+    if(ancla) ancla.parentNode.insertBefore(vista, ancla); else pill.parentNode.parentNode.appendChild(vista);
+  }
+  function visible(){
+    var a = (typeof supAuthData !== "undefined" && supAuthData) ? supAuthData : null;
+    return !!(a && a.scope === "all" && a.role !== "liderbb");
+  }
+  var origSet = window.supSetView;
+  if(typeof origSet !== "function") return;
+  window.supSetView = function(view){
+    crear();
+    var btn = document.getElementById("supViewPagBtn"), vis = document.getElementById("supViewPagJefe");
+    if(view === "pagjefe" && btn && vis){
+      try{ origSet("__pagjefe"); }catch(err){}
+      document.querySelectorAll(".pill.active").forEach(function(p){ if(p.parentNode === btn.parentNode) p.classList.remove("active"); });
+      btn.classList.add("active"); vis.style.display = "block";
+      render();
+      return;
+    }
+    if(btn){ btn.classList.remove("active"); vis.style.display = "none"; }
+    return origSet.apply(this, arguments);
+  };
+  var origShow = window.showSupContent;
+  if(typeof origShow === "function"){
+    window.showSupContent = function(){
+      var r = origShow.apply(this, arguments); crear();
+      var b = document.getElementById("supViewPagBtn");
+      if(b) b.style.display = visible() ? "" : "none";
+      return r;
+    };
+  }
+})();
+
+</script>
 </body>
 </html>
