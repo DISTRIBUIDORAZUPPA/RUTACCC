@@ -9479,5 +9479,53 @@ const PAG_JEFE_DATA = {"info":{"informeAl":"20-oct-26","diasHabiles":26,"diasTra
 })();
 
 </script>
+<script id="ejecPatch">
+/* ===== Usuario Ejecutiva de Ventas (Dana Kaluza): solo VR + bloque Revenue ===== */
+(function(){
+  if(typeof SUP_AUTH === "undefined") return;
+  SUP_AUTH["kaluza2026"] = {name:"DANA KALUZA", scope:"all", role:"ejecutiva"};
+  var PERMITIDAS = ["supViewVrBtn","supViewTradeBtn","supViewRevTsBtn","supViewRevTopBtn","supViewRevNegBtn"];
+  function auth(){ return (typeof supAuthData !== "undefined" && supAuthData) ? supAuthData : null; }
+  function ocultar(el){ if(!el || el.getAttribute("data-ejec") === "1") return; el.setAttribute("data-ejec-prev", el.style.display || ""); el.setAttribute("data-ejec", "1"); el.style.display = "none"; }
+  function restaurar(){
+    document.querySelectorAll('[data-ejec="1"]').forEach(function(el){ el.style.display = el.getAttribute("data-ejec-prev") || ""; el.removeAttribute("data-ejec"); el.removeAttribute("data-ejec-prev"); });
+  }
+  function aplicar(){
+    var c = document.getElementById("supContent"); if(!c) return;
+    var w = document.getElementById("supWelcome");
+    if(w) w.innerHTML = "<span>👋 Hola Di!!</span>";
+    // pastillas de navegación: solo VR y Revenue
+    Array.prototype.forEach.call(c.children, function(fila){
+      if(!fila.classList || !fila.classList.contains("pill-row")) return;
+      var alguna = false;
+      Array.prototype.forEach.call(fila.querySelectorAll(".pill"), function(p){
+        if(PERMITIDAS.indexOf(p.id) === -1) ocultar(p); else { p.style.display = ""; alguna = true; }
+      });
+      if(!alguna){
+        ocultar(fila);
+        var t = fila.previousElementSibling;
+        if(t && t.classList.contains("section-title")) ocultar(t);
+      }
+    });
+  }
+  var origShow = window.showSupContent;
+  if(typeof origShow !== "function") return;
+  window.showSupContent = function(){
+    restaurar();
+    var r = origShow.apply(this, arguments);
+    var a = auth();
+    if(a && a.role === "ejecutiva"){ aplicar(); try{ supSetView("vr"); }catch(e){} }
+    return r;
+  };
+  // por si alguien intenta abrir otra vista (no hay pastillas, pero por las dudas)
+  var origSet = window.supSetView;
+  if(typeof origSet === "function") window.supSetView = function(view){
+    var a = auth();
+    if(a && a.role === "ejecutiva" && ["vr","trade","revts","revtop","revneg"].indexOf(view) === -1) view = "vr";
+    return origSet.call(this, view);
+  };
+})();
+
+</script>
 </body>
 </html>
