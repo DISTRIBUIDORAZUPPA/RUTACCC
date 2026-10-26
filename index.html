@@ -3610,9 +3610,10 @@ function renderTsDescentralizadasObjetivo(){
   out += `<div class="sup-note">Mostrando solo acciones vigentes en ${mesNombre_}.</div>`;
 
   out += `<div class="sens-table-scroll"><table class="sens-table">
-      <thead><tr><th>Estado</th><th>Acción</th><th>Producto</th><th>Vigencia</th><th>TS Total</th><th>% Zuppa</th><th>% CMQ</th><th>OBJ $ Zuppa</th><th>OBJ $ CMQ</th><th>TS Gastado</th><th>Resta</th><th>% consumido</th></tr></thead>
+      <thead><tr><th>Estado</th><th>Código</th><th>Acción</th><th>Producto</th><th>Vigencia</th><th>TS Total</th><th>% Zuppa</th><th>% CMQ</th><th>OBJ $ Zuppa</th><th>OBJ $ CMQ</th><th>TS Gastado</th><th>Resta</th><th>% consumido</th></tr></thead>
       <tbody>${rows.map(r => `<tr>
         <td><span style="background:${r.estado.bg};color:${r.estado.fg};font-weight:800;padding:3px 9px;border-radius:20px;font-size:.72rem;white-space:nowrap;display:inline-block;">${r.estado.emoji} ${r.estado.label}</span></td>
+        <td class="tsdescCod" style="font-family:var(--mono);font-weight:700;white-space:nowrap">${esc(r.it.codigo || '—')}</td>
         <td>${esc(r.it.nombre)}</td>
         <td>${esc(r.it.producto)}</td>
         <td>${esc(r.it.vigencia)}</td>
