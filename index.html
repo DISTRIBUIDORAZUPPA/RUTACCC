@@ -10010,5 +10010,376 @@ const RANKING_TAB_DATA = {"mes":"OCTUBRE","label":"Octubre 2026","act":"26/10/20
 })();
 
 </script>
+<style id="vrDashStyle">
+/* VR — vista Dashboard */
+.vd-head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;background:var(--ink);color:#fff;border-radius:14px;padding:14px 18px;margin-bottom:14px;}
+.vd-title{font-family:var(--serif);font-weight:900;font-size:1.35rem;color:var(--gold);}
+.vd-sub{font-family:var(--mono);font-size:.6rem;color:#cfc7b6;text-transform:uppercase;letter-spacing:.08em;margin-top:2px;}
+.vd-mes{flex:1 1 260px;max-width:460px;}
+.vd-mes-l{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.62rem;color:#cfc7b6;}
+.vd-mes-l b{color:#fff;}
+.vd-mes-t{height:8px;background:rgba(255,255,255,.14);border-radius:5px;overflow:hidden;margin:5px 0;}
+.vd-mes-t span{display:block;height:100%;background:var(--gold);border-radius:5px;}
+.vd-sec{margin-bottom:14px;}
+.vd-sec-t{font-family:var(--mono);font-size:.62rem;font-weight:800;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin:0 0 7px 2px;}
+.vd-grid{display:grid;grid-template-columns:minmax(250px,1.25fr) repeat(auto-fit,minmax(210px,1fr));gap:10px;}
+.vd-grid.vd-solos{grid-template-columns:repeat(auto-fit,minmax(250px,1fr));}
+.vd-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:9px;border-top:4px solid #d9d2c3;min-width:0;}
+.vd-card.hi{border-top-color:#1e7a45;} .vd-card.mid{border-top-color:#c98a00;} .vd-card.lo{border-top-color:#b8402f;}
+.vd-card-h{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.vd-name{font-family:var(--serif);font-weight:900;font-size:1rem;line-height:1.1;}
+.vd-grp{font-family:var(--mono);font-size:.55rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+.vd-st{font-family:var(--mono);font-size:.6rem;font-weight:800;padding:3px 8px;border-radius:10px;white-space:nowrap;background:#f1ece2;color:var(--muted);}
+.vd-st.hi{background:#e3f3e8;color:#1e5c2e;} .vd-st.mid{background:#fff1cf;color:#8a5f00;} .vd-st.lo{background:#fbe1dc;color:#9a2b1d;}
+.vd-gwrap{display:flex;justify-content:center;margin:-2px 0 -6px;}
+.vd-t{font-family:var(--serif);font-weight:900;font-size:1.9rem;line-height:1;}
+.vd-t small{display:block;font-family:var(--mono);font-size:.55rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}
+.vd-t.hi{color:#1e7a45;} .vd-t.mid{color:#a87400;} .vd-t.lo{color:#b8402f;}
+.vd-av-t{position:relative;height:10px;background:#efe9dc;border-radius:6px;}
+.vd-av-t span{display:block;height:100%;border-radius:6px;background:#9aa0ad;}
+.vd-av-t span.hi{background:#1e7a45;} .vd-av-t span.mid{background:#d39b14;} .vd-av-t span.lo{background:#c9563f;}
+.vd-av-t i{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);border-radius:1px;}
+.vd-av-l{display:flex;justify-content:space-between;gap:6px;font-family:var(--mono);font-size:.58rem;color:var(--muted);margin-top:4px;}
+.vd-av-l b{color:var(--ink);}
+.vd-kv{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.vd-kv div{background:#faf7f0;border-radius:8px;padding:5px 7px;min-width:0;}
+.vd-kv span{display:block;font-family:var(--mono);font-size:.5rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.vd-kv b{display:block;font-family:var(--mono);font-size:.8rem;margin-top:1px;}
+.vd-ritmo-l{display:flex;justify-content:space-between;gap:6px;font-size:.68rem;color:var(--muted);}
+.vd-ritmo-l b{color:var(--ink);font-family:var(--mono);}
+.vd-ritmo-t{height:6px;background:#efe9dc;border-radius:4px;overflow:hidden;margin-top:4px;}
+.vd-ritmo-t span{display:block;height:100%;background:var(--amber);border-radius:4px;}
+.vd-pie{display:flex;gap:6px;flex-wrap:wrap;font-family:var(--mono);font-size:.58rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:7px;}
+.vd-pie span{background:#f6f2e9;border-radius:6px;padding:2px 6px;}
+.vd-pie .up{background:#e3f3e8;color:#1e5c2e;font-weight:700;} .vd-pie .down{background:#fbe1dc;color:#9a2b1d;font-weight:700;}
+.vd-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:14px;}
+.vd-panel-t{font-family:var(--serif);font-weight:900;font-size:1rem;margin-bottom:10px;}
+.vd-panel-t small{font-family:var(--mono);font-size:.56rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-left:6px;}
+.vd-hb{display:flex;flex-direction:column;gap:6px;}
+.vd-hb-r{display:grid;grid-template-columns:150px 1fr 64px;gap:10px;align-items:center;}
+.vd-hb-n{font-size:.72rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.vd-hb-t{position:relative;height:14px;background:#f3eee4;border-radius:0 4px 4px 0;}
+.vd-hb-t span{display:block;height:100%;border-radius:0 4px 4px 0;background:#9aa0ad;}
+.vd-hb-t span.hi{background:#1e7a45;} .vd-hb-t span.mid{background:#d39b14;} .vd-hb-t span.lo{background:#c9563f;}
+.vd-hb-t i{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);}
+.vd-hb-v{font-family:var(--mono);font-size:.7rem;font-weight:800;text-align:right;color:var(--ink);}
+.vd-ley{font-size:.66rem;color:var(--muted);margin:-4px 0 14px;line-height:1.45;}
+.vd-pil{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;}
+.vd-pil-c{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fdfbf6;display:flex;flex-direction:column;gap:8px;min-width:0;}
+.vd-pil-h{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.vd-vt{width:100%;border-collapse:collapse;font-size:.7rem;}
+.vd-vt th{font-family:var(--mono);font-size:.5rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700;text-align:right;padding:4px 4px;border-bottom:1px solid var(--line);white-space:nowrap;}
+.vd-vt td{padding:6px 4px;border-bottom:1px solid #efe9dc;text-align:right;font-family:var(--mono);white-space:nowrap;}
+.vd-vt td.vd-vn{text-align:left;font-family:var(--sans);font-weight:800;}
+.vd-mini{display:inline-block;width:46px;height:6px;background:#efe9dc;border-radius:4px;overflow:hidden;vertical-align:middle;margin-right:5px;}
+.vd-mini span{display:block;height:100%;background:#9aa0ad;}
+.vd-mini span.hi{background:#1e7a45;} .vd-mini span.mid{background:#d39b14;} .vd-mini span.lo{background:#c9563f;}
+.vd-vt b.hi{color:#1e7a45;} .vd-vt b.mid{color:#a87400;} .vd-vt b.lo{color:#b8402f;}
+.vd-chip{display:inline-block;padding:2px 6px;border-radius:8px;font-weight:800;background:#f1ece2;}
+.vd-chip.hi{background:#e3f3e8;color:#1e5c2e;} .vd-chip.mid{background:#fff1cf;color:#8a5f00;} .vd-chip.lo{background:#fbe1dc;color:#9a2b1d;}
+@media(max-width:640px){
+  .vd-grid{grid-template-columns:1fr;}
+  .vd-hb-r{grid-template-columns:96px 1fr 54px;gap:6px;}
+  .vd-pil{grid-template-columns:1fr;}
+  .vd-vt th:nth-child(5),.vd-vt td:nth-child(5){display:none;}
+}
+
+</style>
+<script id="vrDashPatch">
+/* ===== VR — vista Dashboard (indicadores visuales) ===== */
+(function(){
+  function e(s){ return (typeof esc === "function") ? esc(String(s == null ? "" : s)) : String(s == null ? "" : s); }
+  function n(v, d){ return v == null || !isFinite(v) ? "—" : Number(v).toLocaleString("es-AR", {minimumFractionDigits: d || 0, maximumFractionDigits: d || 0}); }
+  function pc(v, d){ return v == null || !isFinite(v) ? "—" : Number(v).toLocaleString("es-AR", {minimumFractionDigits: d == null ? 1 : d, maximumFractionDigits: d == null ? 1 : d}) + "%"; }
+  function st(t){ if(t == null || !isFinite(t)) return {c:"", w:"Sin dato", i:"·"}; return t >= 100 ? {c:"hi", w:"Llega", i:"▲"} : (t >= 85 ? {c:"mid", w:"Cerca", i:"●"} : {c:"lo", w:"Atrasado", i:"▼"}); }
+  function M(k, key){ var m = VR_DATA.metricas && VR_DATA.metricas[k]; return m && m.valores ? m.valores[key] : null; }
+
+  // Medidor semicircular de tendencia (0–120%, marca en 100%)
+  function gauge(t, size){
+    var W = size || 150, H = W * 0.62, cx = W / 2, cy = W * 0.55, r = W * 0.42, sw = W * 0.09;
+    var max = 120, v = Math.max(0, Math.min(max, t || 0));
+    function pt(p){ var a = Math.PI * (1 - p / max); return [cx + r * Math.cos(a), cy - r * Math.sin(a)]; }
+    function arc(p0, p1){ var a = pt(p0), b = pt(p1); return "M" + a[0].toFixed(1) + " " + a[1].toFixed(1) + " A" + r + " " + r + " 0 0 1 " + b[0].toFixed(1) + " " + b[1].toFixed(1); }
+    var s = st(t), col = s.c === "hi" ? "#1e7a45" : (s.c === "mid" ? "#c98a00" : "#b8402f");
+    var t100 = pt(100), ti = [cx + (r - sw * 0.9) * Math.cos(Math.PI * (1 - 100 / max)), cy - (r - sw * 0.9) * Math.sin(Math.PI * (1 - 100 / max))];
+    return '<svg class="vd-gauge" viewBox="0 0 ' + W + " " + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="Tendencia ' + pc(t) + '">' +
+      '<path d="' + arc(0, max) + '" stroke="#ece5d6" stroke-width="' + sw + '" fill="none" stroke-linecap="round"/>' +
+      (v > 0.5 ? '<path d="' + arc(0, v) + '" stroke="' + col + '" stroke-width="' + sw + '" fill="none" stroke-linecap="round"/>' : "") +
+      '<line x1="' + ti[0].toFixed(1) + '" y1="' + ti[1].toFixed(1) + '" x2="' + t100[0].toFixed(1) + '" y2="' + t100[1].toFixed(1) + '" stroke="#1e2230" stroke-width="2"/>' +
+      '<text x="' + cx + '" y="' + (cy - r * 0.18) + '" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-weight="900" font-size="' + (W * 0.17) + '" fill="#1e2230">' + pc(t, 0) + "</text>" +
+      '<text x="' + cx + '" y="' + (cy + W * 0.02) + '" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="' + (W * 0.065) + '" fill="#6b6355">TENDENCIA</text></svg>';
+  }
+  // Barra de avance con la marca de "lo esperable a hoy"
+  function avance(alc, ideal){
+    var w = Math.max(0, Math.min(100, alc || 0)), s = st(ideal ? (alc || 0) / ideal * 100 : null).c;
+    return '<div class="vd-av" title="Vendido ' + pc(alc) + ' del objetivo · esperable a hoy ' + pc(ideal) + '"><div class="vd-av-t"><span class="' + s + '" style="width:' + w + '%"></span><i style="left:' + Math.min(100, ideal) + '%"></i></div>' +
+      '<div class="vd-av-l"><span>Vendido <b>' + pc(alc, 0) + "</b> del objetivo</span><span>esperable hoy " + pc(ideal, 0) + "</span></div></div>";
+  }
+  function card(c, ideal, grande){
+    var k = c.key, t = M("tendencia", k), obj = M("objetivos_hl", k), vr = M("venta_real", k), alc = M("alcance_hl", k);
+    var mr = M("media_real", k), mn = M("mn", k), diaria = M("vr_diaria", k), mm = M("proyectado_vs_tendencia", k), plan = M("planificacion", k);
+    var s = st(t), dec = (obj != null && obj < 50) ? 1 : 0;
+    var ritmo = (mr != null && mn != null && mn > 0) ? Math.min(100, mr / mn * 100) : null;
+    var h = '<div class="vd-card ' + (grande ? "vd-big " : "") + s.c + '">' +
+      '<div class="vd-card-h"><div><div class="vd-name">' + e(c.label) + '</div><div class="vd-grp">' + e(c.group || "") + '</div></div><span class="vd-st ' + s.c + '">' + s.i + " " + s.w + "</span></div>";
+    if(grande) h += '<div class="vd-gwrap">' + gauge(t, 170) + "</div>";
+    else h += '<div class="vd-t ' + s.c + '">' + pc(t, 1) + "<small>tendencia</small></div>";
+    h += avance(alc, ideal);
+    h += '<div class="vd-kv"><div><span>Real</span><b>' + n(vr, dec) + "</b></div><div><span>Objetivo</span><b>" + n(obj, dec) + "</b></div><div><span>Cierre estimado</span><b>" + n(M("tendencia_hl", k), dec) + "</b></div></div>";
+    if(mn != null && isFinite(mn)){
+      h += '<div class="vd-ritmo"><div class="vd-ritmo-l"><span>Media real <b>' + n(mr, 1) + "</b>" + (mr != null && isFinite(mr) ? "/día" : "") + "</span><span>" + (mn <= 0 ? "✅ Ya llegó al objetivo" : "Necesaria <b>" + n(mn, 1) + "</b>/día") + "</span></div>" +
+        (mn > 0 && ritmo != null ? '<div class="vd-ritmo-t"><span style="width:' + Math.max(2, ritmo) + '%"></span></div>' : "") + "</div>";
+    }
+    var pie = [];
+    if(mm != null && isFinite(mm)) pie.push('<span class="' + (mm >= 0 ? "up" : "down") + '">' + (mm >= 0 ? "▲ " : "▼ ") + pc(Math.abs(mm)) + " vs año anterior</span>");
+    if(diaria != null && isFinite(diaria)) pie.push("<span>Ayer " + n(diaria, 1) + "</span>");
+    if(plan != null && isFinite(plan)) pie.push("<span>Planif. " + n(plan, 1) + "</span>");
+    if(pie.length) h += '<div class="vd-pie">' + pie.join("") + "</div>";
+    return h + "</div>";
+  }
+  function chartTend(cats){
+    var rows = cats.map(function(c){ return {c: c, t: M("tendencia", c.key)}; }).filter(function(x){ return x.t != null && isFinite(x.t); });
+    if(!rows.length) return "";
+    var max = Math.max(120, Math.min(250, Math.max.apply(null, rows.map(function(x){ return x.t; })))), x100 = 100 / max * 100;
+    return '<div class="vd-panel"><div class="vd-panel-t">Tendencia de cierre por categoría <small>la línea marca el 100% del objetivo</small></div><div class="vd-hb">' +
+      rows.map(function(x){
+        var s = st(x.t), w = Math.max(0.8, Math.min(100, x.t / max * 100));
+        return '<div class="vd-hb-r" title="' + e(x.c.label) + ": tendencia " + pc(x.t) + '"><span class="vd-hb-n">' + e(x.c.label) + '</span><span class="vd-hb-t"><span class="' + s.c + '" style="width:' + w + '%"></span><i style="left:' + x100 + '%"></i></span><span class="vd-hb-v ' + s.c + '">' + pc(x.t, 1) + (x.t > max ? " ›" : "") + "</span></div>";
+      }).join("") + "</div></div>";
+  }
+  function vendedores(titulo, pilares, ideal){
+    var h = '<div class="vd-panel"><div class="vd-panel-t">' + e(titulo) + " <small>avance por pilar y supervisor</small></div><div class=\"vd-pil\">";
+    pilares.forEach(function(p){
+      var s = st(p.tendencia);
+      h += '<div class="vd-pil-c"><div class="vd-pil-h"><div><div class="vd-name">' + e(p.pilar) + '</div><div class="vd-grp">Obj ' + n(p.objetivo) + " · Real " + n(p.venta_real) + "</div></div>" + gauge(p.tendencia, 120) + "</div>" + avance(p.alcance, ideal) +
+        '<table class="vd-vt"><thead><tr><th></th><th>Tendencia</th><th>Alcance</th><th>Media nec.</th><th>Planif.</th><th>Ayer vs planif.</th></tr></thead><tbody>' +
+        (p.vendedores || []).map(function(v){
+          var sv = st(v.tendencia), vp = v.venta_vs_planif;
+          return "<tr><td class=\"vd-vn\">" + e(v.nombre) + '</td><td><div class="vd-mini"><span class="' + sv.c + '" style="width:' + Math.min(100, v.tendencia || 0) + '%"></span></div><b class="' + sv.c + '">' + pc(v.tendencia, 1) + "</b></td><td>" + pc(v.alcance, 1) + "</td><td>" + n(v.media, 1) + "</td><td>" + n(v.planificacion, 1) + '</td><td><span class="vd-chip ' + (vp == null ? "" : (vp >= 100 ? "hi" : vp >= 80 ? "mid" : "lo")) + '">' + pc(vp, 1) + "</span></td></tr>";
+        }).join("") + "</tbody></table></div>";
+    });
+    return h + "</div></div>";
+  }
+
+  function renderDash(){
+    var elV = document.getElementById("vrVentaContent"), elS = document.getElementById("vrSupContent");
+    if(!elV || !elS) return;
+    if(typeof VR_DATA === "undefined" || !VR_DATA || !VR_DATA.categorias || !VR_DATA.categorias.length){ elV.innerHTML = '<div class="stock-empty">Todavía no hay datos de VR cargados.</div>'; elS.innerHTML = ""; return; }
+    var p = VR_DATA.periodo || {}, isAll = !(typeof supAuthData !== "undefined" && supAuthData && supAuthData.scope !== "all");
+    var ideal = p.dias_laborales ? p.transcurridos / p.dias_laborales * 100 : 0;
+    var h = '<div class="vd-head"><div class="vd-head-l"><div class="vd-title">' + e(p.titulo || "VR") + '</div><div class="vd-sub">Avance de venta · hoy ' + e(p.hoy || "") + "</div></div>" +
+      '<div class="vd-mes"><div class="vd-mes-l"><span>Mes transcurrido</span><b>' + n(p.transcurridos) + " de " + n(p.dias_laborales) + " días hábiles</b></div>" +
+      '<div class="vd-mes-t"><span style="width:' + Math.min(100, ideal) + '%"></span></div><div class="vd-mes-l"><span>' + pc(ideal, 0) + ' del mes</span><span>quedan <b>' + n(p.dias_restantes) + "</b> días</span></div></div></div>";
+    if(isAll){
+      var grupos = [];
+      VR_DATA.categorias.forEach(function(c){ var g = grupos.filter(function(x){ return x.g === c.group; })[0]; if(!g){ g = {g: c.group, cats: []}; grupos.push(g); } g.cats.push(c); });
+      // Los grupos de una sola categoría (ej. AGUA, MARKET PLACE) van juntos en una fila, después de UNG
+      var multi = grupos.filter(function(g){ return g.cats.length > 1; }), solos = grupos.filter(function(g){ return g.cats.length === 1; });
+      var orden = [];
+      multi.forEach(function(g, i){ orden.push(g); if(i === Math.min(1, multi.length - 1) && solos.length) orden.push({g: solos.map(function(x){ return x.g; }).join(" · "), cats: solos.map(function(x){ return x.cats[0]; }), solos: true}); });
+      if(!multi.length && solos.length) orden.push({g: solos.map(function(x){ return x.g; }).join(" · "), cats: solos.map(function(x){ return x.cats[0]; }), solos: true});
+      orden.forEach(function(g){
+        h += '<div class="vd-sec"><div class="vd-sec-t">' + e(g.g) + '</div><div class="vd-grid' + (g.solos ? " vd-solos" : "") + '">' +
+          g.cats.map(function(c, i){ return card(c, ideal, !g.solos && i === 0 && (g.g === "CERVEZAS CMQ" || g.g === "UNG")); }).join("") + "</div></div>";
+      });
+      h += chartTend(VR_DATA.categorias);
+      h += '<div class="vd-ley">▲ Llega: tendencia ≥ 100% · ● Cerca: 85–99% · ▼ Atrasado: menos de 85%. La barra muestra lo vendido contra el objetivo y la rayita negra lo esperable a hoy según los días hábiles.</div>';
+    }
+    elV.innerHTML = h;
+    var hs = "";
+    if(isAll && VR_DATA.jefe_ventas && VR_DATA.jefe_ventas.pilares) hs += vendedores("Jefe de Ventas", VR_DATA.jefe_ventas.pilares, ideal);
+    Object.keys(VR_DATA.supervisores || {}).forEach(function(k){
+      if(!isAll && typeof supVrOwnKey_ === "function" && k !== supVrOwnKey_()) return;
+      if(VR_DATA.supervisores[k].pilares) hs += vendedores(k, VR_DATA.supervisores[k].pilares, ideal);
+    });
+    elS.innerHTML = hs || (isAll ? "" : '<div class="stock-empty">No encontré tus datos de VR todavía.</div>');
+  }
+  window.vrDashRender = renderDash;
+
+  function pill(){
+    if(document.getElementById("vrModoDashBtn")) return;
+    var real = document.getElementById("vrModoRealBtn"); if(!real) return;
+    var b = document.createElement("div"); b.className = "pill"; b.id = "vrModoDashBtn"; b.textContent = "🎛️ Dashboard";
+    b.onclick = function(){ vrSetModo("dash"); };
+    real.parentNode.insertBefore(b, real);
+    real.textContent = "📋 Tabla";
+  }
+  if(typeof vrSetModo === "function"){
+    var origSet = window.vrSetModo;
+    window.vrSetModo = function(m){
+      pill();
+      var d = document.getElementById("vrModoDashBtn");
+      if(m === "dash"){
+        vrModo = "dash";
+        ["vrModoRealBtn", "vrModoSimBtn"].forEach(function(id){ var x = document.getElementById(id); if(x) x.classList.remove("active"); });
+        if(d) d.classList.add("active");
+        renderDash(); return;
+      }
+      if(d) d.classList.remove("active");
+      return origSet.apply(this, arguments);
+    };
+  }
+  if(typeof renderSupVr === "function"){
+    var origRender = window.renderSupVr, primera = true;
+    window.renderSupVr = function(){
+      pill();
+      if(primera){ primera = false; vrModo = "dash"; }   // al entrar, arranca en Dashboard
+      var d = document.getElementById("vrModoDashBtn");
+      if(vrModo === "dash"){
+        if(d) d.classList.add("active");
+        ["vrModoRealBtn", "vrModoSimBtn"].forEach(function(id){ var x = document.getElementById(id); if(x) x.classList.remove("active"); });
+        return renderDash();
+      }
+      return origRender.apply(this, arguments);
+    };
+  }
+})();
+
+</script>
+<script id="tsDetPatch">
+/* ===== Trade Spend › Descentralizadas: tocar una acción → en qué clientes se gastó ===== */
+(function(){
+  var st = document.createElement("style"); st.id = "tsDetStyle";
+  st.textContent =
+    "#tsDescentralizadasPanel tbody tr.tsdet-row{cursor:pointer}" +
+    "#tsDescentralizadasPanel tbody tr.tsdet-row:hover td{background:#fff8ec}" +
+    ".tsdet-ver{display:block;font-family:var(--mono);font-size:.56rem;color:var(--amber-deep);font-weight:700;margin-top:2px;text-transform:uppercase;letter-spacing:.05em}" +
+    "#tsDetModal .modal-box{max-width:1080px}" +
+    ".tsdet-sub{font-family:var(--mono);font-size:.62rem;color:#cfc7b6;margin-top:3px;font-weight:500}" +
+    ".tsdet-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:14px}" +
+    ".tsdet-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 11px}" +
+    ".tsdet-card small{display:block;font-family:var(--mono);font-size:.55rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}" +
+    ".tsdet-card b{display:block;font-family:var(--serif);font-size:1.15rem;font-weight:900;margin-top:2px;white-space:nowrap}" +
+    ".tsdet-card span{font-family:var(--mono);font-size:.58rem;color:var(--muted)}" +
+    ".tsdet-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}" +
+    "@media(max-width:700px){.tsdet-cols{grid-template-columns:1fr}}" +
+    ".tsdet-box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}" +
+    ".tsdet-box-t{font-weight:800;font-size:.78rem;margin-bottom:8px}" +
+    ".tsdet-bar{display:grid;grid-template-columns:110px 1fr auto;gap:8px;align-items:center;font-size:.72rem;padding:3px 0}" +
+    ".tsdet-bar .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}" +
+    ".tsdet-bar .t{height:9px;background:#efe9dc;border-radius:5px;overflow:hidden}" +
+    ".tsdet-bar .t span{display:block;height:100%;background:var(--amber);border-radius:5px}" +
+    ".tsdet-bar .v{font-family:var(--mono);font-size:.66rem;white-space:nowrap}" +
+    ".tsdet-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}" +
+    ".tsdet-tools input{flex:1;min-width:180px;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:.8rem}" +
+    ".tsdet-wrap{overflow:auto;max-height:52vh;border:1px solid var(--line);border-radius:12px;background:var(--card)}" +
+    ".tsdet-table{width:100%;border-collapse:collapse;font-size:.74rem;min-width:760px}" +
+    ".tsdet-table th{position:sticky;top:0;background:#fbf8f1;font-family:var(--mono);font-size:.56rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:8px 7px;text-align:right;border-bottom:1.5px solid var(--line);white-space:nowrap;z-index:1}" +
+    ".tsdet-table td{padding:6px 7px;border-bottom:1px solid #efe9dc;text-align:right;font-family:var(--mono);white-space:nowrap}" +
+    ".tsdet-table th.l,.tsdet-table td.l{text-align:left}" +
+    ".tsdet-table td.cli{font-family:var(--sans);font-weight:700;max-width:240px;overflow:hidden;text-overflow:ellipsis}" +
+    ".tsdet-pct{display:inline-block;height:6px;background:var(--amber);border-radius:3px;vertical-align:middle;margin-right:5px}" +
+    ".tsdet-note{font-size:.68rem;color:var(--muted);margin-top:8px}";
+  document.head.appendChild(st);
+
+  function e(s){ return (typeof esc === "function") ? esc(String(s == null ? "" : s)) : String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function $(v){ return "$ " + Math.round(v || 0).toLocaleString("es-AR"); }
+  function pct(v, d){ return v == null || !isFinite(v) ? "—" : v.toLocaleString("es-AR", {maximumFractionDigits: d == null ? 0 : d}) + "%"; }
+  var actual = null, filtro = "";
+
+  function modal(){
+    var m = document.getElementById("tsDetModal");
+    if(m) return m;
+    m = document.createElement("div");
+    m.className = "modal-overlay"; m.id = "tsDetModal";
+    m.onclick = function(ev){ if(ev.target === m) tsDetCerrar(); };
+    m.innerHTML = '<div class="modal-box"><div class="modal-header"><div><h3 id="tsDetTitulo"></h3><div class="tsdet-sub" id="tsDetSub"></div></div><button class="modal-close" onclick="tsDetCerrar()">✕</button></div><div class="modal-body" id="tsDetBody"></div></div>';
+    document.body.appendChild(m);
+    document.addEventListener("keydown", function(ev){ if(ev.key === "Escape") tsDetCerrar(); });
+    return m;
+  }
+  window.tsDetCerrar = function(){ var m = document.getElementById("tsDetModal"); if(m) m.classList.remove("open"); };
+
+  function datos(cod){
+    var obj = (typeof DESCENTRALIZADAS_OBJ_DATA !== "undefined" ? DESCENTRALIZADAS_OBJ_DATA : []).filter(function(x){ return x.codigo === cod; })[0] || null;
+    var acc = ((typeof TRADE_SPEND_DATA !== "undefined" && TRADE_SPEND_DATA.acciones) || []).filter(function(a){ return a.codigo === cod; })[0] || null;
+    var fact = {};
+    ((typeof TRADE_SPEND_DATA !== "undefined" && TRADE_SPEND_DATA.clientes) || []).forEach(function(c){ fact[c.cod] = c.facturacion; });
+    var cli = acc ? (acc.clientes || []).slice() : [];
+    var propio = (typeof supAuthData !== "undefined" && supAuthData && supAuthData.scope !== "all") ? supAuthData.name : null;
+    return { obj: obj, acc: acc, fact: fact, todos: cli, cli: propio ? cli.filter(function(c){ return c.supervisor === propio; }) : cli, propio: propio };
+  }
+
+  function barras(titulo, lista, total){
+    var g = {};
+    lista.forEach(function(x){ g[x.k] = g[x.k] || {k: x.k, v: 0, n: 0}; g[x.k].v += x.v; g[x.k].n++; });
+    var arr = Object.keys(g).map(function(k){ return g[k]; }).sort(function(a, b){ return b.v - a.v; });
+    var max = arr.length ? arr[0].v : 1;
+    return '<div class="tsdet-box"><div class="tsdet-box-t">' + titulo + '</div>' + arr.slice(0, 12).map(function(x){
+      return '<div class="tsdet-bar" title="' + e(x.k) + ': ' + $(x.v) + ' en ' + x.n + (x.n === 1 ? ' cliente' : ' clientes') + '"><span class="n">' + e(x.k || "—") + '</span><span class="t"><span style="width:' + Math.max(2, Math.round(x.v / max * 100)) + '%"></span></span><span class="v">' + $(x.v) + " · " + pct(total ? x.v / total * 100 : null) + " · " + x.n + " cl.</span></div>";
+    }).join("") + (arr.length > 12 ? '<div class="tsdet-note">+ ' + (arr.length - 12) + " más</div>" : "") + "</div>";
+  }
+
+  function render(){
+    var d = datos(actual), body = document.getElementById("tsDetBody");
+    var o = d.obj || {}, a = d.acc;
+    document.getElementById("tsDetTitulo").textContent = actual + " · " + (o.nombre || (a && a.descripcion) || "");
+    document.getElementById("tsDetSub").textContent = [o.producto, o.vigencia ? "Vigencia " + o.vigencia : "", a && a.categoria].filter(Boolean).join(" · ");
+    if(!a || !d.todos.length){ body.innerHTML = '<div class="stock-empty">Todavía no hay gasto registrado de esta acción en el período del Trade Spend.</div>'; return; }
+    var gasto = a.gasto || 0, ts = o.tsTotal || 0, resta = ts - gasto, cons = ts ? gasto / ts * 100 : null;
+    var gEquipo = d.cli.reduce(function(s, c){ return s + (c.gasto || 0); }, 0);
+    var h = '<div class="tsdet-cards">' +
+      '<div class="tsdet-card"><small>TS total (objetivo)</small><b>' + (ts ? $(ts) : "—") + "</b><span>Zuppa " + (o.objZuppa != null ? $(o.objZuppa) : "—") + " · CMQ " + (o.objQuilmes != null ? $(o.objQuilmes) : "—") + "</span></div>" +
+      '<div class="tsdet-card"><small>TS gastado</small><b>' + $(gasto) + "</b><span>" + pct(cons) + " consumido</span></div>" +
+      '<div class="tsdet-card"><small>Resta</small><b style="color:' + (resta < 0 ? "var(--red)" : "var(--green)") + '">' + (ts ? $(resta) : "—") + "</b><span>" + (resta < 0 ? "superado" : "disponible") + "</span></div>" +
+      '<div class="tsdet-card"><small>Clientes</small><b>' + d.todos.length + "</b><span>promedio " + $(gasto / d.todos.length) + " c/u</span></div>" +
+      (d.propio ? '<div class="tsdet-card"><small>Tu equipo</small><b>' + $(gEquipo) + "</b><span>" + d.cli.length + " clientes · " + pct(gasto ? gEquipo / gasto * 100 : null) + " del total</span></div>" : "") +
+      "</div>";
+    var base = d.propio ? d.cli : d.todos, totBase = d.propio ? gEquipo : gasto;
+    h += '<div class="tsdet-cols">' +
+      barras(d.propio ? "Por promotor (tu equipo)" : "Por supervisor", base.map(function(c){ return {k: d.propio ? c.pv : c.supervisor, v: c.gasto}; }), totBase) +
+      barras(d.propio ? "Por canal" : "Por promotor", base.map(function(c){ return {k: d.propio ? c.canal : c.pv, v: c.gasto}; }), totBase) +
+      "</div>";
+    var q = filtro.toLowerCase();
+    var filas = base.slice().sort(function(x, y){ return (y.gasto || 0) - (x.gasto || 0); }).filter(function(c){ return !q || (c.cliente + " " + c.cod + " " + c.pv + " " + c.canal).toLowerCase().indexOf(q) !== -1; });
+    h += '<div class="tsdet-tools"><input id="tsDetBuscar" placeholder="Buscar cliente, código, promotor o canal…" value="' + e(filtro) + '" oninput="tsDetFiltrar(this.value)"><button class="cd-download-btn" onclick="tsDetCsv()">⬇️ Descargar CSV</button></div>';
+    var maxG = filas.length ? Math.max.apply(null, filas.map(function(c){ return c.gasto || 0; })) : 1;
+    h += '<div class="tsdet-wrap"><table class="tsdet-table"><thead><tr><th>#</th><th class="l">Cod</th><th class="l">Cliente</th><th class="l">PV</th><th class="l">Supervisor</th><th class="l">Canal</th><th>TS gastado</th><th>% de la acción</th><th>Facturación</th><th>TS / Fact.</th></tr></thead><tbody>' +
+      filas.map(function(c, i){
+        var f = d.fact[c.cod], r = f ? c.gasto / f * 100 : null;
+        return "<tr><td>" + (i + 1) + '</td><td class="l">' + e(c.cod) + '</td><td class="l cli" title="' + e(c.cliente) + '">' + e(c.cliente) + '</td><td class="l">' + e(c.pv) + '</td><td class="l">' + e(c.supervisor) + '</td><td class="l">' + e(c.canal) + "</td>" +
+          "<td><b>" + $(c.gasto) + '</b></td><td><span class="tsdet-pct" style="width:' + Math.max(2, Math.round((c.gasto || 0) / maxG * 40)) + 'px"></span>' + pct(gasto ? c.gasto / gasto * 100 : null, 1) + "</td>" +
+          "<td>" + (f != null ? $(f) : "—") + '</td><td style="' + (r != null && r > 20 ? "color:var(--red);font-weight:700" : "") + '">' + pct(r, 1) + "</td></tr>";
+      }).join("") + "</tbody></table></div>";
+    h += '<div class="tsdet-note">' + (d.propio ? "Ves solo los clientes de tu equipo. " : "") + "Facturación y TS/Fact. son del cliente en todo el período del Trade Spend" + (typeof TRADE_SPEND_DATA !== "undefined" && TRADE_SPEND_DATA.periodo ? " (" + e(TRADE_SPEND_DATA.periodo.desde) + " al " + e(TRADE_SPEND_DATA.periodo.hasta) + ")" : "") + ". En rojo, TS/Fact. mayor a 20%.</div>";
+    body.innerHTML = h;
+  }
+  window.tsDetFiltrar = function(v){
+    filtro = v; clearTimeout(window.__tsdetT);
+    window.__tsdetT = setTimeout(function(){ render(); var i = document.getElementById("tsDetBuscar"); if(i){ i.focus(); i.setSelectionRange(v.length, v.length); } }, 200);
+  };
+  window.tsDetCsv = function(){
+    var d = datos(actual), base = d.propio ? d.cli : d.todos;
+    var q = function(v){ v = String(v == null ? "" : v); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var lines = [["ACCION", "COD CLIENTE", "CLIENTE", "PV", "SUPERVISOR", "CANAL", "TS GASTADO", "FACTURACION"].join(";")].concat(base.map(function(c){
+      return [actual, c.cod, c.cliente, c.pv, c.supervisor, c.canal, Math.round(c.gasto || 0), d.fact[c.cod] != null ? Math.round(d.fact[c.cod]) : ""].map(q).join(";");
+    }));
+    var blob = new Blob(["﻿" + lines.join("\r\n")], {type: "text/csv;charset=utf-8"});
+    var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "accion_" + actual + "_clientes.csv";
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+  window.tsDetAbrir = function(cod){ actual = cod; filtro = ""; modal().classList.add("open"); render(); };
+
+  function enganchar(){
+    var panel = document.getElementById("tsDescentralizadasPanel"); if(!panel) return;
+    var rows = panel.querySelectorAll("tbody tr");
+    Array.prototype.forEach.call(rows, function(tr){
+      var c = tr.querySelector("td.tsdescCod"); if(!c) return;
+      var cod = c.textContent.trim(); if(!cod || cod === "—") return;
+      tr.classList.add("tsdet-row"); tr.title = "Ver en qué clientes se gastó " + cod;
+      tr.onclick = function(){ tsDetAbrir(cod); };
+      var nom = c.nextElementSibling;
+      if(nom && !nom.querySelector(".tsdet-ver")) nom.insertAdjacentHTML("beforeend", '<span class="tsdet-ver">🔍 ver clientes</span>');
+    });
+    var nota = panel.querySelector(".sup-note");
+    if(nota && nota.textContent.indexOf("Tocá una acción") === -1) nota.textContent += " Tocá una acción para ver en qué clientes se gastó.";
+  }
+  var orig = window.renderTsDescentralizadasObjetivo;
+  if(typeof orig === "function"){
+    window.renderTsDescentralizadasObjetivo = function(){ var r = orig.apply(this, arguments); try{ enganchar(); }catch(err){ console.warn("tsdet", err); } return r; };
+  }
+})();
+
+</script>
 </body>
 </html>
