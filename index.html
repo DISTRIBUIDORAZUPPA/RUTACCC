@@ -11047,5 +11047,24 @@ const MMAA_DATA = {"v":1,"meta":{"mesAct":"OCTUBRE 2026","mesAnt":"OCTUBRE 2025"
 })();
 
 </script>
+<script id="pabloPatch">
+/* ===== Usuario Pablo (clave pablo2026): ve lo mismo que Gerencia, con su propio saludo ===== */
+(function(){
+  if(typeof SUP_AUTH === "undefined") return;
+  SUP_AUTH["pablo2026"] = {name:"PABLO", scope:"all", role:"gerencia", saludo:"👋 Hola Pablito!"};
+  var origShow = window.showSupContent;
+  if(typeof origShow !== "function") return;
+  window.showSupContent = function(){
+    var r = origShow.apply(this, arguments);
+    var a = (typeof supAuthData !== "undefined" && supAuthData) ? supAuthData : null;
+    if(a && a.saludo){
+      var w = document.getElementById("supWelcome");
+      if(w) w.innerHTML = "<span>" + String(a.saludo).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }) + "</span>";
+    }
+    return r;
+  };
+})();
+
+</script>
 </body>
 </html>
