@@ -11580,5 +11580,328 @@ const MMAA_DATA = {};
 })();
 
 </script>
+<script id="tsAgrPatch">
+/* ===== Trade Spend: pasar acciones de "Por Acción" a 🎯 Descentralizadas (TSAGR_V1) =====
+   Las acciones que se pasan quedan guardadas en la planilla (pestaña TS DESCENTRALIZADAS AGREGADAS, por mes)
+   y todos las ven: suman al total de Descentralizadas (gasto y, si se cargó, objetivo) y pasan a la
+   categoría de acciones descentralizadas en Resumen / Por Categoría / Por Canal. */
+(function(){
+  if(typeof TRADE_SPEND_DATA === "undefined" || typeof renderTsAccion !== "function" || typeof renderTsDescentralizadasObjetivo !== "function") return;
+  var MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  var ST = { lista: [], cargado: false, cargando: false, sel: {}, msg: "" };
+
+  var st = document.createElement("style"); st.id = "tsAgrStyle";
+  st.textContent =
+    ".tsagr-tag{position:relative;z-index:1;flex-shrink:0;font-family:var(--mono);font-size:.58rem;font-weight:800;color:#7a4f00;background:#fdecc8;border:1px solid #f1d08a;border-radius:20px;padding:2px 8px;white-space:nowrap}" +
+    ".tsagr-check:disabled{opacity:.35;cursor:not-allowed}" +
+    "@media(max-width:700px){.tsagr-tag .t{display:none}.tsagr-tag{padding:2px 5px}#tsAgrBar{bottom:8px;padding:10px 12px;gap:8px}#tsViewAccion.tsagr-con-barra{padding-bottom:130px}}" +
+    "#tsAgrBar{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;width:min(1100px,calc(100% - 24px));z-index:150;margin:0}" +
+    "#tsViewAccion.tsagr-con-barra{padding-bottom:84px}" +
+    "#tsAgrBar .tsagr-btn{border:none;background:var(--gold);color:#1b1200;border-radius:8px;padding:8px 14px;font-family:var(--sans);font-weight:800;font-size:.76rem;cursor:pointer;white-space:nowrap}" +
+    "#tsAgrBar .tsagr-btn:hover{filter:brightness(1.07)}" +
+    "#tsAgrBar .tsagr-acts{display:flex;gap:8px;flex-wrap:wrap}" +
+    ".tsagr-msg{font-size:.76rem;margin:8px 0 0;font-weight:700}" +
+    ".tsagr-badge{background:#ece7dc;color:#5d5546;font-weight:800;padding:3px 9px;border-radius:20px;font-size:.72rem;white-space:nowrap;display:inline-block}" +
+    ".tsagr-sub{display:block;font-family:var(--mono);font-size:.56rem;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}" +
+    ".tsagr-quitar{display:block;margin:5px auto 0;border:1px solid var(--line);background:#fff;color:var(--red);border-radius:7px;padding:2px 8px;font-family:var(--mono);font-size:.58rem;font-weight:800;cursor:pointer;white-space:nowrap}" +
+    ".tsagr-quitar.conf{background:var(--red);color:#fff;border-color:var(--red)}" +
+    ".tsagr-nota{font-size:.72rem;margin-top:4px;opacity:.9}" +
+    "#tsAgrModal .modal-box{max-width:760px}" +
+    ".tsagr-tabla{width:100%;border-collapse:collapse;font-size:.76rem;min-width:560px}" +
+    ".tsagr-tabla th{font-family:var(--mono);font-size:.56rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:7px 6px;text-align:left;border-bottom:1.5px solid var(--line);white-space:nowrap}" +
+    ".tsagr-tabla td{padding:7px 6px;border-bottom:1px solid #efe9dc;vertical-align:middle}" +
+    ".tsagr-tabla td.n{font-family:var(--mono);white-space:nowrap;text-align:right}" +
+    ".tsagr-tabla input{width:100%;min-width:90px;padding:7px 8px;border:1.5px solid var(--line);border-radius:7px;font-family:var(--mono);font-size:.76rem;background:#fff}" +
+    ".tsagr-tabla input.pz{max-width:80px}" +
+    ".tsagr-wrap{overflow-x:auto}" +
+    ".tsagr-pie{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap}" +
+    ".tsagr-cancel{border:1px solid var(--line);background:#fff;border-radius:9px;padding:10px 16px;font-family:var(--sans);font-weight:700;font-size:.78rem;cursor:pointer}";
+  document.head.appendChild(st);
+
+  function e(s){ return (typeof esc === "function") ? esc(String(s == null ? "" : s)) : String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function $(v){ return "$ " + Math.round(v || 0).toLocaleString("es-AR"); }
+  function api(){ return (typeof SUP_API_URL !== "undefined" && SUP_API_URL && String(SUP_API_URL).indexOf("PENDIENTE") === -1) ? SUP_API_URL : ""; }
+  function quien(){ return (typeof supAuthData !== "undefined" && supAuthData && supAuthData.name) ? supAuthData.name : ""; }
+
+  // mes de los datos de trade spend que se están viendo (AAAA-MM)
+  function mesDatos(){
+    var p = (TRADE_SPEND_DATA && TRADE_SPEND_DATA.periodo) || {};
+    var m = String(p.hasta || p.desde || "").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if(m) return m[3] + "-" + ("0" + m[2]).slice(-2);
+    return (typeof hoyArgentina === "function" ? hoyArgentina() : new Date().toISOString()).slice(0, 7);
+  }
+  function abrevMes(mes){ return MESES[Number(String(mes).slice(5, 7)) - 1] || ""; }
+  function agregadas(){ var mes = mesDatos(); return ST.lista.filter(function(x){ return x.mes === mes; }); }
+  function mapaAgr(){ var o = {}; agregadas().forEach(function(x){ o[x.codigo] = x; }); return o; }
+  function accionesMap(){ var o = {}; (TRADE_SPEND_DATA.acciones || []).forEach(function(a){ o[a.codigo] = a; }); return o; }
+  // acciones que ya están en Descentralizadas por la planilla AGENDA_MATINAL (vigentes en el mes)
+  function propiosMes(){
+    var o = {}, ab = abrevMes(mesDatos());
+    if(!ab || typeof DESCENTRALIZADAS_OBJ_DATA === "undefined") return o;
+    var re = new RegExp(ab, "i");
+    DESCENTRALIZADAS_OBJ_DATA.forEach(function(x){ if(!x._agr && re.test(x.vigencia || "")) o[x.codigo] = 1; });
+    return o;
+  }
+  function catDesc(){
+    var acc = TRADE_SPEND_DATA.acciones || [];
+    for(var i = 0; i < acc.length; i++){
+      var c = acc[i]._tsagrOrig !== undefined ? acc[i]._tsagrOrig : acc[i].categoria;
+      if(/DESCENTRALIZ/i.test(c || "")) return c;
+    }
+    return "ACCIONES DESCENTRALIZADAS";
+  }
+
+  // 1) las acciones pasadas cuentan como descentralizadas en todo Trade Spend
+  function aplicarCategorias(){
+    var ag = mapaAgr(), cat = catDesc();
+    (TRADE_SPEND_DATA.acciones || []).forEach(function(a){
+      if(ag[a.codigo]){ if(a._tsagrOrig === undefined) a._tsagrOrig = a.categoria || ""; a.categoria = cat; }
+      else if(a._tsagrOrig !== undefined){ a.categoria = a._tsagrOrig; delete a._tsagrOrig; }
+    });
+  }
+  // 2) y entran en la tabla de Descentralizadas (con su objetivo si se cargó)
+  function sincronizarObjetivos(){
+    if(typeof DESCENTRALIZADAS_OBJ_DATA === "undefined") return;
+    for(var i = DESCENTRALIZADAS_OBJ_DATA.length - 1; i >= 0; i--) if(DESCENTRALIZADAS_OBJ_DATA[i]._agr) DESCENTRALIZADAS_OBJ_DATA.splice(i, 1);
+    var mes = mesDatos(), ab = abrevMes(mes), propios = propiosMes(), acc = accionesMap();
+    agregadas().forEach(function(x){
+      if(propios[x.codigo]) return;
+      var a = acc[x.codigo] || {};
+      var ts = Number(x.tsTotal) || 0;
+      var pz = (x.pctZuppa === "" || x.pctZuppa == null || isNaN(Number(x.pctZuppa))) ? null : Number(x.pctZuppa);
+      var oz = ts && pz != null ? ts * pz / 100 : 0;
+      DESCENTRALIZADAS_OBJ_DATA.push({
+        codigo: x.codigo, nombre: x.descripcion || a.descripcion || x.codigo,
+        producto: (a._tsagrOrig && !/DESCENTRALIZ/i.test(a._tsagrOrig) ? "Antes: " + a._tsagrOrig : "—"), vigencia: ab,
+        tsTotal: ts, objZuppa: oz, objQuilmes: ts - oz, _agr: true, _pz: pz
+      });
+    });
+  }
+  function preparar(){ aplicarCategorias(); sincronizarObjetivos(); }
+
+  // ---- datos guardados (Web App) ----
+  function cargar(forzar){
+    if(!api() || ST.cargando || (ST.cargado && !forzar)) return Promise.resolve();
+    ST.cargando = true;
+    return fetch(api() + "?action=getTsDescAgregadas").then(function(r){ return r.json(); }).then(function(j){
+      ST.cargando = false;
+      if(j && j.ok && Array.isArray(j.data)){ ST.lista = j.data.map(function(x){ return {mes: String(x.mes || ""), codigo: String(x.codigo || ""), descripcion: String(x.descripcion || ""), tsTotal: x.tsTotal, pctZuppa: x.pctZuppa, quien: x.quien || "", fecha: x.fecha || ""}; }); ST.cargado = true; }
+      else ST.cargado = true;
+      refrescar();
+    }).catch(function(){ ST.cargando = false; ST.cargado = true; });
+  }
+  function visible(id){ var el = document.getElementById(id); return !!(el && el.style.display !== "none" && el.offsetParent !== null); }
+  function refrescar(){
+    preparar();
+    try{ if(document.getElementById("tsNumFact") && typeof renderTradeSpend === "function") renderTradeSpend(); }catch(err){}
+    try{ if(visible("tsViewAccion")) renderTsAccion(); }catch(err){}
+    try{ if(visible("tsViewCategoria") && typeof renderTsCategoria === "function"){ if(typeof tsCategoriaSeleccionada !== "undefined" && tsCategoriaSeleccionada) renderTsCategoriaAcciones(); else renderTsCategoria(); } }catch(err){}
+    try{ if(visible("tsViewCanal") && typeof tsCerrarCanal === "function") tsCerrarCanal(); }catch(err){}
+  }
+
+  // ---- Por Acción: casilla para elegir + barra "Pasar a Descentralizadas" ----
+  function barra(){
+    var view = document.getElementById("tsViewAccion"); if(!view) return;
+    var b = document.getElementById("tsAgrBar");
+    if(!b){
+      b = document.createElement("div"); b.id = "tsAgrBar"; b.className = "ts-selbar"; b.style.display = "none";
+      b.innerHTML = '<div class="ts-selbar-info"><b id="tsAgrCount">0</b> acciones seleccionadas</div><div class="ts-selbar-total">Gasto: <b id="tsAgrTotal">$ 0</b></div>' +
+        '<div class="tsagr-acts"><button type="button" class="ts-selbar-clear" id="tsAgrLimpiar">Limpiar</button><button type="button" class="tsagr-btn" id="tsAgrPasar">🎯 Pasar a Descentralizadas</button></div>';
+      view.appendChild(b);
+      document.getElementById("tsAgrLimpiar").onclick = function(){ ST.sel = {}; renderTsAccion(); };
+      document.getElementById("tsAgrPasar").onclick = abrirModal;
+    }
+    var m = document.getElementById("tsAgrMsg");
+    if(!m){ m = document.createElement("div"); m.id = "tsAgrMsg"; m.className = "tsagr-msg"; view.appendChild(m); }
+    m.innerHTML = ST.msg || ""; m.style.display = ST.msg ? "" : "none";
+    var cods = Object.keys(ST.sel), acc = accionesMap(), tot = 0;
+    cods.forEach(function(c){ tot += acc[c] ? acc[c].gasto : 0; });
+    document.getElementById("tsAgrCount").textContent = cods.length;
+    document.getElementById("tsAgrTotal").textContent = $(tot);
+    b.style.display = cods.length ? "flex" : "none";
+    view.classList.toggle("tsagr-con-barra", cods.length > 0);
+  }
+  function decorarAcciones(){
+    var list = document.getElementById("tsAccionList"); if(!list) return;
+    var ag = mapaAgr(), propios = propiosMes(), acc = accionesMap();
+    Object.keys(ST.sel).forEach(function(c){ if(ag[c] || propios[c] || !acc[c]) delete ST.sel[c]; });
+    Array.prototype.forEach.call(list.querySelectorAll(".ts-rank-row"), function(row){
+      if(row.querySelector(".tsagr-check")) return;
+      var m = (row.getAttribute("onclick") || "").match(/tsOpenAccionDetail\((\d+)\)/); if(!m) return;
+      var a = (window.tsLastAcciones || [])[Number(m[1])]; if(!a) return;
+      var ya = ag[a.codigo] ? "agr" : (propios[a.codigo] ? "obj" : "");
+      var cb = document.createElement("input");
+      cb.type = "checkbox"; cb.className = "ts-rank-check tsagr-check";
+      cb.checked = !!ST.sel[a.codigo]; cb.disabled = !!ya;
+      cb.title = ya ? "Ya está en 🎯 Descentralizadas" : "Elegir para pasar a 🎯 Descentralizadas";
+      cb.onclick = function(ev){ ev.stopPropagation(); };
+      cb.onchange = function(){ if(cb.checked) ST.sel[a.codigo] = 1; else delete ST.sel[a.codigo]; ST.msg = ""; barra(); };
+      row.insertBefore(cb, row.firstChild);
+      row.classList.add("ts-selectable");
+      if(ya){
+        var nums = row.querySelector(".ts-rank-nums");
+        var tag = document.createElement("span"); tag.className = "tsagr-tag";
+        tag.innerHTML = "🎯<span class=\"t\"> " + (ya === "agr" ? "Pasada a Descentralizadas" : "En Descentralizadas") + "</span>";
+        tag.title = ya === "agr" ? "Pasada a 🎯 Descentralizadas" : "Ya está en 🎯 Descentralizadas";
+        row.insertBefore(tag, nums || null);
+      }
+    });
+    var view = document.getElementById("tsViewAccion");
+    var nota = view ? view.querySelector(".sup-note") : null;
+    if(nota && nota.textContent.indexOf("Tildá") === -1) nota.textContent += " Tildá las que quieras pasar a 🎯 Descentralizadas para que sumen a su total.";
+    barra();
+  }
+
+  // ---- ventana para confirmar (con objetivo opcional) ----
+  function modal(){
+    var m = document.getElementById("tsAgrModal");
+    if(m) return m;
+    m = document.createElement("div"); m.className = "modal-overlay"; m.id = "tsAgrModal";
+    m.onclick = function(ev){ if(ev.target === m) cerrarModal(); };
+    m.innerHTML = '<div class="modal-box"><div class="modal-header"><h3>🎯 Pasar a Descentralizadas</h3><button class="modal-close" type="button" id="tsAgrCerrar">✕</button></div><div class="modal-body" id="tsAgrBody"></div></div>';
+    document.body.appendChild(m);
+    document.getElementById("tsAgrCerrar").onclick = cerrarModal;
+    return m;
+  }
+  function cerrarModal(){ var m = document.getElementById("tsAgrModal"); if(m) m.classList.remove("open"); }
+  function abrirModal(){
+    var cods = Object.keys(ST.sel); if(!cods.length) return;
+    var acc = accionesMap(), mes = mesDatos();
+    var h = '<div class="sup-note" style="margin-bottom:10px">Se suman al total de 🎯 Descentralizadas de <b>' + e(abrevMes(mes)) + " " + e(mes.slice(0, 4)) + "</b> y pasan a la categoría de acciones descentralizadas. " +
+      "El <b>TS Total</b> (objetivo) y el <b>% Zuppa</b> son opcionales: si los dejás vacíos, la acción suma solo su gasto y aparece como \"Sin objetivo\".</div>" +
+      '<div class="tsagr-wrap"><table class="tsagr-tabla"><thead><tr><th>Código</th><th>Acción</th><th style="text-align:right">Gastado</th><th>TS Total (opcional)</th><th>% Zuppa</th></tr></thead><tbody>';
+    cods.forEach(function(c){
+      var a = acc[c] || {};
+      h += '<tr data-cod="' + e(c) + '"><td style="font-family:var(--mono);font-weight:700;white-space:nowrap">' + e(c) + "</td><td>" + e(a.descripcion || "") +
+        (a.categoria ? '<span class="tsagr-sub">' + e(a.categoria) + "</span>" : "") + '</td><td class="n">' + $(a.gasto) + "</td>" +
+        '<td><input type="text" inputmode="numeric" class="ts" placeholder="Ej: 1.500.000"></td><td><input type="text" inputmode="decimal" class="pz" placeholder="Ej: 50"></td></tr>';
+    });
+    h += '</tbody></table></div><div class="tsagr-msg" id="tsAgrModalMsg"></div><div class="tsagr-pie"><button type="button" class="tsagr-cancel" id="tsAgrCancelar">Cancelar</button><button type="button" class="sens-save-btn" id="tsAgrConfirmar">🎯 Pasar ' + cods.length + (cods.length === 1 ? " acción" : " acciones") + "</button></div>";
+    modal();
+    document.getElementById("tsAgrBody").innerHTML = h;
+    document.getElementById("tsAgrCancelar").onclick = cerrarModal;
+    document.getElementById("tsAgrConfirmar").onclick = confirmar;
+    document.getElementById("tsAgrModal").classList.add("open");
+  }
+  function numero(txt){
+    var s = String(txt || "").replace(/\$|\s/g, "");
+    if(!s) return "";
+    if(s.indexOf(",") !== -1) s = s.replace(/\./g, "").replace(",", ".");
+    else if(/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");
+    var n = Number(s);
+    return isFinite(n) ? n : NaN;
+  }
+  function confirmar(){
+    var body = document.getElementById("tsAgrBody"), msg = document.getElementById("tsAgrModalMsg");
+    var acc = accionesMap(), mes = mesDatos(), items = [], error = "";
+    Array.prototype.forEach.call(body.querySelectorAll("tbody tr"), function(tr){
+      var c = tr.getAttribute("data-cod"), ts = numero(tr.querySelector("input.ts").value), pz = numero(tr.querySelector("input.pz").value);
+      if(ts !== "" && (isNaN(ts) || ts < 0)) error = "Revisá el TS Total de " + c + " (solo números).";
+      if(pz !== "" && (isNaN(pz) || pz < 0 || pz > 100)) error = "El % Zuppa de " + c + " tiene que ser un número entre 0 y 100.";
+      items.push({mes: mes, codigo: c, descripcion: (acc[c] && acc[c].descripcion) || "", tsTotal: ts === "" ? "" : ts, pctZuppa: (pz === "" || ts === "") ? "" : pz});
+    });
+    if(error){ msg.style.color = "var(--red)"; msg.textContent = "⚠️ " + error; return; }
+    if(!api()){ msg.style.color = "var(--red)"; msg.textContent = "⚠️ No hay conexión con la planilla."; return; }
+    var btn = document.getElementById("tsAgrConfirmar"); btn.disabled = true;
+    msg.style.color = "var(--muted)"; msg.textContent = "Guardando…";
+    fetch(api(), {method: "POST", body: JSON.stringify({action: "setTsDescAgregadas", items: items, quien: quien()})})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        btn.disabled = false;
+        if(!j || !j.ok){ msg.style.color = "var(--red)"; msg.textContent = "❌ No se pudo guardar: " + ((j && j.error) || "error desconocido"); return; }
+        items.forEach(function(it){
+          ST.lista = ST.lista.filter(function(x){ return !(x.mes === it.mes && x.codigo === it.codigo); });
+          ST.lista.push({mes: it.mes, codigo: it.codigo, descripcion: it.descripcion, tsTotal: it.tsTotal, pctZuppa: it.pctZuppa, quien: quien(), fecha: ""});
+        });
+        ST.sel = {};
+        ST.msg = '<span style="color:var(--green)">✅ ' + items.length + (items.length === 1 ? " acción pasada" : " acciones pasadas") + ' a 🎯 Descentralizadas. Ya suman a su total.</span>';
+        cerrarModal();
+        refrescar();
+      })
+      .catch(function(){ btn.disabled = false; msg.style.color = "var(--red)"; msg.textContent = "❌ No se pudo guardar (revisá la conexión)."; });
+  }
+
+  // ---- 🎯 Descentralizadas: marcar las pasadas, "quitar" y nota en el total ----
+  function quitar(cod, btn){
+    if(!btn.classList.contains("conf")){
+      btn.classList.add("conf"); btn.textContent = "¿Quitar? tocá de nuevo";
+      setTimeout(function(){ if(btn.isConnected){ btn.classList.remove("conf"); btn.textContent = "✕ quitar"; } }, 4000);
+      return;
+    }
+    if(!api()) return;
+    btn.disabled = true; btn.textContent = "Quitando…";
+    var mes = mesDatos();
+    fetch(api(), {method: "POST", body: JSON.stringify({action: "quitarTsDescAgregada", mes: mes, codigo: cod, quien: quien()})})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(!j || !j.ok){ btn.disabled = false; btn.textContent = "❌ no se pudo"; return; }
+        ST.lista = ST.lista.filter(function(x){ return !(x.mes === mes && x.codigo === cod); });
+        refrescar();
+      })
+      .catch(function(){ btn.disabled = false; btn.textContent = "❌ sin conexión"; });
+  }
+  function decorarPanel(){
+    var panel = document.getElementById("tsDescentralizadasPanel");
+    if(!panel || panel.style.display === "none" || typeof DESCENTRALIZADAS_OBJ_DATA === "undefined") return;
+    var ag = {}; DESCENTRALIZADAS_OBJ_DATA.forEach(function(x){ if(x._agr) ag[x.codigo] = x; });
+    if(!Object.keys(ag).length) return;
+    var col = {};
+    Array.prototype.forEach.call(panel.querySelectorAll("thead th"), function(th, i){ col[th.textContent.trim()] = i; });
+    var acc = accionesMap(), n = 0, gasto = 0;
+    Array.prototype.forEach.call(panel.querySelectorAll("tbody tr"), function(tr){
+      var cc = tr.querySelector("td.tsdescCod"); if(!cc) return;
+      var cod = cc.textContent.trim(), x = ag[cod]; if(!x || tr.classList.contains("tsagr-row")) return;
+      tr.classList.add("tsagr-row"); n++; gasto += acc[cod] ? acc[cod].gasto : 0;
+      var td = tr.children;
+      function set(nombre, html){ var i = col[nombre]; if(i != null && td[i]) td[i].innerHTML = html; }
+      if(!x.tsTotal){
+        set("Estado", '<span class="tsagr-badge">➕ Sin objetivo</span>');
+        ["TS Total", "% Zuppa", "% CMQ", "OBJ $ Zuppa", "OBJ $ CMQ", "Resta", "% consumido"].forEach(function(k){ set(k, "—"); });
+      } else if(x._pz == null){
+        ["% Zuppa", "% CMQ", "OBJ $ Zuppa", "OBJ $ CMQ"].forEach(function(k){ set(k, "—"); });
+      }
+      set("Vigencia", e(x.vigencia) + '<span class="tsagr-sub">pasada desde Por Acción</span>');
+      var ie = col["Estado"];
+      if(ie != null && td[ie]){
+        var b = document.createElement("button"); b.type = "button"; b.className = "tsagr-quitar"; b.textContent = "✕ quitar";
+        b.title = "Sacarla de Descentralizadas (vuelve a su categoría de antes)";
+        b.onclick = function(ev){ ev.stopPropagation(); quitar(cod, b); };
+        td[ie].appendChild(b);
+      }
+    });
+    if(n){
+      var lbl = panel.querySelector(".alert-btn .ab-lbl");
+      if(lbl && !lbl.querySelector(".tsagr-nota")) lbl.insertAdjacentHTML("beforeend", '<div class="tsagr-nota">Incluye ' + n + (n === 1 ? " acción pasada" : " acciones pasadas") + " desde Por Acción (" + $(gasto) + " gastado).</div>");
+    }
+  }
+
+  // ---- enganches ----
+  var origPanel = window.renderTsDescentralizadasObjetivo;
+  window.renderTsDescentralizadasObjetivo = function(){
+    preparar();
+    var r = origPanel.apply(this, arguments);
+    try{ decorarPanel(); }catch(err){ if(window.console) console.warn("tsagr", err); }
+    cargar();
+    return r;
+  };
+  var origAcc = window.renderTsAccion;
+  window.renderTsAccion = function(){
+    preparar();
+    var r = origAcc.apply(this, arguments);
+    try{ decorarAcciones(); }catch(err){ if(window.console) console.warn("tsagr", err); }
+    cargar();
+    return r;
+  };
+  if(typeof window.renderTradeSpend === "function"){
+    var origTs = window.renderTradeSpend;
+    window.renderTradeSpend = function(){ preparar(); return origTs.apply(this, arguments); };
+  }
+  if(typeof window.tsSetView === "function"){
+    var origView = window.tsSetView;
+    window.tsSetView = function(v){ preparar(); if(v !== "accion"){ ST.msg = ""; } return origView.apply(this, arguments); };
+  }
+})();
+
+</script>
 </body>
 </html>
