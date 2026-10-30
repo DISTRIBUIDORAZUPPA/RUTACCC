@@ -11006,6 +11006,116 @@ const MMAA_DATA = {};
 })();
 
 </script>
+<script id="francoPatch">
+/* ===== Usuario Franco López (clave franco2026): solo Salidas al mercado, con sus tareas ===== */
+(function(){
+  if(typeof SUP_AUTH === "undefined") return;
+  SUP_AUTH["franco2026"] = {name:"FRANCO LOPEZ", scope:"all", role:"mercado", saludo:"👋 Hola Franco!"};
+  var QUIEN = "FRANCO LOPEZ";
+  var TAREAS = ["PROGRAMA DE MERCADO", "BEES VISIÓN", "CAPEX"];   // + OTRO (se muestra como "OTROS")
+
+  function auth(){ return (typeof supAuthData !== "undefined" && supAuthData) ? supAuthData : null; }
+  function esFranco(){ var a = auth(); return !!(a && a.role === "mercado"); }
+
+  var st = document.createElement("style");
+  st.id = "francoStyle";
+  st.textContent =
+    "#supContent.sm-franco > .pill-row .pill:not(#supViewSalidasBtn){display:none!important}" +
+    "#supContent:not(.sm-franco) .pill.sm-fr-only{display:none!important}" +
+    "#supContent.sm-franco #smQuienPills .pill:not(.sm-fr-only),#supContent.sm-franco #smTareaPills .pill:not(.sm-fr-only):not([data-v='OTRO']){display:none!important}";
+  document.head.appendChild(st);
+
+  // botones nuevos en el formulario (para los demás usuarios quedan ocultos)
+  function pill(row, v, extra){
+    if(!row || row.querySelector('.pill[data-v="' + v + '"]')) return null;
+    var p = document.createElement("div");
+    p.className = "pill sm-fr-only" + (extra ? " " + extra : "");
+    p.setAttribute("data-v", v);
+    p.textContent = v;
+    return p;
+  }
+  function armarBotones(){
+    var q = document.getElementById("smQuienPills");
+    var p1 = pill(q, QUIEN);
+    if(p1){ p1.onclick = function(){ smSetQuien(this); }; q.appendChild(p1); }
+    var t = document.getElementById("smTareaPills");
+    if(t){
+      var otro = t.querySelector('.pill[data-v="OTRO"]');
+      TAREAS.forEach(function(v){
+        var p = pill(t, v);
+        if(p){ p.onclick = function(){ smSetTarea(this); }; t.insertBefore(p, otro || null); }
+      });
+    }
+  }
+
+  var ocultos = [];
+  function restaurar(){
+    ocultos.forEach(function(x){ x.el.style.display = x.prev; });
+    ocultos = [];
+    var c = document.getElementById("supContent"); if(c) c.classList.remove("sm-franco");
+    var otro = document.querySelector('#smTareaPills .pill[data-v="OTRO"]'); if(otro) otro.textContent = "OTRO";
+    // lo que había elegido Franco no queda elegido para el próximo usuario
+    if(typeof smQuienVal !== "undefined" && smQuienVal === QUIEN) smQuienVal = "";
+    if(typeof smTareaVal !== "undefined" && TAREAS.indexOf(smTareaVal) !== -1) smTareaVal = "";
+    document.querySelectorAll("#smQuienPills .pill.sm-fr-only, #smTareaPills .pill.sm-fr-only").forEach(function(p){ p.classList.remove("active"); });
+  }
+  function ocultar(el){ if(!el) return; ocultos.push({el: el, prev: el.style.display || ""}); el.style.display = "none"; }
+  function preseleccionar(){
+    var p = document.querySelector('#smQuienPills .pill[data-v="' + QUIEN + '"]');
+    if(p && !p.classList.contains("active")) smSetQuien(p);
+  }
+  function aplicar(){
+    var c = document.getElementById("supContent"); if(!c) return;
+    c.classList.add("sm-franco");
+    var w = document.getElementById("supWelcome");
+    if(w) w.innerHTML = "<span>👋 Hola Franco!</span>";
+    // solo queda la pastilla "Salidas al mercado": las filas sin pastillas visibles se ocultan con su título
+    Array.prototype.forEach.call(c.children, function(fila){
+      if(!fila.classList || !fila.classList.contains("pill-row")) return;
+      if(!fila.querySelector("#supViewSalidasBtn")){
+        ocultar(fila);
+        var t = fila.previousElementSibling;
+        if(t && t.classList.contains("section-title")) ocultar(t);
+      }
+    });
+    var b = document.getElementById("supViewSalidasBtn"); if(b) b.style.display = "";
+    armarBotones();
+    var otro = document.querySelector('#smTareaPills .pill[data-v="OTRO"]'); if(otro) otro.textContent = "OTROS";
+    // si tenía elegida una tarea de los supervisores, se limpia
+    if(typeof smTareaVal !== "undefined" && smTareaVal && smTareaVal !== "OTRO" && TAREAS.indexOf(smTareaVal) === -1){
+      smTareaVal = "";
+      document.querySelectorAll("#smTareaPills .pill").forEach(function(p){ p.classList.remove("active"); });
+      var ow = document.getElementById("smTareaOtroWrap"); if(ow) ow.style.display = "none";
+    }
+    preseleccionar();
+  }
+
+  var origShow = window.showSupContent;
+  if(typeof origShow !== "function") return;
+  window.showSupContent = function(){
+    restaurar();
+    armarBotones();
+    var r;
+    try { r = origShow.apply(this, arguments); }
+    catch(e){ if(!esFranco()) throw e; if(window.console) console.warn("showSupContent", e); }
+    if(esFranco()){ aplicar(); try{ supSetView("salidas"); }catch(e){} }
+    return r;
+  };
+  var origSet = window.supSetView;
+  if(typeof origSet === "function") window.supSetView = function(view){
+    if(esFranco() && view !== "salidas") view = "salidas";
+    return origSet.call(this, view);
+  };
+  // después de enviar, el formulario se limpia: vuelve a quedar elegido "FRANCO LOPEZ"
+  var origHist = window.smCargarHistorial;
+  if(typeof origHist === "function") window.smCargarHistorial = function(){
+    if(esFranco()) preseleccionar();
+    return origHist.apply(this, arguments);
+  };
+  armarBotones();
+})();
+
+</script>
 <style id="vrDashStyle">
 /* VR — vista Dashboard */
 .vd-head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;background:var(--ink);color:#fff;border-radius:14px;padding:14px 18px;margin-bottom:14px;}
@@ -11165,19 +11275,19 @@ const MMAA_DATA = {};
   function chips(p){
     var m = mr(p);
     return '<div class="vd-ind">' +
+      '<div class="vd-ind-c ' + cl3(p.venta_vs_planif) + '" title="Venta del día anterior ÷ Planificación"><small>Vta. ant. vs Planif.</small><b>' + pc(p.venta_vs_planif, 0) + "</b><span>" + n(p.venta_dia_ant, 1) + " / " + n(p.planificacion, 1) + "</span></div>" +
       '<div class="vd-ind-c ' + cl3(vs(p.venta_dia_ant, p.media)) + '" title="Venta del día anterior ÷ Media necesaria"><small>Vta. ant. vs MN</small><b>' + pc(vs(p.venta_dia_ant, p.media), 0) + "</b><span>" + n(p.venta_dia_ant, 1) + " / " + n(p.media, 1) + "</span></div>" +
-      '<div class="vd-ind-c ' + cl3(vs(p.venta_dia_ant, m)) + '" title="Venta del día anterior ÷ Media real (venta real ÷ días transcurridos)"><small>Vta. ant. vs MR</small><b>' + pc(vs(p.venta_dia_ant, m), 0) + "</b><span>" + n(p.venta_dia_ant, 1) + " / " + n(m, 1) + "</span></div>" +
-      '<div class="vd-ind-c ' + cl3(p.venta_vs_planif) + '" title="Venta del día anterior ÷ Planificación"><small>Vta. ant. vs Planif.</small><b>' + pc(p.venta_vs_planif, 0) + "</b><span>" + n(p.venta_dia_ant, 1) + " / " + n(p.planificacion, 1) + "</span></div></div>";
+      '<div class="vd-ind-c ' + cl3(vs(p.venta_dia_ant, m)) + '" title="Venta del día anterior ÷ Media real (venta real ÷ días transcurridos)"><small>Vta. ant. vs MR</small><b>' + pc(vs(p.venta_dia_ant, m), 0) + "</b><span>" + n(p.venta_dia_ant, 1) + " / " + n(m, 1) + "</span></div></div>";
   }
   function vendedores(titulo, pilares, ideal){
     var h = '<div class="vd-panel"><div class="vd-panel-t">' + e(titulo) + " <small>avance por pilar y supervisor</small></div><div class=\"vd-pil\">";
     pilares.forEach(function(p){
       var s = st(p.tendencia);
       h += '<div class="vd-pil-c"><div class="vd-pil-h"><div><div class="vd-name">' + e(p.pilar) + '</div><div class="vd-grp">Obj ' + n(p.objetivo) + " · Real " + n(p.venta_real) + "</div></div>" + gauge(p.tendencia, 120) + "</div>" + avance(p.alcance, ideal) + chips(p) +
-        '<div class="vd-vt-w"><table class="vd-vt"><thead><tr><th></th><th>Tendencia</th><th>Alcance</th><th>Vta. ant.</th><th title="Media necesaria">MN</th><th title="Media real">MR</th><th>Planif.</th><th>Ant. vs planif.</th><th>Ant. vs MN</th><th>Ant. vs MR</th></tr></thead><tbody>' +
+        '<div class="vd-vt-w"><table class="vd-vt"><thead><tr><th></th><th>Tendencia</th><th>Alcance</th><th>Planif.</th><th>Vta. ant.</th><th>Ant. vs planif.</th><th title="Media necesaria">MN</th><th>Ant. vs MN</th><th title="Media real">MR</th><th>Ant. vs MR</th></tr></thead><tbody>' +
         (p.vendedores || []).map(function(v){
           var sv = st(v.tendencia), vp = v.venta_vs_planif;
-          return "<tr><td class=\"vd-vn\">" + e(v.nombre) + '</td><td><div class="vd-mini"><span class="' + sv.c + '" style="width:' + Math.min(100, v.tendencia || 0) + '%"></span></div><b class="' + sv.c + '">' + pc(v.tendencia, 1) + "</b></td><td>" + pc(v.alcance, 1) + "</td><td>" + n(v.venta_dia_ant, 1) + "</td><td>" + n(v.media, 1) + "</td><td>" + n(mr(v), 1) + "</td><td>" + n(v.planificacion, 1) + '</td><td><span class="vd-chip ' + cl3(vp) + '">' + pc(vp, 1) + '</span></td><td><span class="vd-chip ' + cl3(vs(v.venta_dia_ant, v.media)) + '">' + pc(vs(v.venta_dia_ant, v.media), 1) + '</span></td><td><span class="vd-chip ' + cl3(vs(v.venta_dia_ant, mr(v))) + '">' + pc(vs(v.venta_dia_ant, mr(v)), 1) + "</span></td></tr>";
+          return "<tr><td class=\"vd-vn\">" + e(v.nombre) + '</td><td><div class="vd-mini"><span class="' + sv.c + '" style="width:' + Math.min(100, v.tendencia || 0) + '%"></span></div><b class="' + sv.c + '">' + pc(v.tendencia, 1) + "</b></td><td>" + pc(v.alcance, 1) + "</td><td>" + n(v.planificacion, 1) + "</td><td>" + n(v.venta_dia_ant, 1) + '</td><td><span class="vd-chip ' + cl3(vp) + '">' + pc(vp, 1) + "</span></td><td>" + n(v.media, 1) + '</td><td><span class="vd-chip ' + cl3(vs(v.venta_dia_ant, v.media)) + '">' + pc(vs(v.venta_dia_ant, v.media), 1) + "</span></td><td>" + n(mr(v), 1) + '</td><td><span class="vd-chip ' + cl3(vs(v.venta_dia_ant, mr(v))) + '">' + pc(vs(v.venta_dia_ant, mr(v)), 1) + "</span></td></tr>";
         }).join("") + "</tbody></table></div></div>";
     });
     return h + "</div></div>";
@@ -11264,15 +11374,16 @@ const MMAA_DATA = {};
   function mr(r){ var p = per(); return (p.transcurridos && r && r.venta_real != null) ? r.venta_real / p.transcurridos : null; }
   function vs(a, b){ return (a != null && b != null && isFinite(a) && isFinite(b) && b > 0) ? a / b * 100 : null; }
   function c(x){ return '<div class="vr-pilar-cell">' + x + "</div>"; }
-  var HEAD = ["Pilar", "Objetivo", "Venta Real", "Tendencia", "Venta Día Ant.", "Media Nec.", "Media Real", "Planificación", "Vta. Ant. vs Planif.", "Vta. Ant. vs MN", "Vta. Ant. vs MR", "Alcance"];
+  var HEAD = ["Pilar", "Objetivo", "Venta Real", "Tendencia", "Planificación", "Venta Día Ant.", "Vta. Ant. vs Planif.", "Media Nec.", "Vta. Ant. vs MN", "Media Real", "Vta. Ant. vs MR", "Alcance"];
   var TIT = {"Media Real": "Venta real ÷ días transcurridos", "Vta. Ant. vs Planif.": "Venta del día anterior ÷ Planificación", "Vta. Ant. vs MN": "Venta del día anterior ÷ Media necesaria", "Vta. Ant. vs MR": "Venta del día anterior ÷ Media real"};
   function head(){ return HEAD.map(function(h){ return '<div class="vr-pilar-cell vr-pilar-head"' + (TIT[h] ? ' title="' + TIT[h] + '"' : "") + ">" + h + "</div>"; }).join(""); }
   function nombre(row, isCat){ var nm = isCat ? row.pilar : row.nombre; return '<div class="vr-pilar-cell ' + (isCat ? "vr-pilar-cat" : "vr-pilar-name") + '">' + esc(nm || "") + "</div>"; }
   window.vrPilarRowHtml_ = function(row, isCategoria){
     var m = mr(row);
     return nombre(row, isCategoria) + c(vrFmtNum_(row.objetivo, 0)) + c(vrFmtNum_(row.venta_real, 0)) + c(vrFmtPct_(row.tendencia)) +
-      c(vrFmtNum_(row.venta_dia_ant, 1)) + c(vrFmtNum_(row.media, 1)) + c(vrFmtNum_(m, 1)) + c(vrFmtNum_(row.planificacion, 0)) +
-      c(vrFmtPct_(row.venta_vs_planif)) + c(vrFmtPct_(vs(row.venta_dia_ant, row.media))) + c(vrFmtPct_(vs(row.venta_dia_ant, m))) + c(vrFmtPct_(row.alcance));
+      c(vrFmtNum_(row.planificacion, 0)) + c(vrFmtNum_(row.venta_dia_ant, 1)) + c(vrFmtPct_(row.venta_vs_planif)) +
+      c(vrFmtNum_(row.media, 1)) + c(vrFmtPct_(vs(row.venta_dia_ant, row.media))) +
+      c(vrFmtNum_(m, 1)) + c(vrFmtPct_(vs(row.venta_dia_ant, m))) + c(vrFmtPct_(row.alcance));
   };
   window.vrPilaresBlock_ = function(titulo, pilares, conVendedores){
     if(!pilares || !pilares.length) return "";
@@ -11285,10 +11396,11 @@ const MMAA_DATA = {};
       VR_SIM_ROW_META_[rowId] = {objetivo: row.objetivo, ant: row.venta_dia_ant};
       return nombre(row, isCategoria) + c(vrFmtNum_(row.objetivo, 0)) +
         '<div class="vr-pilar-cell"><input type="number" inputmode="decimal" class="vr-sim-input" id="vrsim-in-' + rowId + '" placeholder="' + (row.venta_real != null ? vrFmtNum_(row.venta_real, 0) : "") + '" oninput="vrSimPilRecalc(\'' + rowId + '\')"></div>' +
-        '<div class="vr-pilar-cell" id="vrsim-out-tendencia-' + rowId + '">—</div>' + c(vrFmtNum_(row.venta_dia_ant, 1)) +
+        '<div class="vr-pilar-cell" id="vrsim-out-tendencia-' + rowId + '">—</div>' +
+        c(vrFmtNum_(row.planificacion, 0)) + c(vrFmtNum_(row.venta_dia_ant, 1)) + c(vrFmtPct_(row.venta_vs_planif)) +
         '<div class="vr-pilar-cell" id="vrsim-out-media-' + rowId + '">—</div>' +
-        '<div class="vr-pilar-cell" id="vrsim-out-mr-' + rowId + '">—</div>' + c(vrFmtNum_(row.planificacion, 0)) + c(vrFmtPct_(row.venta_vs_planif)) +
         '<div class="vr-pilar-cell" id="vrsim-out-vsmn-' + rowId + '">—</div>' +
+        '<div class="vr-pilar-cell" id="vrsim-out-mr-' + rowId + '">—</div>' +
         '<div class="vr-pilar-cell" id="vrsim-out-vsmr-' + rowId + '">—</div>' +
         '<div class="vr-pilar-cell" id="vrsim-out-alcance-' + rowId + '">—</div>';
     };
@@ -11465,116 +11577,6 @@ const MMAA_DATA = {};
   if(typeof orig === "function"){
     window.renderTsDescentralizadasObjetivo = function(){ var r = orig.apply(this, arguments); try{ enganchar(); }catch(err){ console.warn("tsdet", err); } return r; };
   }
-})();
-
-</script>
-<script id="francoPatch">
-/* ===== Usuario Franco López (clave franco2026): solo Salidas al mercado, con sus tareas ===== */
-(function(){
-  if(typeof SUP_AUTH === "undefined") return;
-  SUP_AUTH["franco2026"] = {name:"FRANCO LOPEZ", scope:"all", role:"mercado", saludo:"👋 Hola Franco!"};
-  var QUIEN = "FRANCO LOPEZ";
-  var TAREAS = ["PROGRAMA DE MERCADO", "BEES VISIÓN", "CAPEX"];   // + OTRO (se muestra como "OTROS")
-
-  function auth(){ return (typeof supAuthData !== "undefined" && supAuthData) ? supAuthData : null; }
-  function esFranco(){ var a = auth(); return !!(a && a.role === "mercado"); }
-
-  var st = document.createElement("style");
-  st.id = "francoStyle";
-  st.textContent =
-    "#supContent.sm-franco > .pill-row .pill:not(#supViewSalidasBtn){display:none!important}" +
-    "#supContent:not(.sm-franco) .pill.sm-fr-only{display:none!important}" +
-    "#supContent.sm-franco #smQuienPills .pill:not(.sm-fr-only),#supContent.sm-franco #smTareaPills .pill:not(.sm-fr-only):not([data-v='OTRO']){display:none!important}";
-  document.head.appendChild(st);
-
-  // botones nuevos en el formulario (para los demás usuarios quedan ocultos)
-  function pill(row, v, extra){
-    if(!row || row.querySelector('.pill[data-v="' + v + '"]')) return null;
-    var p = document.createElement("div");
-    p.className = "pill sm-fr-only" + (extra ? " " + extra : "");
-    p.setAttribute("data-v", v);
-    p.textContent = v;
-    return p;
-  }
-  function armarBotones(){
-    var q = document.getElementById("smQuienPills");
-    var p1 = pill(q, QUIEN);
-    if(p1){ p1.onclick = function(){ smSetQuien(this); }; q.appendChild(p1); }
-    var t = document.getElementById("smTareaPills");
-    if(t){
-      var otro = t.querySelector('.pill[data-v="OTRO"]');
-      TAREAS.forEach(function(v){
-        var p = pill(t, v);
-        if(p){ p.onclick = function(){ smSetTarea(this); }; t.insertBefore(p, otro || null); }
-      });
-    }
-  }
-
-  var ocultos = [];
-  function restaurar(){
-    ocultos.forEach(function(x){ x.el.style.display = x.prev; });
-    ocultos = [];
-    var c = document.getElementById("supContent"); if(c) c.classList.remove("sm-franco");
-    var otro = document.querySelector('#smTareaPills .pill[data-v="OTRO"]'); if(otro) otro.textContent = "OTRO";
-    // lo que había elegido Franco no queda elegido para el próximo usuario
-    if(typeof smQuienVal !== "undefined" && smQuienVal === QUIEN) smQuienVal = "";
-    if(typeof smTareaVal !== "undefined" && TAREAS.indexOf(smTareaVal) !== -1) smTareaVal = "";
-    document.querySelectorAll("#smQuienPills .pill.sm-fr-only, #smTareaPills .pill.sm-fr-only").forEach(function(p){ p.classList.remove("active"); });
-  }
-  function ocultar(el){ if(!el) return; ocultos.push({el: el, prev: el.style.display || ""}); el.style.display = "none"; }
-  function preseleccionar(){
-    var p = document.querySelector('#smQuienPills .pill[data-v="' + QUIEN + '"]');
-    if(p && !p.classList.contains("active")) smSetQuien(p);
-  }
-  function aplicar(){
-    var c = document.getElementById("supContent"); if(!c) return;
-    c.classList.add("sm-franco");
-    var w = document.getElementById("supWelcome");
-    if(w) w.innerHTML = "<span>👋 Hola Franco!</span>";
-    // solo queda la pastilla "Salidas al mercado": las filas sin pastillas visibles se ocultan con su título
-    Array.prototype.forEach.call(c.children, function(fila){
-      if(!fila.classList || !fila.classList.contains("pill-row")) return;
-      if(!fila.querySelector("#supViewSalidasBtn")){
-        ocultar(fila);
-        var t = fila.previousElementSibling;
-        if(t && t.classList.contains("section-title")) ocultar(t);
-      }
-    });
-    var b = document.getElementById("supViewSalidasBtn"); if(b) b.style.display = "";
-    armarBotones();
-    var otro = document.querySelector('#smTareaPills .pill[data-v="OTRO"]'); if(otro) otro.textContent = "OTROS";
-    // si tenía elegida una tarea de los supervisores, se limpia
-    if(typeof smTareaVal !== "undefined" && smTareaVal && smTareaVal !== "OTRO" && TAREAS.indexOf(smTareaVal) === -1){
-      smTareaVal = "";
-      document.querySelectorAll("#smTareaPills .pill").forEach(function(p){ p.classList.remove("active"); });
-      var ow = document.getElementById("smTareaOtroWrap"); if(ow) ow.style.display = "none";
-    }
-    preseleccionar();
-  }
-
-  var origShow = window.showSupContent;
-  if(typeof origShow !== "function") return;
-  window.showSupContent = function(){
-    restaurar();
-    armarBotones();
-    var r;
-    try { r = origShow.apply(this, arguments); }
-    catch(e){ if(!esFranco()) throw e; if(window.console) console.warn("showSupContent", e); }
-    if(esFranco()){ aplicar(); try{ supSetView("salidas"); }catch(e){} }
-    return r;
-  };
-  var origSet = window.supSetView;
-  if(typeof origSet === "function") window.supSetView = function(view){
-    if(esFranco() && view !== "salidas") view = "salidas";
-    return origSet.call(this, view);
-  };
-  // después de enviar, el formulario se limpia: vuelve a quedar elegido "FRANCO LOPEZ"
-  var origHist = window.smCargarHistorial;
-  if(typeof origHist === "function") window.smCargarHistorial = function(){
-    if(esFranco()) preseleccionar();
-    return origHist.apply(this, arguments);
-  };
-  armarBotones();
 })();
 
 </script>
