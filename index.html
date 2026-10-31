@@ -12023,6 +12023,8 @@ const MMAA_DATA = {};
   function nomV(j, v){ return (j.V[v] && j.V[v][0]) || v; }
   function supV(v){ return (DATA.j.V[v] && DATA.j.V[v][1]) || ""; }
   function telV(v){ var t = String((DATA.j.V[v] && DATA.j.V[v][2]) || "").replace(/\D/g, ""); if (!t) return ""; if (t.indexOf("549") === 0) return t; if (t.indexOf("54") === 0) return "549" + t.slice(2); t = t.replace(/^0/, ""); return "549" + t; }
+  function uxbA(a){ return (DATA.j.uxb && DATA.j.uxb[a]) || 0; }
+  function pu(l){ var u = uxbA(l.art); return l.pb && u ? l.pb / u : null; }
   function cliN(c){ return (DATA.j.clis[c] || [c])[0]; }
   function cliS(c){ return (DATA.j.clis[c] || [])[1] || ""; }
   function esPM(c){ return !!(DATA.j.clis[c] || [])[2]; }
@@ -12049,12 +12051,12 @@ const MMAA_DATA = {};
     if (!r.dups.length && !r.perf.length) t += "\n✅ Sin pedidos repetidos ni PTR perforados\n";
     // Detalle por cliente (si queda muy largo para WhatsApp, va solo el total de cada cliente)
     var clis = {};
-    ls.forEach(function(l){ var c = (clis[l.cli] = clis[l.cli] || {cli: l.cli, fin: 0, b: 0, arts: {}}); c.fin += l.fin; c.b += l.b; if (l.b > 0) { var a = (c.arts[l.art] = c.arts[l.art] || {b: 0, perf: false, sc: true}); a.b += l.b; if (l.fin > 0) a.sc = false; if (l.ctl && l.ctl.perf) a.perf = true; } });
+    ls.forEach(function(l){ var c = (clis[l.cli] = clis[l.cli] || {cli: l.cli, fin: 0, b: 0, arts: {}}); c.fin += l.fin; c.b += l.b; if (l.b > 0) { var a = (c.arts[l.art] = c.arts[l.art] || {b: 0, fin: 0, perf: false, sc: true}); a.b += l.b; a.fin += l.fin; if (l.fin > 0) a.sc = false; if (l.ctl && l.ctl.perf) a.perf = true; } });
     var arr = Object.keys(clis).map(function(k){ return clis[k]; }).sort(function(a, b){ return cliN(a.cli).localeCompare(cliN(b.cli)); });
     var marca = function(c){ return (c.cli && ls.some(function(l){ return l.cli === c.cli && DATA.dupPed[l.ped]; }) ? " ⚠️" : "") + (Object.keys(c.arts).some(function(k){ return c.arts[k].perf; }) ? " 🔻" : ""); };
     var conArts = arr.map(function(c){
       return "• *" + cap(cliN(c.cli)) + "* (" + c.cli + ")" + marca(c) + " — " + fN(c.b, 2) + " bultos · " + fM(c.fin) + "\n" +
-        Object.keys(c.arts).map(function(k){ var a = c.arts[k]; return "   " + fN(a.b, 2) + " × " + cap(DATA.j.arts[k] || k) + (a.sc ? " (sin cargo)" : "") + (a.perf ? " 🔻" : ""); }).join("\n");
+        Object.keys(c.arts).map(function(k){ var a = c.arts[k]; var u = uxbA(k), cu = !a.sc && u && a.b > 0 ? a.fin / a.b / u : 0; return "   " + fN(a.b, 2) + " × " + cap(DATA.j.arts[k] || k) + (a.sc ? " (sin cargo)" : (cu ? " · " + fM(cu) + " c/u" : "")) + (a.perf ? " 🔻" : ""); }).join("\n");
     }).join("\n");
     var soloTot = arr.map(function(c){ return "• " + cap(cliN(c.cli)) + marca(c) + " — " + fN(c.b, 2) + " b · " + fM(c.fin); }).join("\n");
     t += "\n*Tus clientes (" + arr.length + ")*\n" + ((t + conArts).length < 6000 ? conArts : soloTot) + "\n";
@@ -12074,7 +12076,7 @@ const MMAA_DATA = {};
     return ls.map(function(l){
       return {"Fecha entrega": DATA.j.fecha, "Promotor": cap(nomV(DATA.j, l.v)), "Supervisor": cap(supV(l.v)), "Cód. cliente": l.cli, "Cliente": cliN(l.cli), "Subcanal": cliS(l.cli), "PM": esPM(l.cli) ? "SÍ" : "",
         "Pedido": l.ped, "Cód. artículo": l.art, "Artículo": DATA.j.arts[l.art] || "", "Bultos": l.b, "HL": l.hl, "Neto": l.neto, "Final": l.fin,
-        "$ por bulto": l.pb ? Math.round(l.pb) : "", "PTR mínimo": l.ctl ? l.ctl.min : "", "Regla": l.ctl ? l.ctl.regla : "",
+        "$ por bulto": l.pb ? Math.round(l.pb) : "", "Unid. por bulto": uxbA(l.art) || "", "$ por unidad": pu(l) ? Math.round(pu(l)) : "", "PTR mínimo": l.ctl ? l.ctl.min : "", "Regla": l.ctl ? l.ctl.regla : "",
         "Debajo del PTR": l.ctl ? (l.ctl.perf ? "SÍ" : "no") : "", "Pedido repetido": DATA.dupPed[l.ped] ? DATA.dupPed[l.ped].join(" = ") : ""};
     });
   }
@@ -12181,15 +12183,14 @@ const MMAA_DATA = {};
       cl.forEach(function(l){
         var ctl = l.ctl ? (l.ctl.perf ? "PTR " + fM(l.ctl.min) + " (" + fN(l.ctl.dif * 100, 1) + "%)" : "PTR ok") : (l.fin === 0 && l.b > 0 ? "sin cargo" : "");
         if (DATA.dupPed[l.ped]) ctl = (ctl ? ctl + " · " : "") + "REPETIDO";
-        body.push([l.ped, plain(l.art + " " + (DATA.j.arts[l.art] || "")), "", "", fN(l.b, 2), fM(l.fin), ctl]);
+        body.push([l.ped, plain(l.art + " " + (DATA.j.arts[l.art] || "")), l.pb ? fM(l.pb) : "", pu(l) ? fM(pu(l)) : "", fN(l.b, 2), fM(l.fin), ctl]);
         estilos.push({row: body.length - 1, perf: !!(l.ctl && l.ctl.perf) || !!DATA.dupPed[l.ped]});
       });
     });
-    body.forEach(function(row){ if (row.length === 7 && typeof row[2] === "string") { row[1] = {content: row[1], colSpan: 3}; row.splice(2, 2); } });
     var marcadas = {}; estilos.forEach(function(s){ if (s.perf) marcadas[s.row] = 1; });
-    doc.autoTable({startY: y, head: [["Pedido", {content: "Artículo", colSpan: 3}, "Bultos", "Total", "Control"]], body: body, theme: "plain",
+    doc.autoTable({startY: y, head: [["Pedido", "Artículo", "$/bulto", "$/unidad", "Bultos", "Total", "Control"]], body: body, theme: "plain",
       styles: {fontSize: 8, cellPadding: 2.5}, headStyles: {fillColor: [29, 78, 137], textColor: 255}, margin: {left: 40, right: 40},
-      columnStyles: {0: {cellWidth: 52}, 4: {halign: "right", cellWidth: 48}, 5: {halign: "right", cellWidth: 70}, 6: {cellWidth: 110}},
+      columnStyles: {0: {cellWidth: 48}, 2: {halign: "right", cellWidth: 52}, 3: {halign: "right", cellWidth: 46}, 4: {halign: "right", cellWidth: 38}, 5: {halign: "right", cellWidth: 58}, 6: {cellWidth: 92}},
       didParseCell: function(d){ if (d.section === "body" && marcadas[d.row.index]) { d.cell.styles.textColor = [179, 38, 30]; } }});
     var n = doc.internal.getNumberOfPages();
     for (var i = 1; i <= n; i++) { doc.setPage(i); doc.setFontSize(8); doc.setTextColor(140); doc.text("Página " + i + " de " + n, W - 40, doc.internal.pageSize.getHeight() - 20, {align: "right"}); }
@@ -12298,10 +12299,10 @@ const MMAA_DATA = {};
     var cards = arr.map(function(c){
       var peds = []; c.ls.forEach(function(l){ if (peds.indexOf(l.ped) === -1) peds.push(l.ped); });
       var body = peds.map(function(p){ var pl = c.ls.filter(function(l){ return l.ped === p; });
-        return '<div class="sb-ped">Pedido ' + e(p) + (DATA.dupPed[p] ? ' <span class="sb-pill bad">repetido</span>' : "") + '</div><div class="sb-tbl"><table><thead><tr><th>Artículo</th><th class="n">Bultos</th><th class="n">HL</th><th class="n">$/bulto</th><th class="n">Total</th><th>Control</th></tr></thead><tbody>' +
+        return '<div class="sb-ped">Pedido ' + e(p) + (DATA.dupPed[p] ? ' <span class="sb-pill bad">repetido</span>' : "") + '</div><div class="sb-tbl"><table><thead><tr><th>Artículo</th><th class="n">Bultos</th><th class="n">HL</th><th class="n">$/bulto</th><th class="n">$/unidad</th><th class="n">Total</th><th>Control</th></tr></thead><tbody>' +
           pl.map(function(l){ var bon = l.fin === 0;
             var ctl = l.ctl ? (l.ctl.perf ? '<span class="sb-pill ' + (l.ctl.dif < -0.05 ? "bad" : "warn") + '">PTR ' + fM(l.ctl.min) + " · " + fN(l.ctl.dif * 100, 1) + "%</span>" : '<span class="sb-pill ok">PTR ok</span>') : (bon && l.b > 0 ? '<span class="sb-muted">sin cargo</span>' : "");
-            return '<tr class="' + (l.ctl && l.ctl.perf ? "perf" : (bon ? "bonif" : "")) + '"><td><span class="sb-mono sb-muted">' + e(l.art) + "</span> " + e(DATA.j.arts[l.art] || "") + '</td><td class="n">' + fN(l.b, 2) + '</td><td class="n">' + fN(l.hl, 3) + '</td><td class="n">' + (l.pb ? fM(l.pb) : "–") + '</td><td class="n">' + fM(l.fin) + "</td><td>" + ctl + "</td></tr>"; }).join("") + "</tbody></table></div>"; }).join("");
+            return '<tr class="' + (l.ctl && l.ctl.perf ? "perf" : (bon ? "bonif" : "")) + '"><td><span class="sb-mono sb-muted">' + e(l.art) + "</span> " + e(DATA.j.arts[l.art] || "") + '</td><td class="n">' + fN(l.b, 2) + '</td><td class="n">' + fN(l.hl, 3) + '</td><td class="n">' + (l.pb ? fM(l.pb) : "–") + '</td><td class="n">' + (pu(l) ? fM(pu(l)) + '<span class="sb-muted" style="font-size:11px"> ×' + uxbA(l.art) + "</span>" : "–") + '</td><td class="n">' + fM(l.fin) + "</td><td>" + ctl + "</td></tr>"; }).join("") + "</tbody></table></div>"; }).join("");
       return '<details class="sb-cli' + (c.perf || c.dup ? " flag" : "") + '"><summary><span class="nm">' + e(cap(cliN(c.cli))) + ' <span class="sb-mono sb-muted" style="font-weight:400">' + e(c.cli) + "</span><small>" + e(cap(cliS(c.cli))) + (peds.length > 1 ? " · " + peds.length + " pedidos" : "") + "</small></span>" +
         (c.pm ? '<span class="sb-pill pm">PM</span>' : "") + (c.dup ? '<span class="sb-pill bad">repetido</span>' : "") + (c.perf ? '<span class="sb-pill warn">PTR</span>' : "") +
         '<span class="fig"><b>' + fN(c.b, 2) + '</b> bultos</span><span class="fig"><b>' + fN(c.hl, 2) + '</b> HL</span><span class="fig"><b>' + fM(c.fin) + '</b></span></summary><div class="body">' + body + "</div></details>";
