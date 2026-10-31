@@ -11970,6 +11970,15 @@ const MMAA_DATA = {};
 #sbRoot .sb-bar .track{grid-column:1/-1;height:6px;background:var(--sb-line);border-radius:3px;overflow:hidden;margin-top:-2px}
 #sbRoot .sb-bar .track i{display:block;height:100%;background:var(--sb-acc)}
 #sbRoot pre.sb-msg{white-space:pre-wrap;font:12px/1.5 "JetBrains Mono",monospace;margin:0}
+#sbRoot .sb-kline{display:flex;flex-wrap:wrap;gap:6px 18px;background:var(--sb-paper);border:1px solid var(--sb-line);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:13.5px;color:var(--sb-muted)}
+#sbRoot .sb-kline b{color:var(--sb-ink);font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+#sbRoot details.sb-fold{background:var(--sb-paper);border:1px solid var(--sb-line);border-radius:10px;padding:0 14px}
+#sbRoot details.sb-fold>summary{list-style:none;cursor:pointer;padding:10px 0;font-size:13.5px;font-weight:600;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+#sbRoot details.sb-fold>summary::-webkit-details-marker{display:none}
+#sbRoot details.sb-fold .sb-ver{font-weight:400;font-size:12px;margin-left:auto}
+#sbRoot details.sb-fold[open] .sb-ver{visibility:hidden}
+#sbRoot details.sb-fold .sb-two{margin:0 0 12px}
+#sbRoot .sb-grupo{background:var(--sb-acc-s);border:1px solid var(--sb-acc);border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;flex-direction:column;gap:8px}
 #sbRoot .sb-cola{display:flex;flex-direction:column;gap:8px;background:var(--sb-ok-s);border:1px solid var(--sb-ok);border-radius:12px;padding:14px 16px;margin-bottom:16px}
 #sbRoot .sb-cola-t{font-size:13px;color:var(--sb-ok)}
 #sbRoot .sb-cola-n{font-family:"Fraunces",Georgia,serif;font-size:1.3rem;font-weight:700}
@@ -12085,7 +12094,7 @@ const MMAA_DATA = {};
     document.head.appendChild(s);
   }
   function bajarPdf(){
-    var ds = document.querySelectorAll("#sbRoot details.sb-cli");
+    var ds = document.querySelectorAll("#sbRoot details");
     var antes = Array.prototype.map.call(ds, function(d){ return d.open; });
     ds.forEach(function(d){ d.open = true; });
     document.body.classList.add("sb-printing");
@@ -12103,6 +12112,9 @@ const MMAA_DATA = {};
       '<div class="sb-kpi"><span>Bultos</span><b>' + fN(r.b, 2) + '</b></div>' +
       '<div class="sb-kpi"><span>HL vendidos</span><b>' + fN(r.hl, 2) + '</b></div>' +
       '<div class="sb-kpi"><span>Total final</span><b>' + fM(r.fin) + '</b></div></div>';
+  }
+  function kpisCortos(r){
+    return '<div class="sb-kline"><span><b>' + r.cli + "</b> clientes</span><span><b>" + r.ped + "</b> pedidos</span><span><b>" + fN(r.b, 2) + "</b> bultos</span><span><b>" + fN(r.hl, 2) + "</b> HL</span><span><b>" + fM(r.fin) + "</b></span></div>";
   }
   function topProductos(ls, n){
     var m = {};
@@ -12124,10 +12136,11 @@ const MMAA_DATA = {};
   function cabecera(){
     var sups = {}; DATA.vends.forEach(function(v){ var s = supV(v); if (s) sups[s] = 1; });
     var vs = DATA.vends.filter(function(v){ return !sup || supV(v) === sup; });
-    return '<div class="sb-head"><div><div class="sb-title">🧾 Sábana · entrega ' + e(DATA.j.fecha) + '</div><div class="sb-sub">Generada ' + e(DATA.j.gen) + " desde Chess · se genera sola a las 15:00</div></div>" +
+    return '<div class="sb-head"><div><div class="sb-title">🧾 Sábana · entrega ' + e(DATA.j.fecha) + '</div><div class="sb-sub">Generada ' + e(DATA.j.gen) + " desde Chess · sale sola a las 15:00 (sábados 12:30)</div></div>" +
       '<div class="sb-ctrl sb-noprint"><select id="sbSup" aria-label="Supervisor"><option value="">Todos los supervisores</option>' + Object.keys(sups).sort().map(function(s){ return '<option value="' + e(s) + '"' + (s === sup ? " selected" : "") + ">" + e(cap(s)) + "</option>"; }).join("") + "</select>" +
       '<select id="sbVend" aria-label="Promotor"><option value="">Resumen general</option>' + vs.map(function(v){ return '<option value="' + e(v) + '"' + (v === vista ? " selected" : "") + ">" + e(cap(nomV(DATA.j, v))) + "</option>"; }).join("") + "</select>" +
-      '<button class="sb-btn" type="button" id="sbXls">⬇ Excel</button><button class="sb-btn" type="button" id="sbPdf">⬇ PDF</button></div></div>';
+      '<button class="sb-btn" type="button" id="sbXls">⬇ Excel</button><button class="sb-btn" type="button" id="sbPdf">⬇ PDF</button>' +
+      (urlWebApp() ? '<button class="sb-btn" type="button" id="sbGenerar"' + (generando ? " disabled" : "") + ">" + (generando ? "⏳ Bajando de Chess… (1 min)" : "🔄 Actualizar desde Chess") + "</button>" : "") + "</div></div>";
   }
   /* ---------- PDF de un promotor (para compartir por WhatsApp) ---------- */
   function cargarScript(src){ return new Promise(function(ok, mal){ var s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = function(){ mal(new Error("no se pudo cargar " + src)); }; document.head.appendChild(s); }); }
@@ -12199,6 +12212,38 @@ const MMAA_DATA = {};
   }
   function btnPdf(v){ return '<button class="sb-btn sb-noprint" type="button" data-sbpdf="' + e(v) + '" title="Arma el PDF de ' + e(cap(nomV(DATA.j, v))) + ' para compartirlo por WhatsApp">📄 PDF</button>'; }
 
+  /* ---------- Un solo mensaje para el grupo de WhatsApp: cada promotor toca su link ---------- */
+  function mensajeGrupo(vs){
+    var t = "*Sábana " + DATA.j.fecha + "*" + (sup ? " · equipo " + cap(sup) : "") + "\nTocá tu nombre, revisá tu Sábana y dale el cierre a tu supervisor 👇\n";
+    vs.forEach(function(v){
+      var r = resumen(DATA.porV[v]);
+      t += "\n*" + cap(nomV(DATA.j, v)) + "* — " + r.cli + " clientes" + (r.dups.length ? " · ⚠️ " + r.dups.length + " repetido" + (r.dups.length > 1 ? "s" : "") : "") + (r.perf.length ? " · 🔻 " + r.perf.length + " PTR" : "") + (!r.dups.length && !r.perf.length ? " · ✅" : "") + "\n" + linkV(v) + "\n";
+    });
+    return t;
+  }
+  function btnGrupo(vs){
+    return '<a class="sb-btn wa sb-noprint" id="sbGrupo" href="https://wa.me/?text=' + encodeURIComponent(mensajeGrupo(vs)) + '" target="_blank" rel="noopener">📣 Un mensaje para el grupo</a>';
+  }
+
+  /* ---------- Generar de nuevo desde Chess (usa el Web App del tablero) ---------- */
+  function urlWebApp(){
+    if (window.__sbWebApp !== undefined) return window.__sbWebApp;
+    var u = "";
+    Array.prototype.some.call(document.scripts, function(s){ var m = (s.textContent || "").match(/https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec/); if (m) { u = m[0]; return true; } return false; });
+    window.__sbWebApp = u; return u;
+  }
+  var generando = false;
+  function generarAhora(btn){
+    var u = urlWebApp();
+    if (!u) { alert("No encontré la conexión con la planilla. Generala desde el Sheet: menú 🧾 Sábana → Generar Sábana ahora."); return; }
+    if (!confirm("¿Volver a bajar los pedidos de Chess ahora? Tarda alrededor de un minuto y reemplaza la Sábana de hoy.")) return;
+    generando = true; btn.disabled = true; btn.textContent = "⏳ Bajando de Chess… (1 min)";
+    fetch(u + "?action=generarSabana&t=" + Date.now()).then(function(r){ return r.json(); })
+      .then(function(res){ if (!res.ok) throw new Error(res.error || "error desconocido"); DATA = preparar(res.data); cola = null; })
+      .catch(function(x){ alert("No se pudo generar la Sábana: " + x.message); })
+      .then(function(){ generando = false; render(); });
+  }
+
   /* ---------- Enviar a todos: va abriendo el WhatsApp de cada promotor, uno por toque ---------- */
   var cola = null;
   function iniciarCola(vs){
@@ -12228,7 +12273,7 @@ const MMAA_DATA = {};
         '<td class="n"><span class="sb-pill ' + (r.dups.length ? "bad" : "ok") + '">' + r.dups.length + '</span></td><td class="n"><span class="sb-pill ' + (r.perf.length ? "warn" : "ok") + '">' + r.perf.length + '</span></td><td class="sb-noprint"><span class="sb-ctrl" style="flex-wrap:nowrap">' + btnWa(v) + btnPdf(v) + "</span></td></tr>"; }).join("");
     el.innerHTML = cabecera() + panelCola() + kpis(tot) +
       '<div class="sb-ctrl" style="justify-content:space-between;margin-top:6px"><h3 class="sb-h" style="margin:0">Por promotor <small>' + vs.length + '</small></h3>' +
-      '<span class="sb-ctrl sb-noprint"><span class="sb-muted" style="font-size:12.5px">Enviadas ' + nEnv + " de " + vs.length + '</span><button class="sb-btn wa" type="button" id="sbTodos">📲 Enviar a todos' + (nEnv && nEnv < vs.length ? " los que faltan" : "") + "</button></span></div>" +
+      '<span class="sb-ctrl sb-noprint">' + btnGrupo(vs) + '<button class="sb-btn" type="button" id="sbTodos">📲 Uno por uno' + (nEnv && nEnv < vs.length ? " (faltan " + (vs.length - nEnv) + ")" : "") + "</button></span></div>" +
       '<div style="height:10px"></div>' +
       '<div class="sb-tbl"><table><thead><tr><th>Promotor</th><th class="n">Clientes</th><th class="n">Pedidos</th><th class="n">Bultos</th><th class="n">HL</th><th class="n">Total final</th><th class="n">Repetidos</th><th class="n">PTR</th><th class="sb-noprint">Enviar</th></tr></thead><tbody>' + rows + "</tbody>" +
       '<tfoot><tr><td>Total</td><td class="n">' + tot.cli + '</td><td class="n">' + tot.ped + '</td><td class="n">' + fN(tot.b, 2) + '</td><td class="n">' + fN(tot.hl, 2) + '</td><td class="n">' + fM(tot.fin) + '</td><td class="n">' + tot.dups.length + '</td><td class="n">' + tot.perf.length + '</td><td class="sb-noprint"></td></tr></tfoot></table></div>' +
@@ -12263,11 +12308,14 @@ const MMAA_DATA = {};
     }).join("");
     el.innerHTML = cabecera() +
       '<div class="sb-ctrl sb-noprint" style="justify-content:space-between;margin-bottom:12px"><h3 class="sb-h" style="margin:0">' + e(cap(nomV(DATA.j, v))) + " <small>" + e(cap(supV(v))) + '</small></h3><span class="sb-ctrl"><button class="sb-btn" type="button" id="sbVolver">← Resumen general</button>' + btnWa(v) + btnPdf(v) + "</span></div>" +
-      kpis(r) + '<h3 class="sb-h">Alertas</h3>' + alertas(r, false) +
-      '<div class="sb-two"><div class="sb-panel"><h4>Productos que vendió</h4>' + topProductos(ls, 8) + '</div><div class="sb-panel sb-noprint"><h4>Mensaje que se envía por WhatsApp</h4><pre class="sb-msg">' + e(mensaje(v)) + "</pre></div></div>" +
+      kpisCortos(r) +
+      '<details class="sb-fold"><summary><span class="sb-pill ' + (r.dups.length ? "bad" : "ok") + '">' + r.dups.length + "</span> Pedidos repetidos &nbsp; " +
+        '<span class="sb-pill ' + (r.perf.length ? "warn" : "ok") + '">' + r.perf.length + '</span> Líneas debajo del PTR <span class="sb-muted sb-ver">ver detalle ▾</span></summary><div style="padding:0 0 4px">' + alertas(r, false) + "</div></details>" +
       '<h3 class="sb-h">Clientes que compraron <small>' + cuenta.todos + "</small></h3>" +
       '<div class="sb-chips sb-noprint"><button type="button" class="sb-chip' + (filtro === "todos" ? " on" : "") + '" data-sbf="todos">Todos (' + cuenta.todos + ')</button><button type="button" class="sb-chip' + (filtro === "alerta" ? " on" : "") + '" data-sbf="alerta">Con alerta (' + cuenta.alerta + ')</button><button type="button" class="sb-chip' + (filtro === "pm" ? " on" : "") + '" data-sbf="pm">Clientes PM (' + cuenta.pm + ')</button><button type="button" class="sb-chip" id="sbAbrir">Abrir todos</button></div>' +
-      (cards || '<p class="sb-muted">No hay clientes con este filtro.</p>');
+      (cards || '<p class="sb-muted">No hay clientes con este filtro.</p>') +
+      '<details class="sb-fold sb-noprint" style="margin-top:14px"><summary>Productos que vendió y mensaje de WhatsApp <span class="sb-muted sb-ver">ver ▾</span></summary>' +
+      '<div class="sb-two"><div class="sb-panel"><h4>Productos que vendió</h4>' + topProductos(ls, 8) + '</div><div class="sb-panel"><h4>Mensaje que se envía por WhatsApp</h4><pre class="sb-msg">' + e(mensaje(v)) + "</pre></div></div></details>";
     el.querySelector("#sbVolver").onclick = function(){ vista = ""; render(); };
     el.querySelectorAll("[data-sbf]").forEach(function(b){ b.onclick = function(){ filtro = b.getAttribute("data-sbf"); render(); }; });
     el.querySelector("#sbAbrir").onclick = function(){ var ds = el.querySelectorAll("details.sb-cli"), ab = !Array.prototype.every.call(ds, function(d){ return d.open; }); ds.forEach(function(d){ d.open = ab; }); };
@@ -12285,6 +12333,8 @@ const MMAA_DATA = {};
     if (ss) ss.onchange = function(){ sup = ss.value; vista = ""; lsSet("sabana_sup", sup); render(); };
     el.querySelector("#sbXls").onclick = bajarExcel;
     el.querySelector("#sbPdf").onclick = bajarPdf;
+    var bg = el.querySelector("#sbGenerar"); if (bg) bg.onclick = function(){ generarAhora(bg); };
+    var gr = el.querySelector("#sbGrupo"); if (gr) gr.addEventListener("click", function(){ var m = enviados(); DATA.vends.filter(function(v){ return !sup || supV(v) === sup; }).forEach(function(v){ m[v] = "grupo " + new Date().toLocaleTimeString("es-AR", {hour: "2-digit", minute: "2-digit"}); }); lsSet(KEY(), m); setTimeout(render, 400); });
     el.querySelectorAll("[data-sbpdf]").forEach(function(b){ b.onclick = function(ev){ ev.stopPropagation(); compartirPdf(b.getAttribute("data-sbpdf"), b); }; });
     el.querySelectorAll("[data-sbwa]").forEach(function(a){ a.addEventListener("click", function(){ var m = enviados(); m[a.getAttribute("data-sbwa")] = new Date().toLocaleTimeString("es-AR", {hour: "2-digit", minute: "2-digit"}); lsSet(KEY(), m); if (a.getAttribute("data-sbcola") && cola) cola.i++; setTimeout(render, 400); }); });
   }
