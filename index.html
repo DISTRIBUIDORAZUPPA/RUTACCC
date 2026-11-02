@@ -12428,5 +12428,308 @@ const MMAA_DATA = {};
 })();
 
 </script>
+<script id="simpPatch">
+/* ===== 💲 Simulador de precios (Supervisores) — SIMP_V1 =====
+   Mismas fórmulas que el Excel "Simulador_Rentabilidad_Dashboard" (hoja Calculo).
+   Datos: sim.json (LDP + PTR mínimos), se baja recién al abrir el simulador. */
+(function(){
+  if(typeof supSetView !== "function") return;
+  var MESES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+  var CANALES = ["MAYORISTA", "K+T", "AUTOSERVICIOS", "REFRIGERADO", "TRADICIONAL", "OTRO"];
+  var MAXL = 15, LS = "simpBorrador";
+  var D = null, IDX = {}, cargando = false, errorCarga = "";
+  var ST = {prop: "", canal: "MAYORISTA", min: 10, lineas: [nueva()]};
+  try{ var g = JSON.parse(localStorage.getItem(LS) || "null"); if(g && g.lineas && g.lineas.length) ST = g; }catch(e){}
+
+  function nueva(){ return {cod: "", bul: "", base: "", zup: "", adic: "", obj: "", sku: "", cpc: "1", ptr: ""}; }
+  function guardar(){ try{ localStorage.setItem(LS, JSON.stringify(ST)); }catch(e){} }
+  function e(s){ return (typeof esc === "function") ? esc(String(s == null ? "" : s)) : String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function n(v, d){ if(v == null || !isFinite(v)) return "—"; return Number(v).toLocaleString("es-AR", {minimumFractionDigits: d || 0, maximumFractionDigits: d || 0}); }
+  function $(v, d){ return (v == null || !isFinite(v)) ? "—" : (v < 0 ? "-$ " : "$ ") + n(Math.abs(v), d); }
+  function pc(v, d){ return (v == null || !isFinite(v)) ? "—" : n(v * 100, d == null ? 1 : d) + "%"; }
+  function num(t){ var s = String(t == null ? "" : t).replace(/\$|\s|%/g, ""); if(!s) return null; if(s.indexOf(",") !== -1) s = s.replace(/\./g, "").replace(",", "."); else if(/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, ""); var x = Number(s); return isFinite(x) ? x : null; }
+  function frac(t){ var x = num(t); return x == null ? 0 : x / 100; }
+
+  // ---- datos ----
+  function cargar(){
+    if(D || cargando) return;
+    cargando = true; errorCarga = "";
+    var urls = ["sim.json", "https://distribuidorazuppa.github.io/RUTACCC/sim.json"], i = 0;
+    function prox(){
+      if(i >= urls.length){ cargando = false; errorCarga = "No pude bajar la lista de precios del simulador. Revisá la conexión y volvé a entrar."; render(); return; }
+      var u = urls[i++] + "?t=" + Date.now();
+      fetch(u).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); }).then(function(j){
+        D = j; IDX = {};
+        (D.p || []).forEach(function(p){ IDX[String(p[0])] = p; });
+        cargando = false; render();
+      }).catch(prox);
+    }
+    prox();
+  }
+  // p = [cod, desc, negocio, marca, bulPal, unBulto, ltsUn, impInt, lista, rdf, pnsf, pnit]
+  function prod(cod){ return IDX[String(cod || "").trim()] || null; }
+  function ptrMin(cod){ var v = D && D.ptr ? D.ptr[String(cod)] : null; return v == null ? null : Number(v); }
+
+  // ---- cálculo (hoja Calculo del Excel) ----
+  function calc(l){
+    var p = prod(l.cod), C = num(l.bul);
+    if(!p || !C) return {p: p, ok: false};
+    var Dv = frac(l.base), E = frac(l.zup), F = frac(l.adic);
+    var lista = Number(p[8]) || 0, pnit = Number(p[11]) || 0, imp = Number(p[7]) || 0, unb = Number(p[5]) || 0, bp = Number(p[4]) || 0, lts = Number(p[6]) || 0;
+    var I = Dv + F;
+    var J = I ? ((I - Dv) + E) / I : 0; if(!isFinite(J)) J = 0;
+    var H = C * lista, K = C * pnit * (1 - I), L = I * lista * C * (1 - J), M = L + K - H;
+    var O = K * 1.21 + (I === 1 ? 0 : C * imp), P = O / C;
+    var pm = l.ptr !== "" && num(l.ptr) != null ? num(l.ptr) : ptrMin(l.cod);
+    return {p: p, ok: true, C: C, D: Dv, E: E, F: F, I: I, J: J, H: H, K: K, L: L, M: M, G: H ? M / H : null, N: M / C, O: O, P: P,
+      Q: unb ? P / unb : null, R: bp ? C / bp : null, X: lista * 1.21 + imp, ptr: ptrMin(l.cod), ptrUsar: pm, dif: (ptrMin(l.cod) != null ? P - ptrMin(l.cod) : null),
+      hl: C * unb * lts / 100, ts: C * lista * I, cmq: Dv - E, lista: lista, pnit: pnit, imp: imp};
+  }
+  // precio objetivo por bulto → descuento total necesario
+  function dtoPara(l, T){
+    var p = prod(l.cod); if(!p || !T) return null;
+    var pnit = Number(p[11]) || 0, imp = Number(p[7]) || 0;
+    if(!pnit) return null;
+    return 1 - (T - imp) / (pnit * 1.21);
+  }
+  function totales(rs){
+    var t = {C: 0, H: 0, K: 0, L: 0, M: 0, O: 0, R: 0, ts: 0, hl: 0, bajo: 0, n: 0};
+    rs.forEach(function(r){ if(!r.ok) return; t.n++; t.C += r.C; t.H += r.H; t.K += r.K; t.L += r.L; t.M += r.M; t.O += r.O; t.R += r.R || 0; t.ts += r.ts; t.hl += r.hl; if(r.G != null && Math.round(r.G * 1e4) < Math.round(ST.min / 100 * 1e4)) t.bajo++; });
+    t.G = t.H ? (t.K + t.L - t.H) / t.H : null;
+    return t;
+  }
+
+  // ---- estilos ----
+  var st = document.createElement("style"); st.id = "simpStyle";
+  st.textContent =
+    "#supViewSimp{max-width:980px}" +
+    ".sp-head{background:var(--ink);color:#fff;border-radius:16px;padding:16px 18px;margin-bottom:12px}" +
+    ".sp-head h2{font-family:var(--serif);color:var(--gold);font-size:1.35rem;margin:0 0 4px;font-weight:900}" +
+    ".sp-head small{font-family:var(--mono);font-size:.62rem;color:#cfc7b6;letter-spacing:.04em}" +
+    ".sp-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:12px}" +
+    ".sp-f label{display:block;font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;margin-bottom:4px}" +
+    ".sp-f input,.sp-f select{width:100%;box-sizing:border-box;padding:10px 11px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font-family:var(--sans);font-size:.95rem;color:var(--ink)}" +
+    ".sp-f input:focus,.sp-f select:focus{outline:none;border-color:var(--gold)}" +
+    ".sp-tot{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}" +
+    ".sp-tot.ok{border-color:#16a34a}.sp-tot.bad{border-color:#dc2626}" +
+    ".sp-big{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}" +
+    ".sp-big b{font-family:var(--serif);font-size:2.4rem;font-weight:900;line-height:1}" +
+    ".sp-big .ok{color:#16a34a}.sp-big .bad{color:#dc2626}" +
+    ".sp-ban{border-radius:10px;padding:9px 12px;font-weight:800;font-size:.82rem;margin:10px 0}" +
+    ".sp-ban.ok{background:#dcfce7;color:#166534}.sp-ban.bad{background:#fee2e2;color:#991b1b}.sp-ban.neu{background:#f1ede4;color:var(--muted)}" +
+    ".sp-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}" +
+    ".sp-k{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}" +
+    ".sp-k small{display:block;font-family:var(--mono);font-size:.54rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}" +
+    ".sp-k b{display:block;font-family:var(--serif);font-size:1.02rem;font-weight:900;margin-top:2px;white-space:nowrap}" +
+    ".sp-k span{font-size:.62rem;color:var(--muted)}" +
+    ".sp-l{background:var(--card);border:1.5px solid var(--line);border-left-width:6px;border-radius:14px;padding:12px;margin-bottom:10px}" +
+    ".sp-l.ok{border-left-color:#16a34a}.sp-l.bad{border-left-color:#dc2626}" +
+    ".sp-lh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}" +
+    ".sp-lh b{font-family:var(--mono);font-size:.7rem;color:var(--muted)}" +
+    ".sp-x{border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 9px;font-size:.72rem;cursor:pointer;color:var(--red)}" +
+    ".sp-prod{font-weight:800;font-size:.86rem;margin:4px 0 2px}.sp-prod small{display:block;font-weight:500;color:var(--muted);font-size:.7rem}" +
+    ".sp-in{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:8px;margin-top:8px}" +
+    ".sp-res{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}" +
+    ".sp-r{background:#fff;border:1px solid #efe9dc;border-radius:9px;padding:6px 8px}" +
+    ".sp-r small{display:block;font-family:var(--mono);font-size:.5rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700}" +
+    ".sp-r b{font-family:var(--mono);font-size:.82rem;white-space:nowrap}" +
+    ".sp-r.big b{font-family:var(--serif);font-size:1.3rem;font-weight:900}" +
+    ".sp-pos{color:#16a34a}.sp-neg{color:#dc2626}" +
+    ".sp-obj{background:#fff8ec;border:1px dashed #e8c77d;border-radius:10px;padding:8px 10px;margin-top:10px;font-size:.78rem;display:grid;grid-template-columns:180px 1fr;gap:8px;align-items:center}" +
+    ".sp-obj .sp-f input{padding:7px 9px;font-size:.85rem}" +
+    ".sp-btn{border:none;background:var(--ink);color:var(--gold);border-radius:9px;padding:9px 14px;font-family:var(--mono);font-weight:700;font-size:.74rem;cursor:pointer}" +
+    ".sp-btn.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}" +
+    ".sp-btn.mini{padding:5px 9px;font-size:.66rem}" +
+    ".sp-acts{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 16px}" +
+    ".sp-sec{font-family:var(--serif);font-weight:900;font-size:1.05rem;margin:18px 0 8px}" +
+    ".sp-ej-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}" +
+    ".sp-ej{background:#fff;padding:10px;border-radius:12px;border:1px solid var(--line)}" +
+    ".sp-ej table{width:100%;border-collapse:collapse;font-family:Calibri,Arial,sans-serif}" +
+    ".sp-ej td{border:1.5px solid #222;padding:5px 8px;font-weight:700;font-size:.86rem;text-align:center;background:#fff;color:#111}" +
+    ".sp-ej td:first-child{text-align:center;width:52%}" +
+    ".sp-ej-in{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}" +
+    ".sp-ej-in .sp-f input,.sp-ej-in .sp-f select{padding:6px 8px;font-size:.8rem}" +
+    ".sp-note{font-size:.7rem;color:var(--muted);margin-top:6px}" +
+    "@media(max-width:700px){" +
+      ".sp-row{grid-template-columns:1fr 1fr}.sp-row .sp-f:first-child{grid-column:1/-1}" +
+      ".sp-kpis{grid-template-columns:1fr 1fr}.sp-big b{font-size:2.1rem}" +
+      ".sp-in{grid-template-columns:1fr 1fr}.sp-in .sp-f:first-child{grid-column:1/-1}" +
+      ".sp-res{grid-template-columns:1fr 1fr}" +
+      ".sp-obj{grid-template-columns:1fr}" +
+      ".sp-ej-wrap{grid-template-columns:1fr}" +
+    "}";
+  document.head.appendChild(st);
+
+  // ---- pastilla y vista ----
+  function crear(){
+    if(document.getElementById("supViewSimp")) return true;
+    var fila = document.getElementById("supRevRow") || (document.getElementById("supViewTradeBtn") || {}).parentNode;
+    var cont = document.getElementById("supContent");
+    if(!fila || !cont) return false;
+    var pill = document.createElement("div"); pill.className = "pill"; pill.id = "supViewSimpBtn"; pill.textContent = "💲 Simulador de precios";
+    pill.onclick = function(){ supSetView("simp"); };
+    fila.appendChild(pill);
+    var v = document.createElement("div"); v.id = "supViewSimp"; v.style.display = "none";
+    var ancla = document.getElementById("supViewPlanificadorCnc") || document.getElementById("supViewPlan");
+    if(ancla) ancla.parentNode.insertBefore(v, ancla); else cont.appendChild(v);
+    var dl = document.createElement("datalist"); dl.id = "simpProds"; document.body.appendChild(dl);
+    return true;
+  }
+  var origSet = window.supSetView;
+  window.supSetView = function(view){
+    crear();
+    var r = origSet.apply(this, arguments);
+    var b = document.getElementById("supViewSimpBtn"), v = document.getElementById("supViewSimp");
+    if(b) b.classList.toggle("active", view === "simp");
+    if(v){ v.style.display = view === "simp" ? "block" : "none"; if(view === "simp"){ cargar(); render(); } }
+    return r;
+  };
+  if(typeof window.showSupContent === "function"){
+    var origShow = window.showSupContent;
+    window.showSupContent = function(){ var r = origShow.apply(this, arguments); crear(); return r; };
+  }
+
+  // ---- pantalla ----
+  function llenarLista(){
+    var dl = document.getElementById("simpProds");
+    if(!dl || !D || dl.getAttribute("data-ok")) return;
+    dl.innerHTML = (D.p || []).map(function(p){ return '<option value="' + e(p[0]) + '">' + e(p[0] + " — " + p[1]) + "</option>"; }).join("");
+    dl.setAttribute("data-ok", "1");
+  }
+  function campo(lbl, attrs, val, extra){
+    return '<div class="sp-f"' + (extra || "") + '><label>' + lbl + '</label><input ' + attrs + ' value="' + e(val) + '"></div>';
+  }
+  function render(){
+    var v = document.getElementById("supViewSimp"); if(!v || v.style.display === "none") return;
+    var foco = document.activeElement && v.contains(document.activeElement) ? {id: document.activeElement.id, s: document.activeElement.selectionStart} : null;
+    var h = '<div class="sp-head"><h2>💲 Simulador de precios</h2><small>' +
+      (D ? "LISTA DE PRECIOS VIGENTE DESDE " + e(D.vig || "—") + " · " + (D.p || []).length + " PRODUCTOS · PTR MÍNIMOS: " + Object.keys(D.ptr || {}).length : (errorCarga ? e(errorCarga) : "CARGANDO LISTA DE PRECIOS…")) +
+      "</small></div>";
+    if(!D){ v.innerHTML = h; return; }
+    llenarLista();
+    var rs = ST.lineas.map(calc), t = totales(rs), min = (num(ST.min) || 0) / 100;
+    var okTot = t.G != null && Math.round(t.G * 1e4) >= Math.round(min * 1e4);
+    h += '<div class="sp-row">' +
+      campo("Propuesta", 'id="sp-prop" data-k="prop" type="text" placeholder="Nombre de la propuesta (cliente, acción…)"', ST.prop) +
+      '<div class="sp-f"><label>Canal</label><select id="sp-canal" data-k="canal">' + CANALES.map(function(c){ return "<option" + (c === ST.canal ? " selected" : "") + ">" + c + "</option>"; }).join("") + "</select></div>" +
+      campo("Rentab. mínima %", 'id="sp-min" data-k="min" type="text" inputmode="decimal"', ST.min) + "</div>";
+    // total
+    h += '<div class="sp-tot ' + (t.n ? (okTot ? "ok" : "bad") : "") + '" id="spTotal"><div class="sp-big"><div><small style="font-family:var(--mono);font-size:.58rem;color:var(--muted);font-weight:700;letter-spacing:.06em">RENTABILIDAD TOTAL</small><br><b class="' + (t.n ? (okTot ? "ok" : "bad") : "") + '">' + (t.n ? pc(t.G) : "—") + "</b></div>" +
+      '<div style="text-align:right;font-size:.74rem;color:var(--muted)">' + e(ST.prop || "Simulación") + "<br>" + e(ST.canal) + " · mínimo " + n((num(ST.min) || 0), 1) + "%</div></div>" +
+      (t.n ? '<div class="sp-ban ' + (okTot ? "ok" : "bad") + '">' + (okTot ? "✅ ACCIÓN VIABLE — la rentabilidad total alcanza el mínimo" : "⚠️ ACCIÓN NO VIABLE — la rentabilidad total está por debajo del " + n(num(ST.min) || 0, 1) + "%") + (t.bajo && okTot ? " (ojo: " + t.bajo + " producto" + (t.bajo === 1 ? "" : "s") + " por debajo)" : "") + "</div>"
+        : '<div class="sp-ban neu">Cargá un código y la cantidad en bultos para ver el resultado.</div>') +
+      '<div class="sp-kpis">' +
+        k("Ganancia / pérdida", $(t.M), "ingreso total − costo", t.M < 0 ? "sp-neg" : "sp-pos") +
+        k("Ingreso total", $(t.K + t.L), "venta " + $(t.K) + " + Wapi " + $(t.L)) +
+        k("Costo total", $(t.H), "cantidad × precio de lista") +
+        k("Bultos · paletas", n(t.C) + " · " + n(t.R, 1), t.n + " producto" + (t.n === 1 ? "" : "s") + (t.bajo ? " · " + t.bajo + " bajo mínimo" : "")) +
+      "</div></div>";
+    // líneas
+    ST.lineas.forEach(function(l, i){
+      var r = rs[i], p = r.p, okL = r.ok && r.G != null && Math.round(r.G * 1e4) >= Math.round(min * 1e4);
+      h += '<div class="sp-l ' + (r.ok ? (okL ? "ok" : "bad") : "") + '"><div class="sp-lh"><b>PRODUCTO ' + (i + 1) + "</b>" + (ST.lineas.length > 1 ? '<button class="sp-x" data-del="' + i + '">✕ quitar</button>' : "") + "</div>" +
+        '<div class="sp-in">' +
+          campo("Código", 'id="sp-cod-' + i + '" data-i="' + i + '" data-k="cod" type="text" inputmode="numeric" list="simpProds" placeholder="Ej: 7026"', l.cod) +
+          campo("Bultos", 'id="sp-bul-' + i + '" data-i="' + i + '" data-k="bul" type="text" inputmode="numeric" placeholder="0"', l.bul) +
+          campo("Dto Base %", 'id="sp-base-' + i + '" data-i="' + i + '" data-k="base" type="text" inputmode="decimal" placeholder="0"', l.base) +
+          campo("Dto Zuppa %", 'id="sp-zup-' + i + '" data-i="' + i + '" data-k="zup" type="text" inputmode="decimal" placeholder="0"', l.zup) +
+          campo("Adicional Zuppa %", 'id="sp-adic-' + i + '" data-i="' + i + '" data-k="adic" type="text" inputmode="decimal" placeholder="0"', l.adic) +
+        "</div>" +
+        (l.cod ? (p ? '<div class="sp-prod">' + e(p[1]) + "<small>" + e(p[3]) + " · " + e(p[2]) + " · " + n(p[5]) + " un/bulto · " + n(p[4]) + " bultos/pallet · lista " + $(Number(p[8]), 0) + "</small></div>" : '<div class="sp-prod sp-neg">Código no encontrado en la lista de precios</div>') : "");
+      if(r.ok){
+        h += '<div class="sp-res">' +
+          rr("Rentabilidad", pc(r.G), okL ? "sp-pos" : "sp-neg", true) +
+          rr("Ganancia / pérdida", $(r.M), r.M < 0 ? "sp-neg" : "sp-pos", true) +
+          rr("Ingreso por venta", $(r.K)) + rr("Ingreso Wapi", $(r.L)) +
+          rr("Costo", $(r.H)) + rr("Dto total", pc(r.I)) + rr("Part. Zuppa", pc(r.J)) + rr("Pedir a CMQ", pc(r.cmq), r.cmq > 0 ? "" : "") +
+          rr("Precio compra cliente", $(r.O)) + rr("Precio por bulto", $(r.P)) + rr("Precio por unidad", $(r.Q)) + rr("Precio final lista", $(r.X)) +
+          rr("PTR mínimo", r.ptr != null ? $(r.ptr) : "sin dato") + rr("PTR real", $(r.P)) + rr("Diferencia", r.dif != null ? (r.dif >= 0 ? "+" : "") + $(r.dif) : "—", r.dif == null ? "" : (r.dif < 0 ? "sp-neg" : "sp-pos")) + rr("Paletas", n(r.R, 2)) +
+          "</div>";
+      }
+      if(p){
+        var T = num(l.obj), Ineed = T ? dtoPara(l, T) : null, F = frac(l.adic), E = frac(l.zup);
+        var Dneed = Ineed != null ? Ineed - F : null;
+        h += '<div class="sp-obj"><div class="sp-f"><label>🎯 Precio objetivo x bulto</label><input id="sp-obj-' + i + '" data-i="' + i + '" data-k="obj" type="text" inputmode="numeric" placeholder="' + (ptrMin(l.cod) != null ? "PTR mín. " + n(ptrMin(l.cod)) : "Ej: 30.000") + '" value="' + e(l.obj) + '"></div><div>' +
+          (Ineed == null ? (ptrMin(l.cod) != null ? '<button class="sp-btn mini sec" data-ptr="' + i + '">Llegar al PTR mínimo (' + $(ptrMin(l.cod)) + ")</button>" : '<span class="sp-note">Escribí el precio final por bulto al que querés llegar y te digo cuánto descuento hace falta.</span>')
+            : (Ineed < 0 ? "Ese precio está por encima de la lista: no hace falta descuento." :
+               "Para llegar a <b>" + $(T) + "</b> por bulto hace falta un <b>Dto total de " + pc(Ineed, 2) + "</b>" + (F ? " (con tu adicional Zuppa de " + pc(F, 2) + ")" : "") +
+               ": Dto Base <b>" + pc(Dneed, 2) + "</b> → pedir a CMQ <b>" + pc(Dneed - E, 2) + "</b>" + (E ? " (Zuppa pone " + pc(E, 2) + ")" : "") + '. <button class="sp-btn mini" data-apl="' + i + '">Aplicar</button>')) +
+          "</div></div>";
+      }
+      h += "</div>";
+    });
+    h += '<div class="sp-acts">' + (ST.lineas.length < MAXL ? '<button class="sp-btn" id="spAdd">➕ Agregar producto</button>' : "") +
+      '<button class="sp-btn sec" id="spNueva">🧹 Nueva simulación</button><button class="sp-btn sec" id="spImgSim">⬇️ Imagen de la simulación</button></div>';
+    // pedido a la ejecutiva
+    var mes = MESES[new Date().getMonth()];
+    var ej = rs.map(function(r, i){ return {r: r, l: ST.lineas[i], i: i}; }).filter(function(x){ return x.r.ok; });
+    h += '<div class="sp-sec">📨 Pedido para la ejecutiva</div>';
+    if(!ej.length) h += '<div class="sp-note">Cuando cargues productos, acá se arma la ficha para pedir el descuento, con el formato de la ejecutiva.</div>';
+    else {
+      h += '<div class="sp-note" style="margin:-4px 0 10px">Una ficha por producto. Revisá SKU/segmento, cantidad por combo y PTR mín. antes de enviar.</div><div class="sp-ej-wrap" id="spEjAll">';
+      ej.forEach(function(x){
+        var r = x.r, l = x.l, cpc = num(l.cpc) || 1, combos = r.C / cpc, ptrU = r.ptrUsar != null ? r.ptrUsar : r.P;
+        var sku = l.sku || String(r.p[1]).toUpperCase();
+        var filas = [["MES DE LA ACCION", mes], ["DISTRIBUIDORA", "ZUPPA"], ["SKU/SEGMENTO", sku], ["COMBO A ACCIONAR", n(combos, combos % 1 ? 2 : 0)],
+          ["Dto", pc(r.I, r.I * 1000 % 10 ? 2 : 0)], ["Cantidad", n(cpc, cpc % 1 ? 2 : 0)], ["TS COMBOS", $(r.ts, 2)], ["TS Zuppa", $(r.ts * r.J, 2)], ["TS CMQ", $(r.ts * (1 - r.J), 2)],
+          ["CANAL", ST.canal], ["HL A BUSCAR", n(r.hl, 2)], ["PTR Min", $(ptrU, 2)], ["Facturación Total", $(r.O, 2)], ["TS / hl", r.hl ? $(r.ts / r.hl, 2) : "—"]];
+        h += '<div><div class="sp-ej-in">' +
+          campo("SKU/Segmento", 'data-i="' + x.i + '" data-k="sku" type="text" id="sp-sku-' + x.i + '"', l.sku || sku, ' style="grid-column:1/-1"') +
+          campo("Bultos por combo", 'data-i="' + x.i + '" data-k="cpc" type="text" inputmode="decimal" id="sp-cpc-' + x.i + '"', l.cpc) +
+          campo("PTR Min", 'data-i="' + x.i + '" data-k="ptr" type="text" inputmode="numeric" id="sp-ptr-' + x.i + '" placeholder="' + n(r.ptr != null ? r.ptr : r.P) + '"', l.ptr) +
+          '</div><div class="sp-ej" id="spEj' + x.i + '"><table>' + filas.map(function(f){ return "<tr><td>" + e(f[0]) + "</td><td>" + e(f[1]) + "</td></tr>"; }).join("") + "</table></div>" +
+          '<div class="sp-acts" style="margin-top:8px"><button class="sp-btn mini" data-img="' + x.i + '">⬇️ Imagen</button><button class="sp-btn mini sec" data-txt="' + x.i + '">📋 Copiar texto</button></div></div>';
+      });
+      h += "</div>";
+    }
+    h += '<div class="sp-note" style="margin-top:14px">Cálculo igual al Excel del simulador: Dto total = Dto Base + Adicional Zuppa · Part. Zuppa = (Adicional + Dto Zuppa) ÷ Dto total · Ingreso por venta = bultos × PNIT × (1 − Dto total) · Ingreso Wapi = Dto total × precio de lista × bultos × (1 − Part. Zuppa) · Rentabilidad = (venta + Wapi − costo) ÷ costo · Precio compra cliente = venta × 1,21 + imp. internos. TS combos = bultos × precio de lista × Dto total.</div>';
+    v.innerHTML = h;
+    enganchar(v);
+    if(foco && foco.id){ var el = document.getElementById(foco.id); if(el){ el.focus(); try{ if(foco.s != null) el.setSelectionRange(foco.s, foco.s); }catch(err){} } }
+  }
+  function k(t, v, s, cls){ return '<div class="sp-k"><small>' + t + '</small><b class="' + (cls || "") + '">' + v + "</b><span>" + (s || "") + "</span></div>"; }
+  function rr(t, v, cls, big){ return '<div class="sp-r' + (big ? " big" : "") + '"><small>' + t + '</small><b class="' + (cls || "") + '">' + v + "</b></div>"; }
+
+  var tRender = null;
+  function enganchar(v){
+    Array.prototype.forEach.call(v.querySelectorAll("input[data-k],select[data-k]"), function(el){
+      var ev = el.tagName === "SELECT" ? "change" : "input";
+      el.addEventListener(ev, function(){
+        var i = el.getAttribute("data-i"), key = el.getAttribute("data-k");
+        if(i == null) ST[key] = el.value; else ST.lineas[Number(i)][key] = el.value;
+        guardar();
+        clearTimeout(tRender); tRender = setTimeout(render, key === "cod" ? 250 : 120);
+      });
+    });
+    function on(sel, fn){ Array.prototype.forEach.call(v.querySelectorAll(sel), function(b){ b.onclick = function(){ fn(b); }; }); }
+    on("[data-del]", function(b){ ST.lineas.splice(Number(b.getAttribute("data-del")), 1); guardar(); render(); });
+    on("#spAdd", function(){ if(ST.lineas.length < MAXL){ ST.lineas.push(nueva()); guardar(); render(); var c = document.getElementById("sp-cod-" + (ST.lineas.length - 1)); if(c) c.focus(); } });
+    on("#spNueva", function(){ ST = {prop: "", canal: ST.canal, min: ST.min, lineas: [nueva()]}; guardar(); render(); });
+    on("[data-ptr]", function(b){ var i = Number(b.getAttribute("data-ptr")), l = ST.lineas[i]; l.obj = String(Math.round(ptrMin(l.cod))); guardar(); render(); });
+    on("[data-apl]", function(b){
+      var i = Number(b.getAttribute("data-apl")), l = ST.lineas[i], need = dtoPara(l, num(l.obj));
+      if(need == null) return;
+      l.base = String(Math.round((need - frac(l.adic)) * 10000) / 100).replace(".", ",");
+      guardar(); render();
+    });
+    on("[data-img]", function(b){ imagen(b, "spEj" + b.getAttribute("data-img"), "Pedido_descuento_" + (ST.lineas[Number(b.getAttribute("data-img"))].cod || "")); });
+    on("#spImgSim", function(b){ imagen(b, "supViewSimp", "Simulacion_" + (ST.prop || "precios").replace(/[^\w]+/g, "_")); });
+    on("[data-txt]", function(b){ copiar(Number(b.getAttribute("data-txt")), b); });
+  }
+  function imagen(btn, id, nombre){
+    if(typeof descargarCierreComoImagen === "function") descargarCierreComoImagen(btn, id, nombre);
+    else alert("No se pudo generar la imagen en este navegador.");
+  }
+  function copiar(i, btn){
+    var t = document.querySelector("#spEj" + i + " table"); if(!t) return;
+    var txt = Array.prototype.map.call(t.querySelectorAll("tr"), function(tr){ var c = tr.querySelectorAll("td"); return c[0].textContent + ": " + c[1].textContent; }).join("\n");
+    function ok(){ var o = btn.textContent; btn.textContent = "✅ Copiado"; setTimeout(function(){ btn.textContent = o; }, 1800); }
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, function(){ prompt("Copiá el texto:", txt); });
+    else prompt("Copiá el texto:", txt);
+  }
+  window.simpCalcular_ = function(l){ return calc(l); };   // para pruebas
+})();
+
+</script>
 </body>
 </html>
