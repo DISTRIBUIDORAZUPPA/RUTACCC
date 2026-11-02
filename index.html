@@ -11919,6 +11919,10 @@ const MMAA_DATA = {};
 #sbRoot .sb-btn.wa{background:var(--sb-ok);border-color:var(--sb-ok);color:#fff}
 #sbRoot .sb-btn.sent{background:var(--sb-ok-s);border-color:var(--sb-ok);color:var(--sb-ok)}
 #sbRoot .sb-btn.nophone{opacity:.85}
+#sbRoot .sb-act{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:6px 0 2px;padding:5px 12px;border-radius:999px;background:var(--sb-ok-s);color:var(--sb-ok);font-size:13px}
+#sbRoot .sb-act b{font-weight:700}
+#sbRoot .sb-act-dot{width:8px;height:8px;border-radius:50%;background:var(--sb-ok);box-shadow:0 0 0 3px rgba(47,122,69,.18)}
+#sbRoot .sb-act-c{color:var(--sb-muted);font-size:12px}
 #sbRoot .sb-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
 #sbRoot .sb-kpi{background:var(--sb-paper);border:1px solid var(--sb-line);border-radius:10px;padding:11px 13px}
 #sbRoot .sb-kpi span{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--sb-muted)}
@@ -12138,13 +12142,20 @@ const MMAA_DATA = {};
   function cabecera(){
     var sups = {}; DATA.vends.forEach(function(v){ var s = supV(v); if (s) sups[s] = 1; });
     var vs = DATA.vends.filter(function(v){ return !sup || supV(v) === sup; });
-    return '<div class="sb-head"><div><div class="sb-title">🧾 Sábana · entrega ' + e(DATA.j.fecha) + '</div><div class="sb-sub">Generada ' + e(DATA.j.gen) + " desde Chess · sale sola a las 15:00 (sábados 12:30)</div></div>" +
+    return '<div class="sb-head"><div><div class="sb-title">🧾 Sábana · entrega ' + e(DATA.j.fecha) + '</div>' + bannerAct() + "</div>" +
       '<div class="sb-ctrl sb-noprint"><select id="sbSup" aria-label="Supervisor"><option value="">Todos los supervisores</option>' + Object.keys(sups).sort().map(function(s){ return '<option value="' + e(s) + '"' + (s === sup ? " selected" : "") + ">" + e(cap(s)) + "</option>"; }).join("") + "</select>" +
       '<select id="sbVend" aria-label="Promotor"><option value="">Resumen general</option>' + vs.map(function(v){ return '<option value="' + e(v) + '"' + (v === vista ? " selected" : "") + ">" + e(cap(nomV(DATA.j, v))) + "</option>"; }).join("") + "</select>" +
       '<button class="sb-btn" type="button" id="sbXls">⬇ Excel</button><button class="sb-btn" type="button" id="sbPdf">⬇ PDF</button>' +
       (urlWebApp() ? '<button class="sb-btn" type="button" id="sbGenerar"' + (generando ? " disabled" : "") + ">" + (generando ? "⏳ Bajando de Chess… (1 min)" : "🔄 Actualizar desde Chess") + "</button>" : "") + "</div></div>";
   }
   /* ---------- PDF de un promotor (para compartir por WhatsApp) ---------- */
+  function hhmm(t){ var m = String(t || "").match(/^(\d{2})\/(\d{2})\/\d{4} (\d{2}:\d{2})/); return m ? m[1] + "/" + m[2] + " a las " + m[3] : String(t || ""); }
+  function bannerAct(){
+    var a = DATA.j.auto || {lv: "14:30 a 17:00", sab: "12:30"};
+    return '<div class="sb-act"><span class="sb-act-dot"></span><b>Última actualización ' + e(hhmm(DATA.j.gen)) + "</b>" +
+      (DATA.j.cambio && DATA.j.cambio !== DATA.j.gen ? '<span class="sb-act-c">último pedido nuevo: ' + e(hhmm(DATA.j.cambio)) + "</span>" : "") + "</div>" +
+      '<div class="sb-sub">Se actualiza sola cada 5 minutos de lunes a viernes de ' + e(a.lv) + " · sábados lista a las " + e(a.sab) + "</div>";
+  }
   function cargarScript(src){ return new Promise(function(ok, mal){ var s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = function(){ mal(new Error("no se pudo cargar " + src)); }; document.head.appendChild(s); }); }
   function libsPdf(){
     if (window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API.autoTable) return Promise.resolve();
@@ -12303,7 +12314,7 @@ const MMAA_DATA = {};
           pl.map(function(l){ var bon = l.fin === 0;
             var ctl = l.ctl ? (l.ctl.perf ? '<span class="sb-pill ' + (l.ctl.dif < -0.05 ? "bad" : "warn") + '">PTR ' + fM(l.ctl.min) + " · " + fN(l.ctl.dif * 100, 1) + "%</span>" : '<span class="sb-pill ok">PTR ok</span>') : (bon && l.b > 0 ? '<span class="sb-muted">sin cargo</span>' : "");
             return '<tr class="' + (l.ctl && l.ctl.perf ? "perf" : (bon ? "bonif" : "")) + '"><td><span class="sb-mono sb-muted">' + e(l.art) + "</span> " + e(DATA.j.arts[l.art] || "") + '</td><td class="n">' + fN(l.b, 2) + '</td><td class="n">' + fN(l.hl, 3) + '</td><td class="n">' + (l.pb ? fM(l.pb) : "–") + '</td><td class="n">' + (pu(l) ? fM(pu(l)) + '<span class="sb-muted" style="font-size:11px"> ×' + uxbA(l.art) + "</span>" : "–") + '</td><td class="n">' + fM(l.fin) + "</td><td>" + ctl + "</td></tr>"; }).join("") + "</tbody></table></div>"; }).join("");
-      return '<details class="sb-cli' + (c.perf || c.dup ? " flag" : "") + '"><summary><span class="nm">' + e(cap(cliN(c.cli))) + ' <span class="sb-mono sb-muted" style="font-weight:400">' + e(c.cli) + "</span><small>" + e(cap(cliS(c.cli))) + (peds.length > 1 ? " · " + peds.length + " pedidos" : "") + "</small></span>" +
+      return '<details class="sb-cli' + (c.perf || c.dup ? " flag" : "") + '" data-c="' + e(c.cli) + '"><summary><span class="nm">' + e(cap(cliN(c.cli))) + ' <span class="sb-mono sb-muted" style="font-weight:400">' + e(c.cli) + "</span><small>" + e(cap(cliS(c.cli))) + (peds.length > 1 ? " · " + peds.length + " pedidos" : "") + "</small></span>" +
         (c.pm ? '<span class="sb-pill pm">PM</span>' : "") + (c.dup ? '<span class="sb-pill bad">repetido</span>' : "") + (c.perf ? '<span class="sb-pill warn">PTR</span>' : "") +
         '<span class="fig"><b>' + fN(c.b, 2) + '</b> bultos</span><span class="fig"><b>' + fN(c.hl, 2) + '</b> HL</span><span class="fig"><b>' + fM(c.fin) + '</b></span></summary><div class="body">' + body + "</div></details>";
     }).join("");
@@ -12347,13 +12358,35 @@ const MMAA_DATA = {};
     if (typeof window.switchTab === "function") window.switchTab("sabana");
   }
   window.addEventListener("hashchange", abrirDesdeLink);
+  function bajarDatos(){
+    var desdeGithub = function(){ return fetch("sabana.json?t=" + Date.now(), {cache: "no-store"}).then(function(r){ if (!r.ok) throw new Error(r.status === 404 ? "todavía no se generó ninguna" : "HTTP " + r.status); return r.json(); }); };
+    var u = urlWebApp();
+    if (!u) return desdeGithub();
+    return fetch(u + "?action=getSabana&t=" + Date.now()).then(function(r){ return r.json(); })
+      .then(function(res){ if (!res || !res.ok || !res.data) throw new Error("sin datos"); return res.data; })
+      .catch(desdeGithub);
+  }
   function cargar(){
     if (cargando) return;
     cargando = true; error = ""; render();
-    fetch("sabana.json?t=" + Date.now(), {cache: "no-store"}).then(function(r){ if (!r.ok) throw new Error(r.status === 404 ? "todavía no se generó ninguna" : "HTTP " + r.status); return r.json(); })
-      .then(function(j){ DATA = preparar(j); cargando = false; render(); })
+    bajarDatos().then(function(j){ DATA = preparar(j); cargando = false; render(); })
       .catch(function(x){ cargando = false; error = x.message; render(); });
   }
+  /* Con la solapa abierta, se refresca sola cada 5 minutos (sin cerrar los clientes abiertos). */
+  function refrescar(){
+    var p = document.getElementById("tabSabana");
+    if (!DATA || cargando || generando || document.hidden || !p || !p.classList.contains("active")) return;
+    bajarDatos().then(function(j){
+      if (j.gen === DATA.j.gen && j.fecha === DATA.j.fecha) return;
+      var abiertos = {}; document.querySelectorAll("#sbRoot details[open]").forEach(function(d){ abiertos[d.getAttribute("data-c") || d.className] = 1; });
+      var y = window.scrollY;
+      DATA = preparar(j); render();
+      document.querySelectorAll("#sbRoot details").forEach(function(d){ if (abiertos[d.getAttribute("data-c") || d.className]) d.open = true; });
+      window.scrollTo(0, y);
+    }).catch(function(){});
+  }
+  setInterval(refrescar, 5 * 60 * 1000);
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) refrescar(); });
   window.sabanaRecargar = cargar;
   window.__sabanaPreparar = function(j){ DATA = preparar(j); render(); };
 
