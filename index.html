@@ -12731,7 +12731,7 @@ const MMAA_DATA = {};
 })();
 
 </script>
-<!--COMBOS:INICIO 2026-11-03a-->
+<!--COMBOS:INICIO 2026-11-03b-->
 <style id="combosStyle">#cbRoot{--cb-paper:#fffdf8;--cb-ink:#1f1c17;--cb-muted:#6d665a;--cb-line:#e3dccd;--cb-acc:#9c4515;--cb-acc-s:#f6e7da;--cb-ok:#2f7a45;--cb-ok-s:#e2f0e5;--cb-warn:#a86400;--cb-warn-s:#fbeed6;--cb-bad:#b3261e;--cb-bad-s:#f8e1de;color:var(--cb-ink);font-size:14.5px;padding-bottom:30px}
 #cbRoot *{box-sizing:border-box}
 #cbRoot .cb-mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
@@ -12804,6 +12804,26 @@ const MMAA_DATA = {};
 .cbr-tag.usos{background:#fbeed6;color:#a86400}
 .cbr-tag.ok{background:#e2f0e5;color:#2f7a45}
 .cbr-tag.sel{outline:2px solid var(--amber-deep);outline-offset:1px}
+#cbRoot .cb-ver{border:1px solid var(--cb-line);background:#fff;border-radius:999px;font:600 11px inherit;font-family:inherit;padding:2px 8px;margin-left:6px;cursor:pointer;color:var(--cb-acc);vertical-align:1px}
+#cbRoot .cb-ver:hover{border-color:var(--cb-acc)}
+#cbRoot .cb-compbox{background:var(--cb-paper);border:1px solid var(--cb-line);border-radius:10px;padding:10px 14px;margin:0 0 14px}
+.cb-comp{list-style:none;margin:0;padding:0}
+.cb-comp li{padding:6px 0;border-bottom:1px solid #eee6d8;font-size:13.5px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.cb-comp li:last-child{border-bottom:0}
+.cb-comp .cb-pill{display:inline-block;font:600 11px "JetBrains Mono",monospace;padding:2px 7px;border-radius:999px}
+.cb-comp .cb-pill.ok{background:#e2f0e5;color:#2f7a45}
+.cb-comp .cb-pill.usos{background:#fbeed6;color:#a86400}
+.cbr-tag[data-cbver]{cursor:pointer}
+.cbr-tag[data-cbver]:hover{filter:brightness(.96);border-color:var(--amber-deep)}
+.cbr-ayuda{font-size:.68rem;color:var(--muted);margin-top:6px}
+#cbModal{position:fixed;inset:0;background:rgba(26,29,41,.45);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px}
+#cbModal.on{display:flex}
+#cbModal .cbm-box{background:#fffdf8;border-radius:14px;max-width:440px;width:100%;padding:18px 18px 14px;position:relative;box-shadow:0 12px 40px rgba(0,0,0,.25);max-height:85vh;overflow:auto;color:#1f1c17}
+#cbModal .cbm-x{position:absolute;top:10px;right:10px;border:0;background:#f3efe7;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:14px}
+#cbModal .cbm-k{font:700 11px "JetBrains Mono",monospace;text-transform:uppercase;letter-spacing:.05em;color:#9c4515}
+#cbModal h4{font-family:"Fraunces",Georgia,serif;font-size:1.15rem;margin:4px 34px 10px 0;line-height:1.2}
+#cbModal .cbm-sub{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6d665a;margin-bottom:2px}
+#cbModal .cbm-pie{font-size:12.5px;color:#6d665a;margin-top:10px}
 </style>
 <script id="combosPatch">
 /* ===== Solapa "🍺 Combos": combos de cerveza por cliente (datos en combos.json) ===== */
@@ -12848,6 +12868,28 @@ const MMAA_DATA = {};
     if (f.est === "agoto") return '<span class="cb-pill ok">Agotó ' + f.q + "/" + c.lim + "</span>";
     return '<span class="cb-pill usos">' + f.q + (c.lim ? "/" + c.lim + " · quedan " + f.quedan : " compras") + "</span>";
   }
+  function compLista(c){
+    var cp = c.comp || [];
+    if (!cp.length) return '<p class="cb-muted" style="margin:0">' + e(c.d || "Sin detalle de artículos.") + "</p>";
+    return '<ul class="cb-comp">' + cp.map(function(a){
+      var q = a[1] ? a[1] + (a[1] === 1 ? " bulto" : " bultos") : "";
+      if (a[2]) q += (q ? " + " : "") + a[2] + (a[2] === 1 ? " unidad" : " unidades");
+      var b = a[3] >= 100 ? '<span class="cb-pill ok">sin cargo</span>' : (a[3] >= 1 ? '<span class="cb-pill usos">' + String(a[3]).replace(".", ",") + "% dto</span>" : "");
+      return "<li><b>" + e(q || "—") + "</b> " + e(cap(a[0])) + " " + b + "</li>";
+    }).join("") + "</ul>";
+  }
+  function verComp(k, ev){
+    var x = DATA && DATA.combos.filter(function(y){ return y.c.k === k; })[0]; if (!x) return;
+    var c = x.c, m = document.getElementById("cbModal");
+    if (!m) { m = document.createElement("div"); m.id = "cbModal"; document.body.appendChild(m); m.addEventListener("click", function(ev2){ if (ev2.target === m || ev2.target.closest(".cbm-x")) m.classList.remove("on"); }); }
+    m.innerHTML = '<div class="cbm-box"><button type="button" class="cbm-x" aria-label="Cerrar">✕</button><div class="cbm-k">🍺 ' + e(c.foco || "Combo") + " · " + e(c.cod) + '</div><h4>' + e(cap(c.n)) + '</h4><div class="cbm-sub">Qué trae el combo</div>' + compLista(c) +
+      '<div class="cbm-pie">Límite: <b>' + (c.lim ? c.lim + " por cliente por mes" : "sin límite") + "</b> · vigente hasta " + e(cmbDd(c.vh)) + "</div></div>";
+    m.classList.add("on");
+    if (ev) ev.stopPropagation();
+  }
+  function cmbDd(iso){ return String(iso || "").split("-").reverse().join("/"); }
+  window.__combosVer = verComp;
+  document.addEventListener("click", function(ev){ var t = ev.target.closest && ev.target.closest("[data-cbver]"); if (t) { ev.preventDefault(); verComp(t.getAttribute("data-cbver"), ev); } }, true);
   function barra(p){ return '<span class="cb-bar"><i style="width:' + Math.min(100, p) + '%"></i></span><span class="cb-mono">' + p + "%</span>"; }
 
   /* ---------- vistas ---------- */
@@ -12875,7 +12917,7 @@ const MMAA_DATA = {};
   function vistaCombos(){
     var rows = DATA.combos.map(function(x, i){
       var r = resumenCombo(x), c = x.c;
-      return '<tr class="cb-click" data-cbc="' + e(c.k) + '"><td><b>' + e(cap(c.n)) + '</b><small>' + e(c.foco) + " · " + e(c.d) + "</small></td>" +
+      return '<tr class="cb-click" data-cbc="' + e(c.k) + '"><td><b>' + e(cap(c.n)) + '</b> <button type="button" class="cb-ver" data-cbver="' + e(c.k) + '">📦 qué trae</button><small>' + e(c.foco) + " · " + e(c.d) + "</small></td>" +
         '<td class="n cb-hm">' + (c.lim ? c.lim + "/mes" : "sin límite") + "</td>" +
         '<td class="cb-hm"><small class="cb-g">' + e(cap(c.gN)) + "</small></td>" +
         '<td class="n">' + fN(r.hab) + '</td><td class="n">' + fN(r.comp) + "</td><td>" + barra(pct(r.comp, r.hab)) + '</td><td class="n">' + fN(r.apl) + '</td><td class="n">' + fN(r.agoto) + "</td></tr>";
@@ -12897,6 +12939,7 @@ const MMAA_DATA = {};
     return '<button class="cb-btn" type="button" id="cbVolver">← Todos los combos</button>' +
       '<h3 class="cb-h">' + e(cap(c.n)) + ' <small>' + e(c.cod) + " · cía " + e(c.k) + "</small></h3>" +
       '<p class="cb-muted" style="margin:-4px 0 12px">' + e(c.d) + " · límite " + (c.lim ? c.lim + " por cliente por mes" : "sin límite") + " · grupo " + e(c.g) + " " + e(cap(c.gN)) + " · vigente " + e(c.vd.split("-").reverse().join("/")) + " al " + e(c.vh.split("-").reverse().join("/")) + "</p>" +
+      '<div class="cb-compbox"><div class="cb-sub" style="margin:0 0 4px">📦 Qué trae el combo</div>' + compLista(c) + "</div>" +
       '<div class="cb-chips">' + [["todos", "Todos"], ["sin", "Sin comprar"], ["usos", "Con usos disponibles"], ["agoto", "Agotaron"]].map(function(p){ return '<button type="button" class="cb-chip' + (st.filtro === p[0] ? " on" : "") + '" data-cbf="' + p[0] + '">' + p[1] + " (" + fN(cnt[p[0]]) + ")</button>"; }).join("") +
       '<input id="cbQ" type="search" placeholder="Buscar cliente…" value="' + e(st.q) + '"></div>' +
       '<div class="cb-tbl"><table><thead><tr><th>Cliente</th><th>Promotor</th><th>Visita</th><th>Estado</th></tr></thead><tbody>' +
@@ -13011,12 +13054,12 @@ const MMAA_DATA = {};
       var it = d ? itemsDe(d.cod) : [];
       if (!it.length) return html;
       if (cccSel.k) it = it.filter(function(i){ return i.c.k === cccSel.k; }).concat(it.filter(function(i){ return i.c.k !== cccSel.k; }));
-      var tags = it.map(function(i){ var cls = i.f.est === "sin" ? "sin" : (i.f.est === "agoto" ? "ok" : "usos"); return '<span class="cbr-tag ' + cls + (cccSel.k === i.c.k ? " sel" : "") + '" title="' + e(i.c.n + " · " + i.c.d) + '">' + e(cap(i.c.n).replace(/^Combo /i, "")) + " <b>" + i.f.q + (i.c.lim ? "/" + i.c.lim : "") + "</b></span>"; }).join("");
+      var tags = it.map(function(i){ var cls = i.f.est === "sin" ? "sin" : (i.f.est === "agoto" ? "ok" : "usos"); return '<span class="cbr-tag ' + cls + (cccSel.k === i.c.k ? " sel" : "") + '" data-cbver="' + e(i.c.k) + '" role="button" title="Ver qué trae el combo">' + e(cap(i.c.n).replace(/^Combo /i, "")) + " <b>" + i.f.q + (i.c.lim ? "/" + i.c.lim : "") + "</b></span>"; }).join("");
       var usados = it.filter(function(i){ return i.f.q > 0; }).length;
       var sel = cccSel.k ? it.filter(function(i){ return i.c.k === cccSel.k; })[0] : null;
       var resumen = '<span class="cbr-sum"><b>' + usados + "</b> de " + it.length + (usados ? " usados" : " · ninguno usado") + "</span>";
-      var selTag = sel ? '<span class="cbr-tag ' + (sel.f.est === "sin" ? "sin" : (sel.f.est === "agoto" ? "ok" : "usos")) + ' sel">' + e(cap(sel.c.n).replace(/^Combo /i, "")) + " <b>" + sel.f.q + (sel.c.lim ? "/" + sel.c.lim : "") + "</b></span>" : "";
-      var row = '<details class="cbr-row" onclick="event.stopPropagation()"><summary><span class="cbr-btn">🍺 Combos ' + resumen + ' <i>▾</i></span>' + selTag + '</summary><div class="cbr-tags">' + tags + "</div></details>";
+      var selTag = sel ? '<span class="cbr-tag ' + (sel.f.est === "sin" ? "sin" : (sel.f.est === "agoto" ? "ok" : "usos")) + ' sel" data-cbver="' + e(sel.c.k) + '" role="button">' + e(cap(sel.c.n).replace(/^Combo /i, "")) + " <b>" + sel.f.q + (sel.c.lim ? "/" + sel.c.lim : "") + "</b></span>" : "";
+      var row = '<details class="cbr-row" onclick="event.stopPropagation()"><summary><span class="cbr-btn">🍺 Combos ' + resumen + ' <i>▾</i></span>' + selTag + '</summary><div class="cbr-tags">' + tags + '</div><div class="cbr-ayuda">Tocá un combo para ver qué trae.</div></details>';
       var k = html.lastIndexOf("</div>");
       return html.slice(0, k) + row + html.slice(k);
     };
