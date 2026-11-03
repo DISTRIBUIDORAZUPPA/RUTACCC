@@ -12731,5 +12731,337 @@ const MMAA_DATA = {};
 })();
 
 </script>
+<!--COMBOS:INICIO 2026-11-03a-->
+<style id="combosStyle">#cbRoot{--cb-paper:#fffdf8;--cb-ink:#1f1c17;--cb-muted:#6d665a;--cb-line:#e3dccd;--cb-acc:#9c4515;--cb-acc-s:#f6e7da;--cb-ok:#2f7a45;--cb-ok-s:#e2f0e5;--cb-warn:#a86400;--cb-warn-s:#fbeed6;--cb-bad:#b3261e;--cb-bad-s:#f8e1de;color:var(--cb-ink);font-size:14.5px;padding-bottom:30px}
+#cbRoot *{box-sizing:border-box}
+#cbRoot .cb-mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+#cbRoot .cb-muted{color:var(--cb-muted)}
+#cbRoot .cb-nota{font-size:12.5px;margin:8px 2px}
+#cbRoot .cb-head{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end;justify-content:space-between;margin:14px 0 12px}
+#cbRoot .cb-title{font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:1.5rem;line-height:1.1}
+#cbRoot .cb-sub{font-size:12.5px;color:var(--cb-muted);margin-top:3px}
+#cbRoot .cb-ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#cbRoot .cb-ctrl select{width:210px}
+#cbRoot select,#cbRoot input[type=search]{font:inherit;font-size:13.5px;background:var(--cb-paper);color:var(--cb-ink);border:1px solid var(--cb-line);border-radius:8px;padding:7px 10px;max-width:100%}
+#cbRoot input[type=search]{min-width:200px;flex:1}
+#cbRoot .cb-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--cb-line);background:var(--cb-paper);color:var(--cb-ink);border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap;font-family:inherit}
+#cbRoot .cb-btn:hover{border-color:var(--cb-acc)}
+#cbRoot .cb-seg{display:inline-flex;border:1px solid var(--cb-line);border-radius:9px;overflow:hidden;margin-bottom:14px;background:var(--cb-paper)}
+#cbRoot .cb-seg button{border:0;background:none;padding:8px 14px;font:600 13px inherit;font-family:inherit;color:var(--cb-muted);cursor:pointer}
+#cbRoot .cb-seg button+button{border-left:1px solid var(--cb-line)}
+#cbRoot .cb-seg button.on{background:var(--cb-acc);color:#fff}
+#cbRoot .cb-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+#cbRoot .cb-kpi{background:var(--cb-paper);border:1px solid var(--cb-line);border-radius:10px;padding:11px 13px}
+#cbRoot .cb-kpi span{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--cb-muted)}
+#cbRoot .cb-kpi b{font:600 1.35rem/1.2 "JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+#cbRoot .cb-kpi b small{font-size:.75rem;color:var(--cb-ok);margin-left:4px}
+#cbRoot .cb-alert{background:var(--cb-warn-s);border:1px solid #efd3a3;color:#6b4300;border-radius:10px;padding:9px 12px;font-size:13px;margin-bottom:14px}
+#cbRoot h3.cb-h{font-family:"Fraunces",Georgia,serif;font-size:1.15rem;margin:14px 0 8px}
+#cbRoot h3.cb-h small{font:600 12px "JetBrains Mono",monospace;color:var(--cb-muted);margin-left:6px}
+#cbRoot .cb-tbl{overflow-x:auto;background:var(--cb-paper);border:1px solid var(--cb-line);border-radius:10px}
+#cbRoot table{border-collapse:collapse;width:100%;font-size:13px}
+#cbRoot th,#cbRoot td{padding:8px 10px;border-bottom:1px solid var(--cb-line);text-align:left;vertical-align:middle}
+#cbRoot tbody tr:last-child td{border-bottom:0}
+#cbRoot th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--cb-muted);font-weight:600;white-space:nowrap}
+#cbRoot td small{display:block;color:var(--cb-muted);font-size:11.5px;margin-top:2px}
+#cbRoot td small.cb-g{display:inline;margin:0}
+#cbRoot td.n,#cbRoot th.n{text-align:right;font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+#cbRoot tr.cb-click{cursor:pointer}
+#cbRoot tr.cb-click:hover td{background:var(--cb-acc-s)}
+#cbRoot .cb-bar{display:inline-block;width:70px;height:7px;border-radius:4px;background:#eee6d8;vertical-align:middle;margin-right:6px;overflow:hidden}
+#cbRoot .cb-bar i{display:block;height:100%;background:var(--cb-acc);border-radius:4px}
+#cbRoot td .cb-mono{font-size:12px}
+#cbRoot .cb-pill{display:inline-block;font:600 11.5px "JetBrains Mono",monospace;padding:3px 8px;border-radius:999px;white-space:nowrap}
+#cbRoot .cb-pill.sin{background:var(--cb-bad-s);color:var(--cb-bad)}
+#cbRoot .cb-pill.usos{background:var(--cb-warn-s);color:var(--cb-warn)}
+#cbRoot .cb-pill.ok{background:var(--cb-ok-s);color:var(--cb-ok)}
+#cbRoot .cb-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px;align-items:center}
+#cbRoot .cb-chip{border:1px solid var(--cb-line);background:var(--cb-paper);border-radius:999px;padding:6px 12px;font:600 12.5px inherit;font-family:inherit;cursor:pointer;color:var(--cb-ink)}
+#cbRoot .cb-chip.on{background:var(--cb-ink);color:#fff;border-color:var(--cb-ink)}
+#cbRoot .cb-card{background:var(--cb-paper);border:1px solid var(--cb-line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+#cbRoot .cb-card-h small{display:block;color:var(--cb-muted);font-size:12px;margin-top:2px}
+#cbRoot .cb-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+#cbRoot .cb-tag{font-size:11.5px;padding:3px 8px;border-radius:6px;border:1px solid transparent}
+#cbRoot .cb-tag b{font-family:"JetBrains Mono",monospace;margin-left:3px}
+#cbRoot .cb-tag.sin{background:#f3efe7;color:var(--cb-muted);border-color:var(--cb-line)}
+#cbRoot .cb-tag.usos{background:var(--cb-warn-s);color:var(--cb-warn)}
+#cbRoot .cb-tag.ok{background:var(--cb-ok-s);color:var(--cb-ok)}
+#cbRoot .cb-empty{padding:40px 10px;text-align:center;color:var(--cb-muted)}
+@media(max-width:640px){#cbRoot .cb-title{font-size:1.25rem}#cbRoot .cb-ctrl{width:100%}#cbRoot .cb-ctrl select{width:auto}#cbRoot .cb-hm{display:none}#cbRoot .cb-ctrl select{flex:1;min-width:0}#cbRoot input[type=search]{min-width:0;width:100%}#cbRoot .cb-seg{display:flex}#cbRoot .cb-seg button{flex:1;padding:8px 6px}}
+
+.cbr-row{grid-column:1/-1;border-top:1px dashed var(--line);padding-top:7px;margin-top:-2px}
+.cbr-row>summary{list-style:none;display:flex;flex-wrap:wrap;gap:6px;align-items:center;cursor:pointer}
+.cbr-row>summary::-webkit-details-marker{display:none}
+.cbr-btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--amber-deep);background:#fbf3e8;border:1px solid #ecd9c2;border-radius:999px;padding:4px 10px}
+.cbr-btn i{font-style:normal;transition:transform .15s}
+.cbr-row[open] .cbr-btn i{transform:rotate(180deg)}
+.cbr-sum{font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)}
+.cbr-sum b{color:var(--ink)}
+.cbr-tags{display:flex;flex-wrap:wrap;gap:4px 5px;margin-top:8px}
+.cbr-tag{font-size:.7rem;padding:2px 7px;border-radius:6px;border:1px solid transparent;white-space:nowrap}
+.cbr-tag b{font-family:var(--mono);margin-left:2px}
+.cbr-tag.sin{background:#f3efe7;color:var(--muted);border-color:var(--line)}
+.cbr-tag.usos{background:#fbeed6;color:#a86400}
+.cbr-tag.ok{background:#e2f0e5;color:#2f7a45}
+.cbr-tag.sel{outline:2px solid var(--amber-deep);outline-offset:1px}
+</style>
+<script id="combosPatch">
+/* ===== Solapa "🍺 Combos": combos de cerveza por cliente (datos en combos.json) ===== */
+(function(){
+  var DATA = null, cargando = false, error = "";
+  var st = {sup: "", pv: "", modo: "combo", combo: "", filtro: "todos", q: ""};
+  function e(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function fN(n){ return Number(n || 0).toLocaleString("es-AR"); }
+  function pct(a, b){ return b ? Math.round(a * 100 / b) : 0; }
+  function cap(s){ return String(s || "").toLowerCase().replace(/(^|\s)\S/g, function(m){ return m.toUpperCase(); }); }
+  function lsGet(k){ try { return JSON.parse(localStorage.getItem(k) || "null"); } catch(x){ return null; } }
+  function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(x){} }
+
+  /* ---------- datos ---------- */
+  function dec(s){ var p = 0, out = []; String(s || "").split(".").forEach(function(x){ if (!x) return; p += parseInt(x, 16); out.push(String(p)); }); return out; }
+  function preparar(j){
+    var base = {};
+    (typeof DATA_RAW !== "undefined" ? DATA_RAW : []).forEach(function(c){ base[String(c.cod)] = c; });
+    var grupos = {};
+    Object.keys(j.grupos || {}).forEach(function(g){ grupos[g] = dec(j.grupos[g]).filter(function(c){ return base[c]; }); });
+    var combos = (j.combos || []).map(function(c){
+      var cl = grupos[c.g] || [], comp = (j.compras || {})[c.k] || {};
+      var filas = cl.map(function(cod){
+        var q = comp[cod] || 0, b = base[cod];
+        var est = q <= 0 ? "sin" : (c.lim && q >= c.lim ? "agoto" : "usos");
+        return {cod: cod, b: b, q: q, est: est, quedan: c.lim ? Math.max(0, c.lim - q) : null};
+      });
+      return {c: c, filas: filas};
+    });
+    return {j: j, base: base, combos: combos};
+  }
+  function visible(f){ return (!st.sup || f.b.supervisor === st.sup) && (!st.pv || f.b.pv === st.pv); }
+  function resumenCombo(x){
+    var r = {hab: 0, comp: 0, agoto: 0, apl: 0, sin: 0};
+    x.filas.forEach(function(f){ if (!visible(f)) return; r.hab++; if (f.q > 0) { r.comp++; r.apl += f.q; } else r.sin++; if (f.est === "agoto") r.agoto++; });
+    return r;
+  }
+  function supervisores(){ var s = {}; Object.keys(DATA.base).forEach(function(k){ var v = DATA.base[k].supervisor; if (v && v !== "Sin asignar") s[v] = 1; }); return Object.keys(s).sort(); }
+  function promotores(){ var s = {}; Object.keys(DATA.base).forEach(function(k){ var c = DATA.base[k]; if (c.pv && c.pv !== "0" && (!st.sup || c.supervisor === st.sup)) s[c.pv] = 1; }); return Object.keys(s).sort(); }
+  function estTxt(f, c){
+    if (f.est === "sin") return '<span class="cb-pill sin">Sin comprar</span>';
+    if (f.est === "agoto") return '<span class="cb-pill ok">Agotó ' + f.q + "/" + c.lim + "</span>";
+    return '<span class="cb-pill usos">' + f.q + (c.lim ? "/" + c.lim + " · quedan " + f.quedan : " compras") + "</span>";
+  }
+  function barra(p){ return '<span class="cb-bar"><i style="width:' + Math.min(100, p) + '%"></i></span><span class="cb-mono">' + p + "%</span>"; }
+
+  /* ---------- vistas ---------- */
+  function cabecera(){
+    var sups = supervisores(), pvs = promotores();
+    return '<div class="cb-head"><div><div class="cb-title">🍺 Combos de cerveza</div>' +
+      '<div class="cb-sub">' + e(DATA.j.mesTxt) + " · venta del " + e(DATA.j.ventaDesde) + " al " + e(DATA.j.ventaHasta) + " · actualizado " + e(DATA.j.gen) + (DATA.j.ejemplo ? ' · <b style="color:#b3261e">DATOS DE EJEMPLO</b>' : "") + "</div></div>" +
+      '<div class="cb-ctrl"><select id="cbSup"><option value="">Todos los supervisores</option>' + sups.map(function(s){ return '<option value="' + e(s) + '"' + (s === st.sup ? " selected" : "") + ">" + e(cap(s)) + "</option>"; }).join("") + "</select>" +
+      '<select id="cbPv"><option value="">Todos los promotores</option>' + pvs.map(function(s){ return '<option value="' + e(s) + '"' + (s === st.pv ? " selected" : "") + ">" + e(cap(s)) + "</option>"; }).join("") + "</select>" +
+      '<button class="cb-btn" type="button" id="cbXls">⬇ Excel</button></div></div>' +
+      '<div class="cb-seg"><button type="button" data-cbm="combo" class="' + (st.modo === "combo" ? "on" : "") + '">Por combo</button><button type="button" data-cbm="cliente" class="' + (st.modo === "cliente" ? "on" : "") + '">Por cliente</button><button type="button" data-cbm="promotor" class="' + (st.modo === "promotor" ? "on" : "") + '">Por promotor</button></div>';
+  }
+  function kpis(){
+    var hab = 0, comp = 0, apl = 0, ago = 0, cli = {}, cliC = {};
+    DATA.combos.forEach(function(x){ x.filas.forEach(function(f){ if (!visible(f)) return; hab++; cli[f.cod] = 1; if (f.q > 0) { comp++; apl += f.q; cliC[f.cod] = 1; } if (f.est === "agoto") ago++; }); });
+    var nc = Object.keys(cli).length, ncc = Object.keys(cliC).length;
+    return '<div class="cb-kpis">' +
+      '<div class="cb-kpi"><span>Combos vigentes</span><b>' + DATA.combos.length + "</b></div>" +
+      '<div class="cb-kpi"><span>Clientes con combo</span><b>' + fN(nc) + "</b></div>" +
+      '<div class="cb-kpi"><span>Compraron alguno</span><b>' + fN(ncc) + " <small>" + pct(ncc, nc) + "%</small></b></div>" +
+      '<div class="cb-kpi"><span>Aplicaciones del mes</span><b>' + fN(apl) + "</b></div>" +
+      '<div class="cb-kpi"><span>Llegaron al límite</span><b>' + fN(ago) + "</b></div></div>" +
+      ((DATA.j.noCargados || []).length ? '<div class="cb-alert">⚠️ <b>Para reclamar:</b> ' + DATA.j.noCargados.map(function(n){ return "combo " + e(n.cia) + " (" + e(n.n) + ")"; }).join(", ") + " está en el book pero no está cargado en Chess.</div>" : "");
+  }
+  function vistaCombos(){
+    var rows = DATA.combos.map(function(x, i){
+      var r = resumenCombo(x), c = x.c;
+      return '<tr class="cb-click" data-cbc="' + e(c.k) + '"><td><b>' + e(cap(c.n)) + '</b><small>' + e(c.foco) + " · " + e(c.d) + "</small></td>" +
+        '<td class="n cb-hm">' + (c.lim ? c.lim + "/mes" : "sin límite") + "</td>" +
+        '<td class="cb-hm"><small class="cb-g">' + e(cap(c.gN)) + "</small></td>" +
+        '<td class="n">' + fN(r.hab) + '</td><td class="n">' + fN(r.comp) + "</td><td>" + barra(pct(r.comp, r.hab)) + '</td><td class="n">' + fN(r.apl) + '</td><td class="n">' + fN(r.agoto) + "</td></tr>";
+    }).join("");
+    return '<div class="cb-tbl"><table><thead><tr><th>Combo</th><th class="n cb-hm">Límite</th><th class="cb-hm">Grupo de clientes</th><th class="n">Lo tienen</th><th class="n">Compraron</th><th>Cobertura</th><th class="n">Aplicaciones</th><th class="n">Agotaron</th></tr></thead><tbody>' + rows + "</tbody></table></div>" +
+      '<p class="cb-muted cb-nota">Tocá un combo para ver qué clientes lo tienen y todavía no lo compraron.</p>';
+  }
+  function vistaDetalle(){
+    var x = DATA.combos.filter(function(y){ return y.c.k === st.combo; })[0];
+    if (!x) { st.combo = ""; return vistaCombos(); }
+    var c = x.c, r = resumenCombo(x);
+    var fs = x.filas.filter(visible);
+    var cnt = {todos: fs.length, sin: 0, usos: 0, agoto: 0};
+    fs.forEach(function(f){ cnt[f.est]++; });
+    var lista = fs.filter(function(f){ return st.filtro === "todos" || f.est === st.filtro; })
+      .filter(function(f){ return !st.q || (f.cod + " " + f.b.cliente).toLowerCase().indexOf(st.q) !== -1; })
+      .sort(function(a, b){ return (a.b.pv || "").localeCompare(b.b.pv || "") || b.q - a.q || a.b.cliente.localeCompare(b.b.cliente); });
+    var corte = lista.slice(0, 400);
+    return '<button class="cb-btn" type="button" id="cbVolver">← Todos los combos</button>' +
+      '<h3 class="cb-h">' + e(cap(c.n)) + ' <small>' + e(c.cod) + " · cía " + e(c.k) + "</small></h3>" +
+      '<p class="cb-muted" style="margin:-4px 0 12px">' + e(c.d) + " · límite " + (c.lim ? c.lim + " por cliente por mes" : "sin límite") + " · grupo " + e(c.g) + " " + e(cap(c.gN)) + " · vigente " + e(c.vd.split("-").reverse().join("/")) + " al " + e(c.vh.split("-").reverse().join("/")) + "</p>" +
+      '<div class="cb-chips">' + [["todos", "Todos"], ["sin", "Sin comprar"], ["usos", "Con usos disponibles"], ["agoto", "Agotaron"]].map(function(p){ return '<button type="button" class="cb-chip' + (st.filtro === p[0] ? " on" : "") + '" data-cbf="' + p[0] + '">' + p[1] + " (" + fN(cnt[p[0]]) + ")</button>"; }).join("") +
+      '<input id="cbQ" type="search" placeholder="Buscar cliente…" value="' + e(st.q) + '"></div>' +
+      '<div class="cb-tbl"><table><thead><tr><th>Cliente</th><th>Promotor</th><th>Visita</th><th>Estado</th></tr></thead><tbody>' +
+      corte.map(function(f){ return "<tr><td><b>" + e(cap(f.b.cliente)) + '</b> <span class="cb-mono cb-muted">' + e(f.cod) + "</span></td><td>" + e(cap(f.b.pv)) + "</td><td>" + e(f.b.visita || "") + "</td><td>" + estTxt(f, c) + "</td></tr>"; }).join("") +
+      "</tbody></table></div>" + (lista.length > corte.length ? '<p class="cb-muted cb-nota">Se muestran 400 de ' + fN(lista.length) + ". Elegí un promotor o descargá el Excel para ver todos.</p>" : "");
+  }
+  function vistaClientes(){
+    var por = {};
+    DATA.combos.forEach(function(x){ x.filas.forEach(function(f){ if (!visible(f)) return; (por[f.cod] = por[f.cod] || {b: f.b, cod: f.cod, it: []}).it.push({c: x.c, f: f}); }); });
+    var arr = Object.keys(por).map(function(k){ var o = por[k]; o.sin = o.it.filter(function(i){ return i.f.est === "sin"; }).length; return o; })
+      .filter(function(o){ return !st.q || (o.cod + " " + o.b.cliente).toLowerCase().indexOf(st.q) !== -1; })
+      .filter(function(o){ return st.filtro !== "sin" || o.sin === o.it.length; })
+      .sort(function(a, b){ return (a.b.pv || "").localeCompare(b.b.pv || "") || a.b.cliente.localeCompare(b.b.cliente); });
+    var ninguno = Object.keys(por).filter(function(k){ return por[k].sin === por[k].it.length; }).length;
+    var corte = arr.slice(0, 250);
+    return '<div class="cb-chips"><button type="button" class="cb-chip' + (st.filtro !== "sin" ? " on" : "") + '" data-cbf="todos">Todos (' + fN(Object.keys(por).length) + ')</button><button type="button" class="cb-chip' + (st.filtro === "sin" ? " on" : "") + '" data-cbf="sin">No compraron ningún combo (' + fN(ninguno) + ")</button>" +
+      '<input id="cbQ" type="search" placeholder="Buscar cliente…" value="' + e(st.q) + '"></div>' +
+      corte.map(function(o){
+        return '<div class="cb-card"><div class="cb-card-h"><b>' + e(cap(o.b.cliente)) + '</b> <span class="cb-mono cb-muted">' + e(o.cod) + "</span><small>" + e(cap(o.b.pv)) + " · visita " + e(o.b.visita || "-") + "</small></div><div class=\"cb-tags\">" +
+          o.it.map(function(i){ var cls = i.f.est === "sin" ? "sin" : (i.f.est === "agoto" ? "ok" : "usos"); return '<span class="cb-tag ' + cls + '" title="' + e(i.c.d) + '">' + e(cap(i.c.n).replace(/^Combo /i, "")) + " <b>" + (i.f.q ? i.f.q : 0) + (i.c.lim ? "/" + i.c.lim : "") + "</b></span>"; }).join("") + "</div></div>";
+      }).join("") + (arr.length > corte.length ? '<p class="cb-muted cb-nota">Se muestran 250 de ' + fN(arr.length) + ". Elegí un promotor para ver su lista completa.</p>" : "");
+  }
+  function vistaPromotores(){
+    var por = {};
+    DATA.combos.forEach(function(x){ x.filas.forEach(function(f){ if (!visible(f)) return; var p = f.b.pv || "Sin promotor"; var o = (por[p] = por[p] || {p: p, sup: f.b.supervisor, hab: 0, comp: 0, apl: 0, cli: {}, cliC: {}}); o.hab++; o.cli[f.cod] = 1; if (f.q > 0) { o.comp++; o.apl += f.q; o.cliC[f.cod] = 1; } }); });
+    var arr = Object.keys(por).map(function(k){ return por[k]; }).sort(function(a, b){ return pct(b.comp, b.hab) - pct(a.comp, a.hab); });
+    return '<div class="cb-tbl"><table><thead><tr><th>Promotor</th><th>Supervisor</th><th class="n">Clientes con combo</th><th class="n">Compraron alguno</th><th class="n">Combos habilitados</th><th class="n">Combos usados</th><th>Cobertura</th><th class="n">Aplicaciones</th></tr></thead><tbody>' +
+      arr.map(function(o){ var nc = Object.keys(o.cli).length, ncc = Object.keys(o.cliC).length; return '<tr class="cb-click" data-cbp="' + e(o.p) + '"><td><b>' + e(cap(o.p)) + "</b></td><td>" + e(cap(o.sup)) + '</td><td class="n">' + fN(nc) + '</td><td class="n">' + fN(ncc) + '</td><td class="n">' + fN(o.hab) + '</td><td class="n">' + fN(o.comp) + "</td><td>" + barra(pct(o.comp, o.hab)) + '</td><td class="n">' + fN(o.apl) + "</td></tr>"; }).join("") +
+      '</tbody></table></div><p class="cb-muted cb-nota">"Combos habilitados" cuenta cada combo de cada cliente. Tocá un promotor para ver sus clientes.</p>';
+  }
+
+  /* ---------- Excel ---------- */
+  function bajarExcel(){
+    var filas = [];
+    DATA.combos.forEach(function(x){ if (st.combo && x.c.k !== st.combo) return; x.filas.forEach(function(f){ if (!visible(f)) return;
+      filas.push({"Combo": x.c.n, "Código": x.c.cod, "Cód. compañía": x.c.k, "Foco": x.c.foco, "Límite mes": x.c.lim || "", "Cliente": Number(f.cod), "Razón social": f.b.cliente, "Promotor": f.b.pv, "Supervisor": f.b.supervisor, "Visita": f.b.visita || "",
+        "Compras del mes": f.q, "Quedan": f.quedan == null ? "" : f.quedan, "Estado": f.est === "sin" ? "Sin comprar" : (f.est === "agoto" ? "Agotó" : "Con usos") }); }); });
+    var nombre = "Combos_" + DATA.j.mes + (st.pv ? "_" + st.pv : (st.sup ? "_" + st.sup.split(" ")[0] : "")) + ".xlsx";
+    function hacer(){ var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filas), "Combos"); XLSX.writeFile(wb, nombre); }
+    if (window.XLSX) return hacer();
+    var s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s.onload = hacer; s.onerror = function(){ alert("No se pudo cargar el generador de Excel. Revisá la conexión e intentá de nuevo."); };
+    document.head.appendChild(s);
+  }
+
+  function render(){
+    var el = document.getElementById("cbRoot"); if (!el) return;
+    if (!DATA) { el.innerHTML = '<div class="cb-empty">' + (error ? "No se pudieron cargar los combos: " + e(error) : (cargando ? "Cargando combos…" : "Todavía no hay datos de combos.")) + "</div>"; return; }
+    var cuerpo = st.modo === "cliente" ? vistaClientes() : (st.modo === "promotor" ? vistaPromotores() : (st.combo ? vistaDetalle() : vistaCombos()));
+    el.innerHTML = cabecera() + kpis() + cuerpo;
+    var s1 = el.querySelector("#cbSup"), s2 = el.querySelector("#cbPv"), q = el.querySelector("#cbQ");
+    s1.onchange = function(){ st.sup = s1.value; st.pv = ""; lsSet("combos_sup", st.sup); render(); };
+    s2.onchange = function(){ st.pv = s2.value; render(); };
+    if (q) q.oninput = function(){ st.q = q.value.toLowerCase(); var p = q.selectionStart; render(); var n = document.getElementById("cbQ"); if (n) { n.focus(); n.setSelectionRange(p, p); } };
+    el.querySelector("#cbXls").onclick = bajarExcel;
+    el.querySelectorAll("[data-cbm]").forEach(function(b){ b.onclick = function(){ st.modo = b.getAttribute("data-cbm"); st.combo = ""; st.filtro = "todos"; st.q = ""; render(); }; });
+    el.querySelectorAll("[data-cbc]").forEach(function(r){ r.onclick = function(){ st.combo = r.getAttribute("data-cbc"); st.filtro = "sin"; st.q = ""; render(); window.scrollTo(0, 0); }; });
+    el.querySelectorAll("[data-cbp]").forEach(function(r){ r.onclick = function(){ st.pv = r.getAttribute("data-cbp"); st.modo = "cliente"; st.filtro = "todos"; render(); window.scrollTo(0, 0); }; });
+    el.querySelectorAll("[data-cbf]").forEach(function(b){ b.onclick = function(){ st.filtro = b.getAttribute("data-cbf"); render(); }; });
+    var v = el.querySelector("#cbVolver"); if (v) v.onclick = function(){ st.combo = ""; render(); };
+  }
+  function bajarDatos(){ return fetch("combos.json?t=" + Date.now(), {cache: "no-store"}).then(function(r){ if (!r.ok) throw new Error(r.status === 404 ? "todavía no se generaron" : "HTTP " + r.status); return r.json(); }); }
+  function cargar(){
+    if (cargando) return; cargando = true; error = ""; render();
+    bajarDatos().then(function(j){ DATA = preparar(j); cargando = false; render(); }).catch(function(x){ cargando = false; error = x.message; render(); });
+  }
+  window.__combosPreparar = function(j){ DATA = preparar(j); render(); };
+
+  /* ---------- Integración en la solapa 📋 Ruta CCC: filtro de combos + etiquetas en la tarjeta ---------- */
+  var porCli = null, cccSel = {k: "", est: ""};
+  function indexar(){
+    porCli = {};
+    DATA.combos.forEach(function(x){ x.filas.forEach(function(f){ (porCli[f.cod] = porCli[f.cod] || []).push({c: x.c, f: f}); }); });
+  }
+  function itemsDe(cod){ return (porCli && porCli[String(cod)]) || []; }
+  function cumple(d){
+    var it = itemsDe(d.cod);
+    if (cccSel.k) it = it.filter(function(i){ return i.c.k === cccSel.k; });
+    if (!cccSel.k && !cccSel.est) return true;
+    if (!it.length) return false;
+    if (!cccSel.est || cccSel.est === "tiene") return true;
+    if (cccSel.est === "ninguno") return it.every(function(i){ return i.f.est === "sin"; });
+    return it.some(function(i){ return i.f.est === cccSel.est; });
+  }
+  function armarFiltro(){
+    var sel = document.getElementById("comboSelect"); if (!sel || sel.getAttribute("data-cb")) return;
+    sel.setAttribute("data-cb", "1");
+    var fld = sel.closest(".field"); if (fld) fld.style.display = "";
+    var lab = document.querySelector('label[for="comboSelect"]'); if (lab) lab.textContent = "🍺 Combos de cerveza";
+    sel.innerHTML = '<option value="">— Todos los combos —</option>' + DATA.combos.map(function(x){ return '<option value="' + e(x.c.k) + '">' + e(cap(x.c.n).replace(/^Combo /i, "")) + (x.c.lim ? " (" + x.c.lim + "/mes)" : "") + "</option>"; }).join("");
+    var est = document.createElement("select"); est.id = "comboEstSelect"; est.style.marginTop = "6px";
+    est.innerHTML = '<option value="">— Cualquier estado —</option><option value="tiene">Lo tiene habilitado</option><option value="sin">Lo tiene y no lo compró</option><option value="ninguno">No compró ningún combo</option><option value="usos">Compró y le quedan usos</option><option value="agoto">Llegó al límite</option>';
+    sel.parentNode.appendChild(est);
+    var nuevo = sel.cloneNode(true); sel.parentNode.replaceChild(nuevo, sel);
+    nuevo.addEventListener("change", function(){ cccSel.k = nuevo.value; if (typeof state !== "undefined") state.page = 1; window.render(); });
+    est.addEventListener("change", function(){ cccSel.est = est.value; if (typeof state !== "undefined") state.page = 1; window.render(); });
+  }
+  if (typeof getFiltered === "function") {
+    var origFilt = getFiltered;
+    window.getFiltered = function(){
+      var hay = typeof state !== "undefined", bk = hay ? state.combo : ""; if (hay) state.combo = "";
+      var out = origFilt.apply(this, arguments);
+      if (hay) state.combo = bk;
+      return porCli ? out.filter(cumple) : out;
+    };
+  }
+  if (typeof clientCardHTML === "function") {
+    var origCardCb = clientCardHTML;
+    window.clientCardHTML = function(d){
+      var html = origCardCb.apply(this, arguments);
+      var it = d ? itemsDe(d.cod) : [];
+      if (!it.length) return html;
+      if (cccSel.k) it = it.filter(function(i){ return i.c.k === cccSel.k; }).concat(it.filter(function(i){ return i.c.k !== cccSel.k; }));
+      var tags = it.map(function(i){ var cls = i.f.est === "sin" ? "sin" : (i.f.est === "agoto" ? "ok" : "usos"); return '<span class="cbr-tag ' + cls + (cccSel.k === i.c.k ? " sel" : "") + '" title="' + e(i.c.n + " · " + i.c.d) + '">' + e(cap(i.c.n).replace(/^Combo /i, "")) + " <b>" + i.f.q + (i.c.lim ? "/" + i.c.lim : "") + "</b></span>"; }).join("");
+      var usados = it.filter(function(i){ return i.f.q > 0; }).length;
+      var sel = cccSel.k ? it.filter(function(i){ return i.c.k === cccSel.k; })[0] : null;
+      var resumen = '<span class="cbr-sum"><b>' + usados + "</b> de " + it.length + (usados ? " usados" : " · ninguno usado") + "</span>";
+      var selTag = sel ? '<span class="cbr-tag ' + (sel.f.est === "sin" ? "sin" : (sel.f.est === "agoto" ? "ok" : "usos")) + ' sel">' + e(cap(sel.c.n).replace(/^Combo /i, "")) + " <b>" + sel.f.q + (sel.c.lim ? "/" + sel.c.lim : "") + "</b></span>" : "";
+      var row = '<details class="cbr-row" onclick="event.stopPropagation()"><summary><span class="cbr-btn">🍺 Combos ' + resumen + ' <i>▾</i></span>' + selTag + '</summary><div class="cbr-tags">' + tags + "</div></details>";
+      var k = html.lastIndexOf("</div>");
+      return html.slice(0, k) + row + html.slice(k);
+    };
+  }
+  function iniciarCcc(){
+    bajarDatos().then(function(j){ if (!DATA) DATA = preparar(j); indexar(); armarFiltro(); try { window.render(); } catch(x){} }).catch(function(){});
+  }
+
+
+  function crear(){
+    if (document.getElementById("tabCombos")) return;
+    var btns = Array.prototype.slice.call(document.querySelectorAll(".tab-btn"));
+    if (!btns.length) return;
+    var ref = btns[btns.length - 1];
+    var b = document.createElement("button");
+    b.className = "tab-btn"; b.setAttribute("onclick", "switchTab('combos')");
+    b.innerHTML = '<span class="tab-full">🍺 Combos</span><span class="tab-short">🍺 Comb.</span>';
+    ref.parentNode.insertBefore(b, ref.nextSibling);
+    var p = document.createElement("div");
+    p.id = "tabCombos"; p.className = "tab-panel";
+    p.innerHTML = '<div class="wrap"><div id="cbRoot"></div></div>';
+    var ancla = document.querySelectorAll(".tab-panel"); ancla = ancla[ancla.length - 1];
+    if (ancla) ancla.parentNode.insertBefore(p, ancla.nextSibling); else document.body.appendChild(p);
+  }
+  st.sup = lsGet("combos_sup") || "";
+  if (typeof switchTab === "function") {
+    var orig = window.switchTab;
+    window.switchTab = function(tab){
+      var r = orig.apply(this, arguments);
+      var p = document.getElementById("tabCombos");
+      if (p) p.classList.toggle("active", tab === "combos");
+      document.querySelectorAll(".tab-btn").forEach(function(b){ if ((b.getAttribute("onclick") || "").indexOf("'combos'") !== -1) b.classList.toggle("active", tab === "combos"); });
+      if (tab === "combos") {
+        var mark = document.querySelector(".brand .mark"), sub = document.querySelector(".brand .sub");
+        if (mark) mark.textContent = "🍺 Combos"; if (sub) sub.textContent = "Combos de cerveza por cliente";
+        if (!DATA) cargar(); else render();
+      }
+      return r;
+    };
+  }
+  function iniciar(){ crear(); iniciarCcc(); }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar); else iniciar();
+})();
+
+</script>
+<!--COMBOS:FIN-->
 </body>
 </html>
