@@ -7424,7 +7424,7 @@ function supPasRenderPanel() {
     </div>
 
     <div id="supViewAgenda" style="display:none">
-      <iframe src="https://agendamatinal.netlify.app/" style="width:100%;height:82vh;border:none;border-radius:12px;background:#fff;" title="Agenda Matinal"></iframe>
+      <iframe id="agendaMatFrame" data-src="https://agendamatinal.netlify.app/" style="width:100%;height:82vh;border:none;border-radius:12px;background:#fff;" title="Agenda Matinal"></iframe>
     </div>
 
   </div>
@@ -13341,5 +13341,13 @@ const MMAA_DATA = {};
 })();
 
 </script>
+<!--AJT:INICIO AJT_V1-->
+<style id="ajtStyle">.tab-btn[onclick*="'combos'"]{display:none!important}</style>
+<script id="ajtPatch">(function(){
+  function agenda(){ var f = document.getElementById("agendaMatFrame"); if(f && !f.getAttribute("src")) f.setAttribute("src", f.getAttribute("data-src")); }
+  if(typeof window.supSetView === "function"){ var o = window.supSetView; window.supSetView = function(v){ var r = o.apply(this, arguments); if(v === "agenda") agenda(); return r; }; }
+  if(typeof window.switchTab === "function"){ var s = window.switchTab; window.switchTab = function(t){ if(t === "combos") t = "ccc"; return s.call(this, t); }; }
+})();</script>
+<!--AJT:FIN-->
 </body>
 </html>
