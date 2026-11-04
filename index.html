@@ -12814,6 +12814,14 @@ const MMAA_DATA = {};
 
 </script>
 <!--CHL:FIN-->
+<!--AJT:INICIO AJT_V1-->
+<style id="ajtStyle">.tab-btn[onclick*="'combos'"]{display:none!important}</style>
+<script id="ajtPatch">(function(){
+  function agenda(){ var f = document.getElementById("agendaMatFrame"); if(f && !f.getAttribute("src")) f.setAttribute("src", f.getAttribute("data-src")); }
+  if(typeof window.supSetView === "function"){ var o = window.supSetView; window.supSetView = function(v){ var r = o.apply(this, arguments); if(v === "agenda") agenda(); return r; }; }
+  if(typeof window.switchTab === "function"){ var s = window.switchTab; window.switchTab = function(t){ if(t === "combos") t = "ccc"; return s.call(this, t); }; }
+})();</script>
+<!--AJT:FIN-->
 <style id="sabanaStyle">
 /* Solapa Sábana */
 #sbRoot{--sb-paper:#fffdf8;--sb-ink:#1f1c17;--sb-muted:#6d665a;--sb-line:#e3dccd;--sb-acc:#1d4e89;--sb-acc-s:#e3ebf5;--sb-ok:#2f7a45;--sb-ok-s:#e2f0e5;--sb-warn:#b26a00;--sb-warn-s:#fbeed6;--sb-bad:#b3261e;--sb-bad-s:#f8e1de;color:var(--sb-ink);font-size:14.5px}
@@ -12853,6 +12861,7 @@ const MMAA_DATA = {};
 #sbRoot .sb-pill.bad{background:var(--sb-bad-s);color:var(--sb-bad)}
 #sbRoot .sb-pill.warn{background:var(--sb-warn-s);color:var(--sb-warn)}
 #sbRoot .sb-pill.ok{background:var(--sb-ok-s);color:var(--sb-ok)}
+#sbRoot .sb-pill.neg{background:#efe6f7;color:#6a3d9a}
 #sbRoot .sb-pill.pm{background:var(--sb-acc-s);color:var(--sb-acc)}
 #sbRoot .sb-alerts{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
 #sbRoot .sb-alert{background:var(--sb-paper);border:1px solid var(--sb-line);border-left:4px solid var(--sb-bad);border-radius:10px;padding:12px 14px;min-width:0}
@@ -12927,6 +12936,7 @@ const MMAA_DATA = {};
       var l = {v: x[0], cli: x[1], ped: x[2], art: x[3], b: x[4], hl: x[5], neto: x[6], fin: x[7]};
       l.pb = l.b > 0 && l.fin > 0 ? l.fin / l.b : null;
       if (x[8] && l.pb) l.ctl = {prod: x[8][0], min: x[8][1], regla: x[8][2], perf: l.pb < x[8][1], dif: l.pb / x[8][1] - 1};
+      if (x[9] && x[9].length) l.bo = x[9];
       return l;
     });
     var dupPed = {};
@@ -12943,6 +12953,10 @@ const MMAA_DATA = {};
   function pu(l){ var u = uxbA(l.art); return l.pb && u ? l.pb / u : null; }
   function cliN(c){ return (DATA.j.clis[c] || [c])[0]; }
   function cliS(c){ return (DATA.j.clis[c] || [])[1] || ""; }
+  /* Bonificación / negociación de la línea: [[codpromo, motivo, %real, %orig], ...] */
+  function pc(n){ return fN(n, n % 1 ? 1 : 0) + "%"; }
+  function boTxt(bo, conCod){ return (bo || []).map(function(x){ return (conCod && x[0] ? x[0] + " - " : "") + cap(x[1] || "Bonif.") + " " + pc(x[2]) + (x[3] !== x[2] ? " (orig " + pc(x[3]) + ")" : ""); }).join(" + "); }
+  function boHtml(bo){ return (bo || []).map(function(x){ return '<span class="sb-pill ' + (x[3] !== x[2] ? "warn" : "neg") + '" title="' + e((x[0] ? x[0] + " - " : "") + (x[1] || "") + (x[3] !== x[2] ? " · original " + pc(x[3]) : "")) + '">' + e(cap(x[1] || "Bonif.")) + " " + pc(x[2]) + (x[3] !== x[2] ? " <s>" + pc(x[3]) + "</s>" : "") + "</span>"; }).join(" "); }
   function esPM(c){ return !!(DATA.j.clis[c] || [])[2]; }
   function dupsDe(ls){ var vistos = {}, out = []; ls.forEach(function(l){ var g = DATA.dupPed[l.ped]; if (g && !vistos[g.join()]) { vistos[g.join()] = 1; out.push({g: g, cli: l.cli, v: l.v}); } }); return out; }
   function resumen(ls){
@@ -12967,12 +12981,12 @@ const MMAA_DATA = {};
     if (!r.dups.length && !r.perf.length) t += "\n✅ Sin pedidos repetidos ni PTR perforados\n";
     // Detalle por cliente (si queda muy largo para WhatsApp, va solo el total de cada cliente)
     var clis = {};
-    ls.forEach(function(l){ var c = (clis[l.cli] = clis[l.cli] || {cli: l.cli, fin: 0, b: 0, arts: {}}); c.fin += l.fin; c.b += l.b; if (l.b > 0) { var a = (c.arts[l.art] = c.arts[l.art] || {b: 0, fin: 0, perf: false, sc: true}); a.b += l.b; a.fin += l.fin; if (l.fin > 0) a.sc = false; if (l.ctl && l.ctl.perf) a.perf = true; } });
+    ls.forEach(function(l){ var c = (clis[l.cli] = clis[l.cli] || {cli: l.cli, fin: 0, b: 0, arts: {}}); c.fin += l.fin; c.b += l.b; if (l.b > 0) { var a = (c.arts[l.art] = c.arts[l.art] || {b: 0, fin: 0, perf: false, sc: true, bo: ""}); a.b += l.b; a.fin += l.fin; if (l.fin > 0) a.sc = false; if (l.ctl && l.ctl.perf) a.perf = true; if (l.bo && !a.bo) a.bo = boTxt(l.bo); } });
     var arr = Object.keys(clis).map(function(k){ return clis[k]; }).sort(function(a, b){ return cliN(a.cli).localeCompare(cliN(b.cli)); });
     var marca = function(c){ return (c.cli && ls.some(function(l){ return l.cli === c.cli && DATA.dupPed[l.ped]; }) ? " ⚠️" : "") + (Object.keys(c.arts).some(function(k){ return c.arts[k].perf; }) ? " 🔻" : ""); };
     var conArts = arr.map(function(c){
       return "• *" + cap(cliN(c.cli)) + "* (" + c.cli + ")" + marca(c) + " — " + fN(c.b, 2) + " bultos · " + fM(c.fin) + "\n" +
-        Object.keys(c.arts).map(function(k){ var a = c.arts[k]; var u = uxbA(k), cu = !a.sc && u && a.b > 0 ? a.fin / a.b / u : 0; return "   " + fN(a.b, 2) + " × " + cap(DATA.j.arts[k] || k) + (a.sc ? " (sin cargo)" : (cu ? " · " + fM(cu) + " c/u" : "")) + (a.perf ? " 🔻" : ""); }).join("\n");
+        Object.keys(c.arts).map(function(k){ var a = c.arts[k]; var u = uxbA(k), cu = !a.sc && u && a.b > 0 ? a.fin / a.b / u : 0; return "   " + fN(a.b, 2) + " × " + cap(DATA.j.arts[k] || k) + (a.sc ? " (sin cargo)" : (cu ? " · " + fM(cu) + " c/u" : "")) + (a.bo ? " · 🎁 " + a.bo : "") + (a.perf ? " 🔻" : ""); }).join("\n");
     }).join("\n");
     var soloTot = arr.map(function(c){ return "• " + cap(cliN(c.cli)) + marca(c) + " — " + fN(c.b, 2) + " b · " + fM(c.fin); }).join("\n");
     t += "\n*Tus clientes (" + arr.length + ")*\n" + ((t + conArts).length < 6000 ? conArts : soloTot) + "\n";
@@ -12980,11 +12994,18 @@ const MMAA_DATA = {};
     return t;
   }
   function linkV(v){ return location.href.split("#")[0] + "#sabana-" + v; }
+  /* En la compu: directo a WhatsApp Web, siempre en la MISMA pestaña ("sbWhatsapp"). En el celular: la app. */
+  var ES_CEL = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  function waUrl(tel, txt){
+    return ES_CEL ? "https://wa.me/" + (tel || "") + "?text=" + encodeURIComponent(txt)
+      : "https://web.whatsapp.com/send?" + (tel ? "phone=" + tel + "&" : "") + "text=" + encodeURIComponent(txt);
+  }
+  function waAttrs(){ return ES_CEL ? ' target="_blank" rel="noopener"' : ' target="sbWhatsapp"'; }
   function btnWa(v, enCola){
     var s = enviados()[v], tel = telV(v);
-    var href = "https://wa.me/" + (tel || "") + "?text=" + encodeURIComponent(mensaje(v));
+    var href = waUrl(tel, mensaje(v));
     var txt = enCola ? "Abrir WhatsApp de " + e(cap(nomV(DATA.j, v))) : (s ? "✓ Enviado " + e(s) : "WhatsApp");
-    return '<a class="sb-btn ' + (s && !enCola ? "sent" : "wa") + (tel ? "" : " nophone") + ' sb-noprint" data-sbwa="' + e(v) + '"' + (enCola ? ' data-sbcola="1"' : "") + ' href="' + href + '" target="_blank" rel="noopener" title="' + (tel ? "Enviar a " + tel : "Sin celular cargado: elegís el contacto en WhatsApp") + '">' + txt + "</a>";
+    return '<a class="sb-btn ' + (s && !enCola ? "sent" : "wa") + (tel ? "" : " nophone") + ' sb-noprint" data-sbwa="' + e(v) + '"' + (enCola ? ' data-sbcola="1"' : "") + ' href="' + href + '"' + waAttrs() + ' title="' + (tel ? "Enviar a " + tel : "Sin celular cargado: elegís el contacto en WhatsApp") + '">' + txt + "</a>";
   }
 
   /* ---------- descargas ---------- */
@@ -12993,7 +13014,7 @@ const MMAA_DATA = {};
       return {"Fecha entrega": DATA.j.fecha, "Promotor": cap(nomV(DATA.j, l.v)), "Supervisor": cap(supV(l.v)), "Cód. cliente": l.cli, "Cliente": cliN(l.cli), "Subcanal": cliS(l.cli), "PM": esPM(l.cli) ? "SÍ" : "",
         "Pedido": l.ped, "Cód. artículo": l.art, "Artículo": DATA.j.arts[l.art] || "", "Bultos": l.b, "HL": l.hl, "Neto": l.neto, "Final": l.fin,
         "$ por bulto": l.pb ? Math.round(l.pb) : "", "Unid. por bulto": uxbA(l.art) || "", "$ por unidad": pu(l) ? Math.round(pu(l)) : "", "PTR mínimo": l.ctl ? l.ctl.min : "", "Regla": l.ctl ? l.ctl.regla : "",
-        "Debajo del PTR": l.ctl ? (l.ctl.perf ? "SÍ" : "no") : "", "Pedido repetido": DATA.dupPed[l.ped] ? DATA.dupPed[l.ped].join(" = ") : ""};
+        "Debajo del PTR": l.ctl ? (l.ctl.perf ? "SÍ" : "no") : "", "Pedido repetido": DATA.dupPed[l.ped] ? DATA.dupPed[l.ped].join(" = ") : "", "Bonificación / negociación": boTxt(l.bo, true)};
     });
   }
   function bajarExcel(){
@@ -13107,6 +13128,7 @@ const MMAA_DATA = {};
       cl.forEach(function(l){
         var ctl = l.ctl ? (l.ctl.perf ? "PTR " + fM(l.ctl.min) + " (" + fN(l.ctl.dif * 100, 1) + "%)" : "PTR ok") : (l.fin === 0 && l.b > 0 ? "sin cargo" : "");
         if (DATA.dupPed[l.ped]) ctl = (ctl ? ctl + " · " : "") + "REPETIDO";
+        if (l.bo) ctl = boTxt(l.bo) + (ctl ? " · " + ctl : "");
         body.push([l.ped, plain(l.art + " " + (DATA.j.arts[l.art] || "")), l.pb ? fM(l.pb) : "", pu(l) ? fM(pu(l)) : "", fN(l.b, 2), fM(l.fin), ctl]);
         estilos.push({row: body.length - 1, perf: !!(l.ctl && l.ctl.perf) || !!DATA.dupPed[l.ped]});
       });
@@ -13114,7 +13136,7 @@ const MMAA_DATA = {};
     var marcadas = {}; estilos.forEach(function(s){ if (s.perf) marcadas[s.row] = 1; });
     doc.autoTable({startY: y, head: [["Pedido", "Artículo", "$/bulto", "$/unidad", "Bultos", "Total", "Control"]], body: body, theme: "plain",
       styles: {fontSize: 8, cellPadding: 2.5}, headStyles: {fillColor: [29, 78, 137], textColor: 255}, margin: {left: 40, right: 40},
-      columnStyles: {0: {cellWidth: 48}, 2: {halign: "right", cellWidth: 52}, 3: {halign: "right", cellWidth: 46}, 4: {halign: "right", cellWidth: 38}, 5: {halign: "right", cellWidth: 58}, 6: {cellWidth: 92}},
+      columnStyles: {0: {cellWidth: 48}, 2: {halign: "right", cellWidth: 52}, 3: {halign: "right", cellWidth: 46}, 4: {halign: "right", cellWidth: 38}, 5: {halign: "right", cellWidth: 58}, 6: {cellWidth: 110}},
       didParseCell: function(d){ if (d.section === "body" && marcadas[d.row.index]) { d.cell.styles.textColor = [179, 38, 30]; } }});
     var n = doc.internal.getNumberOfPages();
     for (var i = 1; i <= n; i++) { doc.setPage(i); doc.setFontSize(8); doc.setTextColor(140); doc.text("Página " + i + " de " + n, W - 40, doc.internal.pageSize.getHeight() - 20, {align: "right"}); }
@@ -13147,7 +13169,7 @@ const MMAA_DATA = {};
     return t;
   }
   function btnGrupo(vs){
-    return '<a class="sb-btn wa sb-noprint" id="sbGrupo" href="https://wa.me/?text=' + encodeURIComponent(mensajeGrupo(vs)) + '" target="_blank" rel="noopener">📣 Un mensaje para el grupo</a>';
+    return '<a class="sb-btn wa sb-noprint" id="sbGrupo" href="' + waUrl("", mensajeGrupo(vs)) + '"' + waAttrs() + '>📣 Un mensaje para el grupo</a>';
   }
 
   /* ---------- Generar de nuevo desde Chess (usa el Web App del tablero) ---------- */
@@ -13216,19 +13238,19 @@ const MMAA_DATA = {};
     ls.forEach(function(l){ (clis[l.cli] = clis[l.cli] || {cli: l.cli, ls: []}).ls.push(l); });
     var arr = Object.keys(clis).map(function(k){ var c = clis[k];
       c.fin = c.ls.reduce(function(s, l){ return s + l.fin; }, 0); c.hl = c.ls.reduce(function(s, l){ return s + l.hl; }, 0); c.b = c.ls.reduce(function(s, l){ return s + l.b; }, 0);
-      c.perf = c.ls.some(function(l){ return l.ctl && l.ctl.perf; }); c.dup = c.ls.some(function(l){ return DATA.dupPed[l.ped]; }); c.pm = esPM(c.cli); return c; })
+      c.perf = c.ls.some(function(l){ return l.ctl && l.ctl.perf; }); c.neg = c.ls.some(function(l){ return l.bo; }); c.dup = c.ls.some(function(l){ return DATA.dupPed[l.ped]; }); c.pm = esPM(c.cli); return c; })
       .sort(function(a, b){ return b.fin - a.fin; });
-    var cuenta = {todos: arr.length, alerta: arr.filter(function(c){ return c.perf || c.dup; }).length, pm: arr.filter(function(c){ return c.pm; }).length};
-    if (filtro === "alerta") arr = arr.filter(function(c){ return c.perf || c.dup; }); else if (filtro === "pm") arr = arr.filter(function(c){ return c.pm; });
+    var cuenta = {todos: arr.length, alerta: arr.filter(function(c){ return c.perf || c.dup; }).length, pm: arr.filter(function(c){ return c.pm; }).length, neg: arr.filter(function(c){ return c.neg; }).length};
+    if (filtro === "alerta") arr = arr.filter(function(c){ return c.perf || c.dup; }); else if (filtro === "pm") arr = arr.filter(function(c){ return c.pm; }); else if (filtro === "neg") arr = arr.filter(function(c){ return c.neg; });
     var cards = arr.map(function(c){
       var peds = []; c.ls.forEach(function(l){ if (peds.indexOf(l.ped) === -1) peds.push(l.ped); });
       var body = peds.map(function(p){ var pl = c.ls.filter(function(l){ return l.ped === p; });
-        return '<div class="sb-ped">Pedido ' + e(p) + (DATA.dupPed[p] ? ' <span class="sb-pill bad">repetido</span>' : "") + '</div><div class="sb-tbl"><table><thead><tr><th>Artículo</th><th class="n">Bultos</th><th class="n">HL</th><th class="n">$/bulto</th><th class="n">$/unidad</th><th class="n">Total</th><th>Control</th></tr></thead><tbody>' +
+        return '<div class="sb-ped">Pedido ' + e(p) + (DATA.dupPed[p] ? ' <span class="sb-pill bad">repetido</span>' : "") + '</div><div class="sb-tbl"><table><thead><tr><th>Artículo</th><th class="n">Bultos</th><th class="n">HL</th><th class="n">$/bulto</th><th class="n">$/unidad</th><th class="n">Total</th><th>Bonif. / negociación</th><th>Control</th></tr></thead><tbody>' +
           pl.map(function(l){ var bon = l.fin === 0;
             var ctl = l.ctl ? (l.ctl.perf ? '<span class="sb-pill ' + (l.ctl.dif < -0.05 ? "bad" : "warn") + '">PTR ' + fM(l.ctl.min) + " · " + fN(l.ctl.dif * 100, 1) + "%</span>" : '<span class="sb-pill ok">PTR ok</span>') : (bon && l.b > 0 ? '<span class="sb-muted">sin cargo</span>' : "");
-            return '<tr class="' + (l.ctl && l.ctl.perf ? "perf" : (bon ? "bonif" : "")) + '"><td><span class="sb-mono sb-muted">' + e(l.art) + "</span> " + e(DATA.j.arts[l.art] || "") + '</td><td class="n">' + fN(l.b, 2) + '</td><td class="n">' + fN(l.hl, 3) + '</td><td class="n">' + (l.pb ? fM(l.pb) : "–") + '</td><td class="n">' + (pu(l) ? fM(pu(l)) + '<span class="sb-muted" style="font-size:11px"> ×' + uxbA(l.art) + "</span>" : "–") + '</td><td class="n">' + fM(l.fin) + "</td><td>" + ctl + "</td></tr>"; }).join("") + "</tbody></table></div>"; }).join("");
+            return '<tr class="' + (l.ctl && l.ctl.perf ? "perf" : (bon ? "bonif" : "")) + '"><td><span class="sb-mono sb-muted">' + e(l.art) + "</span> " + e(DATA.j.arts[l.art] || "") + '</td><td class="n">' + fN(l.b, 2) + '</td><td class="n">' + fN(l.hl, 3) + '</td><td class="n">' + (l.pb ? fM(l.pb) : "–") + '</td><td class="n">' + (pu(l) ? fM(pu(l)) + '<span class="sb-muted" style="font-size:11px"> ×' + uxbA(l.art) + "</span>" : "–") + '</td><td class="n">' + fM(l.fin) + "</td><td>" + boHtml(l.bo) + "</td><td>" + ctl + "</td></tr>"; }).join("") + "</tbody></table></div>"; }).join("");
       return '<details class="sb-cli' + (c.perf || c.dup ? " flag" : "") + '" data-c="' + e(c.cli) + '"><summary><span class="nm">' + e(cap(cliN(c.cli))) + ' <span class="sb-mono sb-muted" style="font-weight:400">' + e(c.cli) + "</span><small>" + e(cap(cliS(c.cli))) + (peds.length > 1 ? " · " + peds.length + " pedidos" : "") + "</small></span>" +
-        (c.pm ? '<span class="sb-pill pm">PM</span>' : "") + (c.dup ? '<span class="sb-pill bad">repetido</span>' : "") + (c.perf ? '<span class="sb-pill warn">PTR</span>' : "") +
+        (c.pm ? '<span class="sb-pill pm">PM</span>' : "") + (c.neg ? '<span class="sb-pill neg">🎁 bonif.</span>' : "") + (c.dup ? '<span class="sb-pill bad">repetido</span>' : "") + (c.perf ? '<span class="sb-pill warn">PTR</span>' : "") +
         '<span class="fig"><b>' + fN(c.b, 2) + '</b> bultos</span><span class="fig"><b>' + fN(c.hl, 2) + '</b> HL</span><span class="fig"><b>' + fM(c.fin) + '</b></span></summary><div class="body">' + body + "</div></details>";
     }).join("");
     el.innerHTML = cabecera() +
@@ -13237,7 +13259,7 @@ const MMAA_DATA = {};
       '<details class="sb-fold"><summary><span class="sb-pill ' + (r.dups.length ? "bad" : "ok") + '">' + r.dups.length + "</span> Pedidos repetidos &nbsp; " +
         '<span class="sb-pill ' + (r.perf.length ? "warn" : "ok") + '">' + r.perf.length + '</span> Líneas debajo del PTR <span class="sb-muted sb-ver">ver detalle ▾</span></summary><div style="padding:0 0 4px">' + alertas(r, false) + "</div></details>" +
       '<h3 class="sb-h">Clientes que compraron <small>' + cuenta.todos + "</small></h3>" +
-      '<div class="sb-chips sb-noprint"><button type="button" class="sb-chip' + (filtro === "todos" ? " on" : "") + '" data-sbf="todos">Todos (' + cuenta.todos + ')</button><button type="button" class="sb-chip' + (filtro === "alerta" ? " on" : "") + '" data-sbf="alerta">Con alerta (' + cuenta.alerta + ')</button><button type="button" class="sb-chip' + (filtro === "pm" ? " on" : "") + '" data-sbf="pm">Clientes PM (' + cuenta.pm + ')</button><button type="button" class="sb-chip" id="sbAbrir">Abrir todos</button></div>' +
+      '<div class="sb-chips sb-noprint"><button type="button" class="sb-chip' + (filtro === "todos" ? " on" : "") + '" data-sbf="todos">Todos (' + cuenta.todos + ')</button><button type="button" class="sb-chip' + (filtro === "alerta" ? " on" : "") + '" data-sbf="alerta">Con alerta (' + cuenta.alerta + ')</button><button type="button" class="sb-chip' + (filtro === "pm" ? " on" : "") + '" data-sbf="pm">Clientes PM (' + cuenta.pm + ')</button>' + (cuenta.neg ? '<button type="button" class="sb-chip' + (filtro === "neg" ? " on" : "") + '" data-sbf="neg">🎁 Con bonificación (' + cuenta.neg + ')</button>' : "") + '<button type="button" class="sb-chip" id="sbAbrir">Abrir todos</button></div>' +
       (cards || '<p class="sb-muted">No hay clientes con este filtro.</p>') +
       '<details class="sb-fold sb-noprint" style="margin-top:14px"><summary>Productos que vendió y mensaje de WhatsApp <span class="sb-muted sb-ver">ver ▾</span></summary>' +
       '<div class="sb-two"><div class="sb-panel"><h4>Productos que vendió</h4>' + topProductos(ls, 8) + '</div><div class="sb-panel"><h4>Mensaje que se envía por WhatsApp</h4><pre class="sb-msg">' + e(mensaje(v)) + "</pre></div></div></details>";
@@ -13341,13 +13363,5 @@ const MMAA_DATA = {};
 })();
 
 </script>
-<!--AJT:INICIO AJT_V1-->
-<style id="ajtStyle">.tab-btn[onclick*="'combos'"]{display:none!important}</style>
-<script id="ajtPatch">(function(){
-  function agenda(){ var f = document.getElementById("agendaMatFrame"); if(f && !f.getAttribute("src")) f.setAttribute("src", f.getAttribute("data-src")); }
-  if(typeof window.supSetView === "function"){ var o = window.supSetView; window.supSetView = function(v){ var r = o.apply(this, arguments); if(v === "agenda") agenda(); return r; }; }
-  if(typeof window.switchTab === "function"){ var s = window.switchTab; window.switchTab = function(t){ if(t === "combos") t = "ccc"; return s.call(this, t); }; }
-})();</script>
-<!--AJT:FIN-->
 </body>
 </html>
