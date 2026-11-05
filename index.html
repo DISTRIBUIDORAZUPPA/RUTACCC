@@ -13363,5 +13363,70 @@ const MMAA_DATA = {};
 })();
 
 </script>
+<!--TIER:INICIO TIER_V1-->
+<script id="tierPatch">
+/* ===== 🏅 Tier del cliente en Ruta CCC — TIER_V1 =====
+   tier.json: acciones comerciales vigentes de Chess con "TIER" en el nombre → grupo de clientes → clientes. */
+(function(){
+  if(typeof clientCardHTML !== "function" || typeof getFiltered !== "function") return;
+  var T = null, sel = "";
+  try{ sel = localStorage.getItem("tierSel") || ""; }catch(e){}
+  var COL = {1: ["#0f766e", "#ccfbf1"], 2: ["#1d4ed8", "#dbeafe"], 3: ["#7c3aed", "#ede9fe"]};
+  function e(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function de(cod){ if(!T) return null; var i = T.c[String(cod)]; return i == null ? null : T.t[i]; }
+
+  var st = document.createElement("style"); st.id = "tierStyle";
+  st.textContent = ".tier-tag{display:inline-block;font-family:var(--mono);font-size:.6rem;font-weight:800;padding:2px 7px;border-radius:20px;white-space:nowrap;border:1px solid currentColor}" +
+    ".tier-tag.on{box-shadow:0 0 0 2px var(--amber-deep)}";
+  document.head.appendChild(st);
+
+  function badge(t){ var c = COL[t.tier] || ["#6b7280", "#f3f4f6"]; return '<span class="tier-tag' + (sel === t.k ? " on" : "") + '" style="color:' + c[0] + ';background:' + c[1] + '" title="' + e(t.desc) + " (acción " + e(t.acc) + ')">🏅 ' + e(t.n) + "</span>"; }
+
+  function armarFiltro(){
+    if(!T || document.getElementById("tierSelect")) return;
+    var ref = document.getElementById("cccSelect"); if(!ref) return;
+    var fld = ref.closest(".field"); if(!fld) return;
+    var cuenta = {}, enRuta = {};
+    (typeof DATA !== "undefined" ? DATA : []).forEach(function(d){ var t = de(d.cod); if(t){ cuenta[t.k] = (cuenta[t.k] || 0) + 1; } });
+    var f = document.createElement("div"); f.className = "field";
+    f.innerHTML = '<label for="tierSelect">🏅 Tier</label><select id="tierSelect"><option value="">— Todos —</option>' +
+      T.t.map(function(t){ return '<option value="' + e(t.k) + '">' + e(t.n) + " (" + (cuenta[t.k] || 0) + ")</option>"; }).join("") +
+      '<option value="sin">Sin tier</option></select>';
+    fld.parentNode.appendChild(f);
+    var s = f.querySelector("select"); s.value = sel;
+    s.addEventListener("change", function(){ sel = s.value; try{ localStorage.setItem("tierSel", sel); }catch(x){} if(typeof state !== "undefined") state.page = 1; window.render(); });
+  }
+
+  var origF = window.getFiltered;
+  window.getFiltered = function(){
+    var out = origF.apply(this, arguments);
+    if(!T || !sel) return out;
+    return out.filter(function(d){ var t = de(d.cod); return sel === "sin" ? !t : (t && t.k === sel); });
+  };
+  var origC = window.clientCardHTML;
+  window.clientCardHTML = function(d){
+    var html = origC.apply(this, arguments);
+    var t = d ? de(d.cod) : null;
+    if(!t) return html;
+    var k = html.indexOf('<div class="client-meta">');
+    if(k === -1) return html;
+    k += '<div class="client-meta">'.length;
+    return html.slice(0, k) + badge(t) + html.slice(k);
+  };
+
+  var urls = ["tier.json", "https://distribuidorazuppa.github.io/RUTACCC/tier.json"], i = 0;
+  function bajar(){
+    if(i >= urls.length) return;
+    fetch(urls[i++] + "?t=" + Date.now()).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(j){
+      T = j; if(!T.t || !T.c) { T = null; return; }
+      if(sel && sel !== "sin" && !T.t.some(function(t){ return t.k === sel; })) sel = "";
+      armarFiltro(); try{ window.render(); }catch(x){}
+    }).catch(bajar);
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bajar); else bajar();
+})();
+
+</script>
+<!--TIER:FIN-->
 </body>
 </html>
