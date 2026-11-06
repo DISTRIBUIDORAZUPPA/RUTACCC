@@ -13363,9 +13363,10 @@ const MMAA_DATA = {};
 })();
 
 </script>
-<!--TIER:INICIO TIER_V1-->
+
+<!--TIER:INICIO TIER_V2-->
 <script id="tierPatch">
-/* ===== 🏅 Tier del cliente en Ruta CCC — TIER_V1 =====
+/* ===== 🏅 Tier del cliente en Ruta CCC — TIER_V2 =====
    tier.json: acciones comerciales vigentes de Chess con "TIER" en el nombre → grupo de clientes → clientes. */
 (function(){
   if(typeof clientCardHTML !== "function" || typeof getFiltered !== "function") return;
@@ -13414,13 +13415,49 @@ const MMAA_DATA = {};
     return html.slice(0, k) + badge(t) + html.slice(k);
   };
 
+  // ⬇️ Descargar (Ruta CCC): agrega la columna "Tier" al CSV que arma downloadFilteredCSV (y sus versiones)
+  function partir(txt){
+    var filas = [], f = [], c = "", q = false;
+    for(var i = 0; i < txt.length; i++){
+      var ch = txt[i];
+      if(q){ if(ch === '"'){ if(txt[i + 1] === '"'){ c += '""'; i++; } else { q = false; c += ch; } } else c += ch; continue; }
+      if(ch === '"'){ q = true; c += ch; }
+      else if(ch === ";"){ f.push(c); c = ""; }
+      else if(ch === "\n"){ f.push(c); filas.push(f); f = []; c = ""; }
+      else c += ch;
+    }
+    if(c !== "" || f.length){ f.push(c); filas.push(f); }
+    return filas;
+  }
+  function conTier(txt){
+    var bom = txt.charCodeAt(0) === 0xFEFF ? "﻿" : "", filas = partir(bom ? txt.slice(1) : txt);
+    if(!filas.length || !/^"?C[oó]digo/i.test(filas[0][0] || "")) return txt;
+    if(filas[0].some(function(x){ return /^"?Tier"?$/i.test(x); })) return txt;
+    filas[0].push("Tier");
+    for(var k = 1; k < filas.length; k++){ if(filas[k].length === 1 && filas[k][0] === "") continue; var t = de(String(filas[k][0]).replace(/"/g, "").trim()); filas[k].push(t ? t.n : "Sin tier"); }
+    return bom + filas.map(function(f){ return f.join(";"); }).join("\n") + "\n";
+  }
+  function engancharCsv(){
+    if(typeof window.downloadFilteredCSV !== "function" || window.downloadFilteredCSV._tier) return;
+    var orig = window.downloadFilteredCSV;
+    var nuevo = function(){
+      if(!T) return orig.apply(this, arguments);
+      var B = window.Blob;
+      window.Blob = function(partes, op){ try{ if(op && /csv/i.test(op.type || "") && partes && typeof partes[0] === "string") partes = [conTier(partes.join(""))]; }catch(x){} return new B(partes, op); };
+      window.Blob.prototype = B.prototype;
+      try{ return orig.apply(this, arguments); } finally { window.Blob = B; }
+    };
+    nuevo._tier = true;
+    window.downloadFilteredCSV = nuevo;
+  }
+
   var urls = ["tier.json", "https://distribuidorazuppa.github.io/RUTACCC/tier.json"], i = 0;
   function bajar(){
     if(i >= urls.length) return;
     fetch(urls[i++] + "?t=" + Date.now()).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(j){
       T = j; if(!T.t || !T.c) { T = null; return; }
       if(sel && sel !== "sin" && !T.t.some(function(t){ return t.k === sel; })) sel = "";
-      armarFiltro(); try{ window.render(); }catch(x){}
+      armarFiltro(); engancharCsv(); try{ window.render(); }catch(x){}
     }).catch(bajar);
   }
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bajar); else bajar();
