@@ -12814,14 +12814,7 @@ const MMAA_DATA = {};
 
 </script>
 <!--CHL:FIN-->
-<!--AJT:INICIO AJT_V1-->
-<style id="ajtStyle">.tab-btn[onclick*="'combos'"]{display:none!important}</style>
-<script id="ajtPatch">(function(){
-  function agenda(){ var f = document.getElementById("agendaMatFrame"); if(f && !f.getAttribute("src")) f.setAttribute("src", f.getAttribute("data-src")); }
-  if(typeof window.supSetView === "function"){ var o = window.supSetView; window.supSetView = function(v){ var r = o.apply(this, arguments); if(v === "agenda") agenda(); return r; }; }
-  if(typeof window.switchTab === "function"){ var s = window.switchTab; window.switchTab = function(t){ if(t === "combos") t = "ccc"; return s.call(this, t); }; }
-})();</script>
-<!--AJT:FIN-->
+
 <style id="sabanaStyle">
 /* Solapa Sábana */
 #sbRoot{--sb-paper:#fffdf8;--sb-ink:#1f1c17;--sb-muted:#6d665a;--sb-line:#e3dccd;--sb-acc:#1d4e89;--sb-acc-s:#e3ebf5;--sb-ok:#2f7a45;--sb-ok-s:#e2f0e5;--sb-warn:#b26a00;--sb-warn-s:#fbeed6;--sb-bad:#b3261e;--sb-bad-s:#f8e1de;color:var(--sb-ink);font-size:14.5px}
@@ -13465,5 +13458,16 @@ const MMAA_DATA = {};
 
 </script>
 <!--TIER:FIN-->
+<!--AJT:INICIO AJT_V2-->
+<style id="ajtStyle">.tab-btn[onclick*="'combos'"]{display:none!important}</style>
+<script id="ajtPatch">(function(){
+  function agenda(){ var f = document.getElementById("agendaMatFrame"); if(f && !f.getAttribute("src")) f.setAttribute("src", f.getAttribute("data-src")); }
+  if(typeof window.supSetView === "function"){ var o = window.supSetView; window.supSetView = function(v){ var r = o.apply(this, arguments); if(v === "agenda") agenda(); return r; }; }
+  var SAL = {"jefe2026": "👋 Hola Cris!", "sans2026": "👋 Hola Luc!!", "guillen2026": "👋 Hola Nacho!!"};
+  function saludo(){ var a = (typeof supAuthData !== "undefined") ? supAuthData : null; if(!a || typeof SUP_AUTH === "undefined") return; var t = null; for(var k in SAL){ if(SUP_AUTH[k] && SUP_AUTH[k].name === a.name && SUP_AUTH[k].role === a.role) t = SAL[k]; } if(!t) return; var w = document.getElementById("supWelcome"); if(!w) return; var sp = w.querySelector("span"); if(sp) sp.textContent = t; else w.textContent = t; }
+  if(typeof window.showSupContent === "function"){ var sc = window.showSupContent; window.showSupContent = function(){ var r = sc.apply(this, arguments); try{ saludo(); }catch(e){} return r; }; }
+  if(typeof window.switchTab === "function"){ var s = window.switchTab; window.switchTab = function(t){ if(t === "combos") t = "ccc"; return s.call(this, t); }; }
+})();</script>
+<!--AJT:FIN-->
 </body>
 </html>
