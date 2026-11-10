@@ -10343,13 +10343,23 @@ const RANKING_TAB_DATA = {"mes":"OCTUBRE","label":"Octubre 2026","act":"10/11/20
 .mm-dd-pvs{max-height:330px;overflow-y:auto;}
 .mm-dd-pvs thead th{position:sticky;top:0;background:var(--card);z-index:1;}
 
+/* Por semana */
+.mm-sem-ayuda{font-size:.72rem;color:var(--muted);margin:2px 0 8px;}
+.mm-sem-chart .mm-dd-cols{gap:10px;}
+.mm-sem-chart .mm-dd-col span{font-size:.62rem;font-weight:700;}
+.mm-pb-a.mm-sem-curso{opacity:.6;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.35) 0 4px,transparent 4px 8px);}
+.mm-sem-tag{font-family:var(--mono);font-size:.55rem;font-weight:800;color:#92400e;background:#fef3c7;border-radius:20px;padding:2px 7px;vertical-align:middle;}
+.mm-sem-nota{font-size:.72rem;background:#fffbeb;border:1px solid #fde68a;color:#78350f;border-radius:10px;padding:7px 10px;margin-bottom:10px;}
+.mm-t-sem tr.mm-sem-tot td{font-weight:800;border-top:2px solid var(--line);}
+.mm-t-sem .mm-dim div{font-size:.55rem;}
+
 </style>
 <script id="mmaaPatch">
 /* ===== Comparación vs MMAA (mismo mes del año anterior) — Supervisores ===== */
 const MMAA_DATA = {};
 /* MMAA_LAZY_V3: los datos se bajan de mmaa.json al abrir la comparación */
 (function(){
-  var ST = {modo: "fecha", sup: "", pv: "", un: "", todasMarcas: false, cliLista: "caen", lectura: false, dia: null, ddVista: "dia", ddTabla: false};
+  var ST = {modo: "fecha", sup: "", pv: "", un: "", todasMarcas: false, cliLista: "caen", lectura: false, dia: null, ddVista: "dia", ddTabla: false, sem: null};
   var EPS = 0.001;
   function D(){ return (typeof MMAA_DATA !== "undefined" && MMAA_DATA && MMAA_DATA.f && MMAA_DATA.f.length) ? MMAA_DATA : null; }
   function auth(){ return (typeof supAuthData !== "undefined" && supAuthData) ? supAuthData : null; }
@@ -10802,16 +10812,22 @@ const MMAA_DATA = {};
       '<div><small>Venta del día</small><b class="' + clp(relHl(vc, va || 0)) + '">' + pc(relHl(vc, va || 0)) + "</b><span>" + n(vc, 0) + " vs " + n(va || 0, 0) + " HL · " + sg(vc - (va || 0), 0) + "</span></div>" +
       '<div><small>Clientes que compraron ese día</small><b>' + Q.c.cli[k] + " <i>vs</i> " + (k < Q.nA ? Q.a.cli[k] : "—") + '</b><span class="' + clp(rel(Q.c.cli[k], k < Q.nA ? Q.a.cli[k] : 0)) + '">' + pc(rel(Q.c.cli[k], k < Q.nA ? Q.a.cli[k] : 0)) + "</span></div>" +
       '<div><small>Acumulado al día ' + (k + 1) + '</small><b class="' + clp(relHl(aC, aA)) + '">' + pc(relHl(aC, aA)) + "</b><span>" + n(aC, 0) + " vs " + n(aA, 0) + " HL · " + sg(aC - aA, 0) + "</span></div></div>";
+    h += cuerpoDet(d, Q.a.un[k], Q.c.un[k], Q.a.mk[k], Q.c.mk[k], Q.a.pv[k], Q.c.pv[k]);
+    return h + "</div>";
+  }
+  function cuerpoDet(d, UA, UC, MA, MC, PA, PC, tit, tit2){
+    var L = d.L, mA = mesCorto(MES.a), mC = mesCorto(MES.c), h = "";
+    UA = UA || {}; UC = UC || {}; MA = MA || {}; MC = MC || {}; PA = PA || {}; PC = PC || {};
     // por unidad de negocio
-    var us = {}; Object.keys(Q.a.un[k] || {}).concat(Object.keys(Q.c.un[k] || {})).forEach(function(u){ us[u] = 1; });
-    var urows = Object.keys(us).map(function(u){ var b = (Q.a.un[k] || {})[u] || 0, a = Q.c.un[k][u] || 0; return {k: L.un[u], b: b, a: a, d: a - b, p: relHl(a, b)}; })
+    var us = {}; Object.keys(UA).concat(Object.keys(UC)).forEach(function(u){ us[u] = 1; });
+    var urows = Object.keys(us).map(function(u){ var b = UA[u] || 0, a = (UC[u] || 0) || 0; return {k: L.un[u], b: b, a: a, d: a - b, p: relHl(a, b)}; })
       .filter(function(r){ return Math.abs(r.b) >= 0.5 || Math.abs(r.a) >= 0.5; }).sort(function(x, y){ return y.b - x.b; });
     var keepB = COL.b, keepA = COL.a; COL.b = mA; COL.a = mC;
     h += '<div class="mm-dd-g"><div><div class="mm-dd-st">Por unidad de negocio</div>' + barrasPar(urows) + "</div>";
     COL.b = keepB; COL.a = keepA;
     // marcas del día
-    var ms = {}; Object.keys(Q.a.mk[k] || {}).concat(Object.keys(Q.c.mk[k] || {})).forEach(function(x){ ms[x] = 1; });
-    var mrows = Object.keys(ms).map(function(x){ var b = (Q.a.mk[k] || {})[x] || 0, a = Q.c.mk[k][x] || 0; return {k: L.marca[x], b: b, a: a, d: a - b}; });
+    var ms = {}; Object.keys(MA).concat(Object.keys(MC)).forEach(function(x){ ms[x] = 1; });
+    var mrows = Object.keys(ms).map(function(x){ var b = MA[x] || 0, a = (MC[x] || 0) || 0; return {k: L.marca[x], b: b, a: a, d: a - b}; });
     var caen = mrows.filter(function(r){ return r.d < -0.5; }).sort(function(x, y){ return x.d - y.d; }).slice(0, 5);
     var suben = mrows.filter(function(r){ return r.d > 0.5; }).sort(function(x, y){ return y.d - x.d; }).slice(0, 5);
     function lm(arr, tit, cls){
@@ -10820,18 +10836,109 @@ const MMAA_DATA = {};
       arr.forEach(function(r){ s += '<div class="mm-dd-mr">' + (r.k === "OTRAS MARCAS" ? '<span class="mm-logo mm-logo-m">+</span><span>Otras marcas</span>' : logo(r.k) + "<span>" + e(r.k) + "</span>") + '<b class="' + cl(r.d) + '">' + sg(r.d, 1) + "</b></div>"; });
       return s + "</div>";
     }
-    h += '<div><div class="mm-dd-st">Marcas del día</div><div class="mm-dd-mg">' + lm(caen, "▼ caen", "mm-neg") + lm(suben, "▲ crecen", "mm-pos") + "</div></div></div>";
+    h += '<div><div class="mm-dd-st">Marcas ' + (tit || "del día") + '</div><div class="mm-dd-mg">' + lm(caen, "▼ caen", "mm-neg") + lm(suben, "▲ crecen", "mm-pos") + "</div></div></div>";
     // promotores del día
-    var ps = {}; Object.keys(Q.a.pv[k] || {}).concat(Object.keys(Q.c.pv[k] || {})).forEach(function(x){ ps[x] = 1; });
-    var prow = Object.keys(ps).map(function(x){ var b = (Q.a.pv[k] || {})[x] || 0, a = Q.c.pv[k][x] || 0; return {k: L.pv[x], b: b, a: a, d: a - b, p: relHl(a, b)}; })
+    var ps = {}; Object.keys(PA).concat(Object.keys(PC)).forEach(function(x){ ps[x] = 1; });
+    var prow = Object.keys(ps).map(function(x){ var b = PA[x] || 0, a = (PC[x] || 0) || 0; return {k: L.pv[x], b: b, a: a, d: a - b, p: relHl(a, b)}; })
       .filter(function(r){ return Math.abs(r.b) >= 0.5 || Math.abs(r.a) >= 0.5; }).sort(function(x, y){ return x.d - y.d; });
     if(prow.length > 1){
       var max = 0; prow.forEach(function(r){ max = Math.max(max, Math.abs(r.d)); });
-      h += '<div class="mm-dd-st" style="margin-top:12px">Promotores ese día</div><div class="mm-tw mm-dd-pvs"><table class="mm-t"><thead><tr><th class="mm-tn">Promotor</th><th>' + e(mA) + "</th><th>" + e(mC) + '</th><th>Dif. HL</th><th>Dif. %</th><th class="mm-th-bar"></th></tr></thead><tbody>';
+      h += '<div class="mm-dd-st" style="margin-top:12px">Promotores ' + (tit2 || "ese día") + '</div><div class="mm-tw mm-dd-pvs"><table class="mm-t"><thead><tr><th class="mm-tn">Promotor</th><th>' + e(mA) + "</th><th>" + e(mC) + '</th><th>Dif. HL</th><th>Dif. %</th><th class="mm-th-bar"></th></tr></thead><tbody>';
       prow.forEach(function(r){ h += '<tr><td class="mm-tn">' + e(r.k) + "</td><td>" + n(r.b) + '</td><td class="mm-strong">' + n(r.a) + '</td><td class="' + cl(r.d) + ' mm-strong">' + sg(r.d) + '</td><td class="' + clp(r.p) + '">' + pc(r.p) + "</td><td>" + barraDiv(r.d, max) + "</td></tr>"; });
       h += "</tbody></table></div>";
     }
+    return h;
+  }
+
+  // ---------- Por semana (semanas de lunes a domingo de cada mes; si la primera o la última tiene menos de 3 días hábiles se une a la de al lado) ----------
+  function lunes(k){ var p = k.split("-"), dt = new Date(+p[0], +p[1] - 1, +p[2]); dt.setDate(dt.getDate() - ((dt.getDay() + 6) % 7)); return dt.getTime(); }
+  function semanas(fechas, abierto){
+    var g = [], last = null;
+    fechas.forEach(function(f, i){ var l = lunes(f); if(l !== last){ g.push([]); last = l; } g[g.length - 1].push(i); });
+    if(g.length > 1 && g[0].length < 3){ g[1] = g[0].concat(g[1]); g.shift(); }
+    if(!abierto && g.length > 1 && g[g.length - 1].length < 3){ g[g.length - 2] = g[g.length - 2].concat(g[g.length - 1]); g.pop(); }
+    return g;
+  }
+  function sumSem(Y, idx){
+    var o = {hl: 0, cli: 0, un: {}, pv: {}, mk: {}};
+    idx.forEach(function(k){
+      o.hl += Y.hl[k] || 0; o.cli += Y.cli[k] || 0;
+      [["un", "un"], ["pv", "pv"], ["mk", "mk"]].forEach(function(p){ var src = Y[p[0]][k] || {}; Object.keys(src).forEach(function(x){ o[p[1]][x] = (o[p[1]][x] || 0) + src[x]; }); });
+    });
+    return o;
+  }
+  function rango(f, idx){ if(!idx || !idx.length) return ""; var a = f[idx[0]], b = f[idx[idx.length - 1]]; return a === b ? fechaCorta(a) : fechaCorta(a) + " al " + fechaCorta(b); }
+  function armarSemanas(Q, m){
+    var abierto = Q.nC < (m.diasMes || 0);
+    var WA = semanas(Q.fA, false), WC = semanas(Q.fC, abierto), n = Math.max(WA.length, WC.length), out = [];
+    for(var i = 0; i < n; i++){
+      var ia = WA[i] || [], ic = WC[i] || null, curso = !!(ic && abierto && i === WC.length - 1);
+      var A = sumSem(Q.a, ia), C = ic ? sumSem(Q.c, ic) : null;
+      // semana en curso: se compara contra los mismos días hábiles de la semana del año pasado
+      var iaIg = curso ? ia.slice(0, ic.length) : ia, AI = curso ? sumSem(Q.a, iaIg) : A;
+      out.push({i: i, ia: ia, ic: ic, curso: curso, A: A, AI: AI, iaIg: iaIg, C: C, dA: ia.length, dC: ic ? ic.length : 0});
+    }
+    return out;
+  }
+  function graficoSemanas(S, sel){
+    var max = 0; S.forEach(function(w){ max = Math.max(max, w.A.hl, w.C ? w.C.hl : 0); });
+    var h = '<div class="mm-dd-chart mm-sem-chart"><div class="mm-dd-grid"><div class="mm-dd-gl" style="bottom:100%"><em>' + n(max, 0) + '</em></div><div class="mm-dd-gl" style="bottom:50%"><em>' + n(max / 2, 0) + '</em></div><div class="mm-dd-gl" style="bottom:0"><em>0</em></div></div><div class="mm-dd-cols">';
+    S.forEach(function(w){
+      var va = w.A.hl, vc = w.C ? w.C.hl : null, base = w.AI.hl;
+      var tt = "Semana " + (w.i + 1) + " · " + mesCorto(MES.a) + " " + rango(MESF.a, w.ia) + ": " + n(va, 0) + " HL" + (vc != null ? " · " + mesCorto(MES.c) + " " + rango(MESF.c, w.ic) + ": " + n(vc, 0) + " HL" + (w.curso ? " (en curso, " + w.dC + " días)" : "") : " · todavía no empezó");
+      h += '<div class="mm-dd-col' + (w.i === sel ? " sel" : "") + (vc == null ? " fut" : "") + '" data-mm-sem="' + w.i + '" title="' + e(tt) + '"><div class="mm-dd-bars">' +
+        '<i class="mm-pb-b" style="height:' + (max > 0 ? Math.max(0, va) / max * 100 : 0).toFixed(1) + '%"></i>' +
+        (vc != null ? '<i class="mm-pb-a' + (w.curso ? " mm-sem-curso" : "") + '" style="height:' + (max > 0 ? Math.max(0, vc) / max * 100 : 0).toFixed(1) + '%"></i>' : "") + "</div><span>Sem " + (w.i + 1) + "</span>" +
+        '<em class="mm-dd-dot' + (vc != null ? (vc >= base ? " up" : " dn") : "") + '"></em></div>';
+    });
+    return h + "</div></div>";
+  }
+  var MESF = {a: [], c: []};
+  function detalleSemana(d, Q, S, w){
+    var mA = mesCorto(MES.a), mC = mesCorto(MES.c);
+    var h = '<div class="mm-dd-det"><div class="mm-dd-det-h"><div class="mm-dd-det-t">Semana ' + (w.i + 1) + (w.curso ? ' <small class="mm-sem-tag">en curso</small>' : "") + '</div><div class="mm-dd-chips">' +
+      (w.C ? '<span class="mm-chip-a">' + e(mC) + " · " + e(rango(Q.fC, w.ic)) + " · " + w.dC + (w.dC === 1 ? " día háb." : " días háb.") + "</span>" : '<span class="mm-chip-f">' + e(mC) + " · todavía no empezó</span>") +
+      (w.ia.length ? '<span class="mm-chip-b">' + e(mA) + " · " + e(rango(Q.fA, w.ia)) + " · " + w.dA + (w.dA === 1 ? " día háb." : " días háb.") + "</span>" : "") + "</div></div>";
+    if(!w.C){
+      h += '<div class="mm-dd-fut">Esa semana el año pasado se vendieron <b>' + n(w.A.hl, 0) + " HL</b> en " + w.dA + " días hábiles (" + n(w.dA ? w.A.hl / w.dA : 0, 0) + " HL por día).</div></div>";
+      return h;
+    }
+    var b = w.AI.hl, a = w.C.hl, pdA = w.iaIg.length ? b / w.iaIg.length : 0, pdC = w.dC ? a / w.dC : 0;
+    var ultC = w.ic[w.ic.length - 1], accC = acum(Q.c.hl, ultC), accA = acum(Q.a.hl, Math.min(ultC, Q.nA - 1));
+    var nota = w.curso ? '<div class="mm-sem-nota">⏳ Semana en curso: se compara contra ' + (w.iaIg.length === 1 ? "el primer día hábil" : "los primeros " + w.iaIg.length + " días hábiles") + " de la semana " + (w.i + 1) + " de " + e(mA) + " (" + e(rango(Q.fA, w.iaIg)) + "). La semana completa del año pasado fue de " + n(w.A.hl, 0) + " HL.</div>"
+      : (w.dA !== w.dC ? '<div class="mm-sem-nota">ℹ️ Esta semana tuvo ' + w.dC + " días hábiles en " + e(mC) + " y " + w.dA + " en " + e(mA) + ": mirá también el promedio por día.</div>" : "");
+    h += nota + '<div class="mm-dd-kpis">' +
+      '<div><small>Venta de la semana</small><b class="' + clp(relHl(a, b)) + '">' + pc(relHl(a, b)) + "</b><span>" + n(a, 0) + " vs " + n(b, 0) + " HL · " + sg(a - b, 0) + "</span></div>" +
+      '<div><small>Promedio por día hábil</small><b class="' + clp(relHl(pdC, pdA)) + '">' + pc(relHl(pdC, pdA)) + "</b><span>" + n(pdC, 0) + " vs " + n(pdA, 0) + " HL por día</span></div>" +
+      '<div><small>Acumulado del mes al cierre de la semana</small><b class="' + clp(relHl(accC, accA)) + '">' + pc(relHl(accC, accA)) + "</b><span>" + n(accC, 0) + " vs " + n(accA, 0) + " HL · " + sg(accC - accA, 0) + "</span></div></div>";
+    var A = w.AI;
+    h += cuerpoDet(d, A.un, w.C.un, A.mk, w.C.mk, A.pv, w.C.pv, "de la semana", "en la semana");
     return h + "</div>";
+  }
+  function tablaSemanas(Q, S, sel){
+    var mA = mesCorto(MES.a), mC = mesCorto(MES.c);
+    var h = '<div class="mm-tw"><table class="mm-t mm-t-dias mm-t-sem"><thead><tr><th class="mm-tn">Semana</th><th>' + e(mA) + "</th><th>Días</th><th>HL</th><th>" + e(mC) + "</th><th>Días</th><th>HL</th><th>Dif. HL</th><th>Dif. %</th><th>HL/día " + e(mA) + "</th><th>HL/día " + e(mC) + "</th><th>Dif. % por día</th></tr></thead><tbody>";
+    var tA = 0, tC = 0, tAI = 0, dA = 0, dC = 0, dAI = 0;
+    S.forEach(function(w){
+      tA += w.A.hl; dA += w.dA;
+      var c = w.C, b = w.AI.hl;
+      if(c){ tC += c.hl; dC += w.dC; tAI += b; dAI += w.iaIg.length; }
+      var pdA = w.iaIg.length ? b / w.iaIg.length : 0, pdC = w.dC ? (c ? c.hl : 0) / w.dC : 0;
+      h += '<tr class="mm-dd-tr' + (w.i === sel ? " sel" : "") + '" data-mm-sem="' + w.i + '"><td class="mm-tn">Sem ' + (w.i + 1) + (w.curso ? " ⏳" : "") + '</td><td class="mm-dim">' + e(rango(Q.fA, w.ia)) + "</td><td>" + w.dA + "</td><td>" + n(w.A.hl, 0) + (w.curso ? '<div class="mm-dim">igual días: ' + n(b, 0) + "</div>" : "") + '</td><td class="mm-dim">' + (c ? e(rango(Q.fC, w.ic)) : "—") + "</td><td>" + (c ? w.dC : "—") + '</td><td class="mm-strong">' + (c ? n(c.hl, 0) : "—") + "</td>" +
+        (c ? '<td class="' + cl(c.hl - b) + '">' + sg(c.hl - b, 0) + '</td><td class="' + clp(relHl(c.hl, b)) + '">' + pc(relHl(c.hl, b)) + "</td><td>" + n(pdA, 0) + '</td><td class="mm-strong">' + n(pdC, 0) + '</td><td class="' + clp(relHl(pdC, pdA)) + '">' + pc(relHl(pdC, pdA)) + "</td>" : "<td>—</td><td>—</td><td>" + n(w.dA ? w.A.hl / w.dA : 0, 0) + "</td><td>—</td><td>—</td>") + "</tr>";
+    });
+    h += '<tr class="mm-sem-tot"><td class="mm-tn">Total a hoy</td><td></td><td>' + dAI + "</td><td>" + n(tAI, 0) + "</td><td></td><td>" + dC + '</td><td class="mm-strong">' + n(tC, 0) + '</td><td class="' + cl(tC - tAI) + '">' + sg(tC - tAI, 0) + '</td><td class="' + clp(relHl(tC, tAI)) + '">' + pc(relHl(tC, tAI)) + "</td><td>" + n(dAI ? tAI / dAI : 0, 0) + '</td><td class="mm-strong">' + n(dC ? tC / dC : 0, 0) + '</td><td class="' + clp(relHl(dC ? tC / dC : 0, dAI ? tAI / dAI : 0)) + '">' + pc(relHl(dC ? tC / dC : 0, dAI ? tAI / dAI : 0)) + "</td></tr>";
+    return h + "</tbody></table></div>";
+  }
+  function vistaSemanas(d, Q, m){
+    MESF.a = Q.fA; MESF.c = Q.fC;
+    var S = armarSemanas(Q, m);
+    if(!S.length) return '<div class="mm-vacio">No hay días con venta para armar las semanas.</div>';
+    if(ST.sem == null || ST.sem >= S.length){ ST.sem = 0; for(var i = 0; i < S.length; i++) if(S[i].C) ST.sem = i; }
+    var w = S[ST.sem];
+    return '<div class="mm-sem-ayuda">Semanas de lunes a domingo de cada mes (si la primera o la última tiene menos de 3 días hábiles, se suma a la de al lado). Tocá una semana para ver el detalle.</div>' +
+      graficoSemanas(S, ST.sem) + detalleSemana(d, Q, S, w) +
+      '<div class="mm-dd-st" style="margin-top:14px">📋 Todas las semanas</div>' + tablaSemanas(Q, S, ST.sem);
   }
   function tablaDias(Q, nTot, sel){
     var h = '<div class="mm-tw"><table class="mm-t mm-t-dias"><thead><tr><th class="mm-tn">Día</th><th>' + e(mesCorto(MES.a)) + "</th><th>HL</th><th>" + e(mesCorto(MES.c)) + "</th><th>HL</th><th>Dif. HL</th><th>Dif. %</th><th>Acum. " + e(mesCorto(MES.a)) + "</th><th>Acum. " + e(mesCorto(MES.c)) + "</th><th>Dif. acum.</th></tr></thead><tbody>";
@@ -10857,9 +10964,10 @@ const MMAA_DATA = {};
     }
     if(ST.dia == null || ST.dia >= nTot) ST.dia = Q.nC ? Q.nC - 1 : 0;
     var sel = ST.dia;
-    h += '<div class="mm-dd-tools"><div class="pill-row mm-dd-vista"><div class="pill' + (ST.ddVista !== "acum" ? " active" : "") + '" data-mm-ddv="dia">📊 Venta de cada día</div><div class="pill' + (ST.ddVista === "acum" ? " active" : "") + '" data-mm-ddv="acum">📈 Acumulado</div></div>' +
-      '<div class="mm-pb-ley"><span><i class="mm-pb-b"></i>' + e(mesCorto(m.mesAnt)) + "</span>" + (Q.nC ? '<span><i class="mm-pb-a"></i>' + e(mesCorto(m.mesAct)) + "</span>" + (ST.ddVista === "acum" ? '<span><i class="mm-h-proy"></i>proyección lineal</span>' : '<span><em class="mm-dd-dot dn"></em>vendió menos</span><span><em class="mm-dd-dot up"></em>vendió más</span>') : "") + "</div></div>";
+    h += '<div class="mm-dd-tools"><div class="pill-row mm-dd-vista"><div class="pill' + (ST.ddVista !== "acum" && ST.ddVista !== "sem" ? " active" : "") + '" data-mm-ddv="dia">📊 Venta de cada día</div><div class="pill' + (ST.ddVista === "acum" ? " active" : "") + '" data-mm-ddv="acum">📈 Acumulado</div><div class="pill' + (ST.ddVista === "sem" ? " active" : "") + '" data-mm-ddv="sem">🗓️ Por semana</div></div>' +
+      '<div class="mm-pb-ley"><span><i class="mm-pb-b"></i>' + e(mesCorto(m.mesAnt)) + "</span>" + (Q.nC ? '<span><i class="mm-pb-a"></i>' + e(mesCorto(m.mesAct)) + "</span>" + (ST.ddVista === "sem" ? '<span><em class="mm-dd-dot dn"></em>vendió menos</span><span><em class="mm-dd-dot up"></em>vendió más</span>' : ST.ddVista === "acum" ? '<span><i class="mm-h-proy"></i>proyección lineal</span>' : '<span><em class="mm-dd-dot dn"></em>vendió menos</span><span><em class="mm-dd-dot up"></em>vendió más</span>') : "") + "</div></div>";
     var linealFin = Q.nC ? acum(Q.c.hl, Q.nC - 1) / Q.nC * (m.diasMes || nTot) : null;
+    if(ST.ddVista === "sem") return h + vistaSemanas(d, Q, m) + "</div>";
     h += ST.ddVista === "acum" ? graficoAcum(Q, nTot, sel, linealFin) : graficoDiario(Q, nTot, sel);
     if(Q.nC) h += detalleDia(d, Q, sel);
     else if(sel < Q.nA) h += '<div class="mm-dd-det"><div class="mm-dd-det-h"><div class="mm-dd-det-t">Día hábil ' + (sel + 1) + '</div><div class="mm-dd-chips"><span class="mm-chip-b">' + e(mesCorto(m.mesAnt)) + " · " + e(fechaLarga(Q.fA[sel])) + '</span></div></div><div class="mm-dd-fut">Ese día de ' + e(mesCorto(m.mesAnt)) + " se vendieron <b>" + n(Q.a.hl[sel], 0) + " HL</b> a " + Q.a.cli[sel] + " clientes. Acumulado al día " + (sel + 1) + ": " + n(acum(Q.a.hl, sel), 0) + " HL (" + n(acum(Q.a.hl, sel) / (acum(Q.a.hl, Q.nA - 1) || 1) * 100, 0) + "% del mes).</div></div>";
@@ -10870,6 +10978,7 @@ const MMAA_DATA = {};
     var box = document.getElementById("mmaaDiaBox"); if(!box) return;
     function redraw(){ var R = calc(d); var tmp = document.createElement("div"); tmp.innerHTML = diaADia(d, R); var nb = tmp.firstElementChild; box.parentNode.replaceChild(nb, box); bindDias(d); }
     box.querySelectorAll("[data-mm-dia]").forEach(function(x){ x.addEventListener("click", function(){ ST.dia = +x.getAttribute("data-mm-dia"); redraw(); }); });
+    box.querySelectorAll("[data-mm-sem]").forEach(function(x){ x.addEventListener("click", function(){ ST.sem = +x.getAttribute("data-mm-sem"); redraw(); }); });
     box.querySelectorAll("[data-mm-ddv]").forEach(function(x){ x.addEventListener("click", function(){ ST.ddVista = x.getAttribute("data-mm-ddv"); redraw(); }); });
     var t = box.querySelector(".mm-dd-tabla"); if(t) t.addEventListener("toggle", function(){ ST.ddTabla = t.open; });
   }
