@@ -13636,7 +13636,8 @@ const MMAA_DATA = {};
 })();</script>
 <!--AJT:FIN-->
 
-<!--GV:INICIO GV_V5-->
+
+<!--GV:INICIO GV_V7-->
 <style id="gvStyle">
 /* 🏆 Planificación Ranking Vol Galaxia */
 .gv-t{min-width:760px;}
@@ -13652,6 +13653,8 @@ const MMAA_DATA = {};
 .bk-table tr.bk-emp td .gv-bul,.bk-table tr.bk-emp td .gv-nec{color:#cfc7b6;}
 .gv-orden .bk-dim{font-family:var(--mono);font-size:.62rem;}
 .bk-matrix td.bk-cell small.gv-med{margin-top:2px;font-size:.54rem;font-weight:700;opacity:.9;white-space:nowrap;}
+.bk-matrix td.bk-cell small.gv-vis,.gv-plan small.gv-vis{display:block;margin-top:2px;font-size:.54rem;font-weight:600;color:var(--muted);white-space:nowrap;}
+.gv-plan small.gv-vis{margin:0 0 4px;}
 </style>
 <script id="gvPatch">
 /* ===== 🏆 Planificación Ranking Vol Galaxia (GV_V1) — Supervisores › Resultados =====
@@ -13681,6 +13684,7 @@ const MMAA_DATA = {};
   try{ if(typeof FOTOS_PV !== "undefined" && !FOTOS_PV.CORDOBA) FOTOS_PV.CORDOBA = FOTO_CORDOBA; }catch(x){}
   var STILL = ["29814","29815","29816","30840","30842","30843","31600","31601","31602","32489","32492"];
   var NABS = ["30648", "30663", "30642", "30974", "30973", "30979", "30481", "30791", "25194", "30477", "25645", "31073", "31074", "25978", "25979", "25980", "25981", "1413", "1416", "1418", "11522", "1483", "14624", "14625", "24118", "27325", "29802", "16371", "16372", "26422", "22256", "29799", "58089", "32710"];   // códigos de NABS TOP (lista de Anahí, 14/11/2026)
+  var GJ = null;   // gv.json: venta por día de STILL / NABS TOP / AGUA / RED BULL por promotor (para −7 y −14)
   var M = null, HL = null, mEstado = "", plan = {}, planFecha = null, planEstado = "", orden = "planilla", sub = "avance";
   var prod = {};
   try{ prod = JSON.parse(localStorage.getItem("gvProd") || "{}") || {}; }catch(e){ prod = {}; }
@@ -13718,7 +13722,7 @@ const MMAA_DATA = {};
         var g = grupos[j];
         if(!pref[i].test(norm(g.nombre))) continue;
         var v = (g.vendedores || []).filter(function(x){ return norm(x.n) === pv; })[0];
-        if(v) return {real: v.ventaAcum, tend: v.tendencia, nec: v.mediaNecesaria, mr: v.mediaReal};
+        if(v) return {real: v.ventaAcum, tend: v.tendencia, nec: v.mediaNecesaria, mr: v.mediaReal, v7: v.visita7, v14: v.visita14};
       }
     }
     return null;
@@ -13752,6 +13756,21 @@ const MMAA_DATA = {};
       }
     });
   }
+  var MESN = {ene: 0, feb: 1, mar: 2, abr: 3, may: 4, jun: 5, jul: 6, ago: 7, sep: 8, set: 8, oct: 9, nov: 10, dic: 11};
+  function fechaVisita(k){
+    // el PAS cuenta "−7" como la venta con fecha (día del informe − 6) en la base de preventa (pedido de la visita de hace 7 días)
+    var t = pasInforme(), m = String(t).toLowerCase().match(/(\d{1,2})[-\/ ]([a-z]{3})[a-z]*[-\/ ](\d{2,4})/), b;
+    if(m && MESN[m[2]] != null){ var y = +m[3]; if(y < 100) y += 2000; b = new Date(y, MESN[m[2]], +m[1]); }
+    else { var h = hoyArg().split("-"); b = new Date(+h[0], +h[1] - 1, +h[2]); }
+    b.setDate(b.getDate() - (k - 1));
+    return b.getFullYear() + "-" + ("0" + (b.getMonth() + 1)).slice(-2) + "-" + ("0" + b.getDate()).slice(-2);
+  }
+  var GJI = {still: 0, nabs: 1, agua: 2, rb: 3};
+  function gjVis(pv, k, dd){
+    if(!GJ || !GJ.d || GJI[k] == null) return null;
+    var p = GJ.d[pv]; if(!p) return 0;
+    var r = p[fechaVisita(dd)]; return r ? (r[GJI[k]] || 0) : 0;
+  }
   function dias(){ var m = (M && M.meta) || {}; return {t: m.diasTrans || 0, m: m.diasMes || 0}; }
   function fila(pv, o){
     var D = dias(), r = {pv: pv, c: {}};
@@ -13759,12 +13778,13 @@ const MMAA_DATA = {};
       var obj = o[i + 1], x = {obj: obj, real: null, tend: null, nec: null};
       if(c.k === "cvza" || c.k === "ung"){
         var p = pasReal(pv, c.k);
-        if(p){ x.real = p.real; x.tend = p.tend; x.nec = p.nec; x.mr = p.mr; }
+        if(p){ x.real = p.real; x.tend = p.tend; x.nec = p.nec; x.mr = p.mr; x.v7 = p.v7; x.v14 = p.v14; }
       } else if(c.k === "nabs" && !NABS.length){
         x.falta = true;
       } else if(M){
         x.real = ((VR.pv[pv] || {})[c.k]) || 0;
         if(D.t > 0){ x.tend = x.real / D.t * D.m; x.mr = x.real / D.t; }
+        x.v7 = gjVis(pv, c.k, 7); x.v14 = gjVis(pv, c.k, 14);
         var rest = D.m - D.t;
         x.nec = rest > 0 ? (obj - x.real) / rest : null;
       }
@@ -13777,8 +13797,8 @@ const MMAA_DATA = {};
   function sumar(filas, nombre){
     var t = {pv: nombre, c: {}, tot: true};
     CAT.forEach(function(c){
-      var x = {obj: 0, real: 0, tend: 0, nec: 0, mr: 0}, hay = false, falta = false;
-      filas.forEach(function(f){ var y = f.c[c.k]; x.obj += y.obj || 0; if(y.falta) falta = true; if(y.real != null){ hay = true; x.real += y.real; x.tend += y.tend || 0; x.nec += Math.max(0, y.nec || 0); x.mr += y.mr || 0; } });
+      var x = {obj: 0, real: 0, tend: 0, nec: 0, mr: 0, v7: null, v14: null}, hay = false, falta = false;
+      filas.forEach(function(f){ var y = f.c[c.k]; x.obj += y.obj || 0; if(y.falta) falta = true; if(y.real != null){ hay = true; x.real += y.real; x.tend += y.tend || 0; x.nec += Math.max(0, y.nec || 0); x.mr += y.mr || 0; if(y.v7 != null) x.v7 = (x.v7 || 0) + y.v7; if(y.v14 != null) x.v14 = (x.v14 || 0) + y.v14; } });
       if(!hay){ x.real = x.tend = x.nec = x.mr = null; }
       x.falta = falta && !hay;
       x.av = (x.real != null && x.obj) ? x.real / x.obj : null;
@@ -13880,10 +13900,11 @@ const MMAA_DATA = {};
     v.innerHTML = '<div id="gvContent"></div>';
     if(ref) ref.parentNode.insertBefore(v, ref.nextSibling);
   }
+  function vis(x){ return (x.v7 == null && x.v14 == null) ? "" : '<small class="gv-vis">−7: ' + n1(x.v7) + " · −14: " + n1(x.v14) + "</small>"; }
   function celdaAv(x){
     if(x.falta) return '<td class="bk-cell"><b class="bk-dim">—</b><small>obj ' + n1(x.obj) + ' · falta definir</small></td>';
     if(x.real == null) return '<td class="bk-cell"><b class="bk-dim">—</b><small>obj ' + n1(x.obj) + "</small></td>";
-    return '<td class="bk-cell ' + cls(x.pt) + '" title="Avance ' + pc(x.av) + " · Tendencia " + n1(x.tend) + ' HL"><b>' + pc(x.pt) + "</b><small>" + n1(x.real) + " / " + n1(x.obj) + '</small><small class="gv-med">MR ' + n1(x.mr) + " · MN " + (x.nec != null ? n1(Math.max(0, x.nec)) : "—") + "</small></td>";
+    return '<td class="bk-cell ' + cls(x.pt) + '" title="Avance ' + pc(x.av) + " · Tendencia " + n1(x.tend) + ' HL"><b>' + pc(x.pt) + "</b><small>" + n1(x.real) + " / " + n1(x.obj) + '</small><small class="gv-med">MR ' + n1(x.mr) + " · MN " + (x.nec != null ? n1(Math.max(0, x.nec)) : "—") + "</small>" + vis(x) + "</td>";
   }
   function tablaAvance(F){
     var h = '<div class="bk-table-wrap"><table class="bk-table bk-matrix gv-t"><thead><tr><th>Promotor</th>' +
@@ -13914,7 +13935,7 @@ const MMAA_DATA = {};
         var top = '<div class="gv-nec">' + (x.falta ? "falta definir" : "nec. " + n1(nec) + " HL") + (pp != null ? ' <span class="bk-badge ' + cls(pp) + '">' + pc(pp) + "</span>" : "") + "</div>";
         var inp = editable ? '<input class="bk-plan-in" inputmode="decimal" data-ind="' + ind + '" data-pv="' + e(f.pv) + '" value="' + (pl != null ? String(pl).replace(".", ",") : "") + '" placeholder="HL" onchange="gvGuardar(this)" onkeydown="if(event.key===\'Enter\')this.blur()">'
           : "<b>" + (pl != null ? n1(pl) + " HL" : "—") + "</b>";
-        return '<td class="bk-td-plan">' + top + inp + bultos(c.k, pl) + "</td>";
+        return '<td class="bk-td-plan">' + top + vis(x) + inp + bultos(c.k, pl) + "</td>";
       }).join("") + "</tr>";
     }
     var todos = [];
@@ -13946,10 +13967,10 @@ const MMAA_DATA = {};
     if(mEstado === "error") h += '<div class="bk-plan-note">⚠️ No pude leer la venta del mes del archivo VR: STILL, AGUA y RED BULL quedan sin real.</div>';
     if(sub === "avance"){
       h += '<div class="pill-row bk-sub gv-orden"><span class="bk-dim">Orden:</span><div class="pill' + (orden === "planilla" ? " active" : "") + '" onclick="gvOrden(\'planilla\')">Por supervisor</div><div class="pill' + (orden === "ranking" ? " active" : "") + '" onclick="gvOrden(\'ranking\')">🏆 Ranking</div></div>' +
-        '<div class="bk-plan-note">En cada casillero: <b>% de tendencia</b> (cómo cerraría el mes a este ritmo ÷ objetivo) y abajo real / objetivo en HL, más la media real (MR, lo que vende por día) y la media necesaria (MN, lo que necesita vender por día para llegar). Rojo hasta 65%, amarillo hasta 95%, verde arriba de 95%. "Prom." = promedio de las tendencias (cada una con tope 200%).</div>' +
+        '<div class="bk-plan-note">En cada casillero: <b>% de tendencia</b> (cómo cerraría el mes a este ritmo ÷ objetivo) y abajo real / objetivo en HL, más la media real (MR, lo que vende por día) y la media necesaria (MN, lo que necesita vender por día para llegar). También se ve −7 y −14: lo que vendió en la visita de hace 7 y 14 días (CVZA y UNG del PAS; el resto, de la base de preventa del archivo VR, con el mismo criterio). Rojo hasta 65%, amarillo hasta 95%, verde arriba de 95%. "Prom." = promedio de las tendencias (cada una con tope 200%).</div>' +
         tablaAvance(F);
     } else {
-      h += '<div class="bk-plan-note">Cargá los HL que planifica cada promotor hoy y tocá Enter: se guarda en la planilla y lo ve todo el equipo. Debajo de cada casillero aparece a cuántos bultos equivale, según el producto que elijas acá arriba para cada columna. El % compara lo planificado con lo necesario por día.</div>' +
+      h += '<div class="bk-plan-note">Cargá los HL que planifica cada promotor hoy y tocá Enter: se guarda en la planilla y lo ve todo el equipo. Debajo de cada casillero aparece a cuántos bultos equivale, según el producto que elijas acá arriba para cada columna. El % compara lo planificado con lo necesario por día. −7 y −14 es lo que vendió en la visita de hace 7 y 14 días, para tener de referencia.</div>' +
         tablaPlan(F);
     }
     if(!NABS.length) h += '<div class="bk-foot">NABS TOP: falta cargar los códigos de artículo que lo forman; por ahora se ve solo el objetivo.</div>';
@@ -13998,6 +14019,7 @@ const MMAA_DATA = {};
     mEstado = "cargando";
     bajar("mmaa.json", function(j){ M = j; VR = null; mEstado = "ok"; render(); }, function(){ mEstado = "error"; render(); });
     bajar("hl.json", function(j){ HL = j; render(); }, function(){});
+    bajar("gv.json", function(j){ GJ = j; render(); }, function(){});
   }
 
   var orig = window.supSetView;
