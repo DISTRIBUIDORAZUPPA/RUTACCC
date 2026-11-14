@@ -13635,5 +13635,384 @@ const MMAA_DATA = {};
   if(typeof window.switchTab === "function"){ var s = window.switchTab; window.switchTab = function(t){ if(t === "combos") t = "ccc"; return s.call(this, t); }; }
 })();</script>
 <!--AJT:FIN-->
+<!--GV:INICIO GV_V5-->
+<style id="gvStyle">
+/* 🏆 Planificación Ranking Vol Galaxia */
+.gv-t{min-width:760px;}
+.gv-orden{align-items:center;gap:6px;}
+.gv-prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin:0 0 12px;}
+.gv-prods label{display:flex;flex-direction:column;gap:3px;font-family:var(--mono);font-size:.58rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.gv-prods select{font-family:var(--sans);font-size:.72rem;text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink);padding:6px 8px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);max-width:100%;}
+.gv-plan td.bk-td-plan{text-align:center;vertical-align:top;}
+.gv-plan th small{font-size:.5rem;font-weight:500;letter-spacing:.02em;text-transform:none;}
+.gv-nec{font-size:.58rem;color:var(--muted);margin-bottom:3px;white-space:nowrap;}
+.gv-nec .bk-badge{min-width:0;padding:1px 5px;font-size:.55rem;}
+.gv-bul{display:block;font-size:.58rem;color:var(--amber-deep);font-weight:700;margin-top:3px;}
+.bk-table tr.bk-emp td .gv-bul,.bk-table tr.bk-emp td .gv-nec{color:#cfc7b6;}
+.gv-orden .bk-dim{font-family:var(--mono);font-size:.62rem;}
+.bk-matrix td.bk-cell small.gv-med{margin-top:2px;font-size:.54rem;font-weight:700;opacity:.9;white-space:nowrap;}
+</style>
+<script id="gvPatch">
+/* ===== 🏆 Planificación Ranking Vol Galaxia (GV_V1) — Supervisores › Resultados =====
+   Objetivos fijos de noviembre/diciembre 2026. Real: CVZA y UNG del PAS (Portal D+);
+   STILL, NABS TOP, AGUA y RED BULL de la venta del mes del archivo VR (mmaa.json). */
+(function(){
+  if(typeof supSetView !== "function") return;
+  var CAT = [
+    {k: "cvza", n: "VOL CVZA", ind: "GV_CVZA"},
+    {k: "still", n: "VOL STILL", ind: "GV_STILL"},
+    {k: "ung", n: "UNG", ind: "GV_UNG"},
+    {k: "nabs", n: "NABS TOP", ind: "GV_NABSTOP"},
+    {k: "agua", n: "AGUA", ind: "GV_AGUA"},
+    {k: "rb", n: "RED BULL", ind: "GV_REDBULL"}
+  ];
+  // Objetivos (HL) — vigentes noviembre y diciembre 2026
+  var OBJ = {
+    sans: [["BRIZUELA",217,11,170,20,15,1.1],["CUBILLOS",360,11,432,20,10,15],["MANZANO",253,11,134,20,18,1.2],["NARVAEZ",145,11,74,16,15,1.1],
+           ["OLMEDO",133,11,72,13,11,1.1],["RIOS",112,11,84,20,15,1.1],["STAERKLE",111,11,76,14,10,1.2],["ZUBELZU",288,11,154,21,13,1.1]],
+    guillen: [["ANZORENA",141,11,91,20,11,1.1],["BILYK",101,11,78,18,10,1.1],["CORDOBA",116,11,68,16,10,1.0],["DANIELI",114,11,107,30,14,1.1],
+              ["GARCIA",161,11,111,20,14,1.1],["QUIROGA",178,11,94,16,10,1.1],["RAMIREZ",184,11,97,19,15,1.3],["SALATINO",555,11,147,80,31,10],["VICENS",3830,20,2597,166,35,15]]
+  };
+  var SUPN = {sans: "SANS", guillen: "GUILLEN"};
+  // Córdoba usa el código de cliente/cartera que tenía Villegas
+  var ALIAS = {"VILLEGAS": "CORDOBA"};
+  var FOTO_CORDOBA = "data:image/jpeg;base64,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";
+  try{ if(typeof FOTOS_PV !== "undefined" && !FOTOS_PV.CORDOBA) FOTOS_PV.CORDOBA = FOTO_CORDOBA; }catch(x){}
+  var STILL = ["29814","29815","29816","30840","30842","30843","31600","31601","31602","32489","32492"];
+  var NABS = ["30648", "30663", "30642", "30974", "30973", "30979", "30481", "30791", "25194", "30477", "25645", "31073", "31074", "25978", "25979", "25980", "25981", "1413", "1416", "1418", "11522", "1483", "14624", "14625", "24118", "27325", "29802", "16371", "16372", "26422", "22256", "29799", "58089", "32710"];   // códigos de NABS TOP (lista de Anahí, 14/11/2026)
+  var M = null, HL = null, mEstado = "", plan = {}, planFecha = null, planEstado = "", orden = "planilla", sub = "avance";
+  var prod = {};
+  try{ prod = JSON.parse(localStorage.getItem("gvProd") || "{}") || {}; }catch(e){ prod = {}; }
+
+  function e(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function n(v, d){ if(v == null || isNaN(v)) return "—"; return Number(v).toLocaleString("es-AR", {minimumFractionDigits: d || 0, maximumFractionDigits: d || 0}); }
+  function n1(v){ if(v == null || isNaN(v)) return "—"; var a = Math.abs(v); return a < 1 ? n(v, 2) : a < 10 ? n(v, 1) : n(v, 0); }
+  function pc(v){ return (v == null || isNaN(v)) ? "—" : n(v * 100, 1) + "%"; }
+  function cls(p){ if(p == null || isNaN(p)) return ""; p = p * 100; return p <= 65 ? "lo" : p <= 95 ? "mid" : "hi"; }
+  function foto(pv){ return (typeof FOTOS_PV !== "undefined" && FOTOS_PV[pv]) ? '<img class="bk-foto" src="' + FOTOS_PV[pv] + '" alt="">' : ""; }
+  function apiOk(){ return typeof SUP_API_URL !== "undefined" && SUP_API_URL && SUP_API_URL.indexOf("PENDIENTE") === -1; }
+  function hoyArg(){ return (typeof hoyArgentina === "function") ? hoyArgentina() : new Date().toISOString().slice(0, 10); }
+  function norm(s){ return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().trim(); }
+
+  // ---------- qué supervisores ve el usuario ----------
+  var CTX = "sup";
+  function supsVisibles(){
+    if(CTX === "pas") return [(typeof pasCurrentSup !== "undefined" && pasCurrentSup === "guillen") ? "guillen" : "sans"];
+    var a = (typeof supAuthData !== "undefined") ? supAuthData : null;
+    if(a && a.scope === "own"){
+      var k = (typeof PAS_NAME_TO_KEY_ !== "undefined" && PAS_NAME_TO_KEY_[a.name]) || (/SANS/.test(norm(a.name)) ? "sans" : /GUILLEN/.test(norm(a.name)) ? "guillen" : null);
+      if(k) return [k];
+    }
+    return ["sans", "guillen"];
+  }
+
+  // ---------- real ----------
+  function pasReal(pv, tipo){
+    if(typeof PAS_DATA === "undefined" || !PAS_DATA) return null;
+    var pref = tipo === "cvza" ? [/FOCO 1.*TOTAL CERVEZAS/, /^2022 TOTAL CERVEZAS$/, /TOTAL CERVEZAS/] : [/FOCO 3.*TOTAL UNG/, /^2020 TOTAL UNG$/];
+    var grupos = [];
+    Object.keys(PAS_DATA).forEach(function(s){ ((PAS_DATA[s] || {}).grupos || []).forEach(function(g){ grupos.push(g); }); });
+    for(var i = 0; i < pref.length; i++){
+      for(var j = 0; j < grupos.length; j++){
+        var g = grupos[j];
+        if(!pref[i].test(norm(g.nombre))) continue;
+        var v = (g.vendedores || []).filter(function(x){ return norm(x.n) === pv; })[0];
+        if(v) return {real: v.ventaAcum, tend: v.tendencia, nec: v.mediaNecesaria, mr: v.mediaReal};
+      }
+    }
+    return null;
+  }
+  function pasInforme(){
+    if(typeof PAS_DATA === "undefined" || !PAS_DATA) return "";
+    var k = Object.keys(PAS_DATA)[0]; return k ? (PAS_DATA[k].informeAl || "") : "";
+  }
+  var VR = null;   // {pv: {still, nabs, agua, rb}}, top vendidos por categoría
+  function armarVr(){
+    if(!M || VR) return;
+    VR = {pv: {}, top: {}};
+    var L = M.L, sS = {}, sN = {};
+    STILL.forEach(function(c){ sS[c] = 1; }); NABS.forEach(function(c){ sN[c] = 1; });
+    var catSk = M.sk.map(function(s){
+      var c = String(Number(s[0])), r = [];
+      if(sS[c]) r.push("still");
+      if(sN[c]) r.push("nabs");
+      if(L.un[s[4]] === "AGUAS ECO") r.push("agua");
+      if(norm(L.marca[s[2]]) === "RED BULL") r.push("rb");
+      return r;
+    });
+    M.f.forEach(function(arr, ci){
+      if(!arr) return;
+      var pv = norm(L.pv[M.cl[ci][2]]); if(ALIAS[pv]) pv = ALIAS[pv];
+      for(var j = 0; j < arr.length; j += 4){
+        var cs = catSk[arr[j]]; if(!cs.length) continue;
+        var v = arr[j + 3] || 0; if(!v) continue;
+        var o = VR.pv[pv] || (VR.pv[pv] = {still: 0, nabs: 0, agua: 0, rb: 0});
+        cs.forEach(function(k){ o[k] += v; var t = VR.top[k] || (VR.top[k] = {}); var code = String(Number(M.sk[arr[j]][0])); t[code] = (t[code] || 0) + v; });
+      }
+    });
+  }
+  function dias(){ var m = (M && M.meta) || {}; return {t: m.diasTrans || 0, m: m.diasMes || 0}; }
+  function fila(pv, o){
+    var D = dias(), r = {pv: pv, c: {}};
+    CAT.forEach(function(c, i){
+      var obj = o[i + 1], x = {obj: obj, real: null, tend: null, nec: null};
+      if(c.k === "cvza" || c.k === "ung"){
+        var p = pasReal(pv, c.k);
+        if(p){ x.real = p.real; x.tend = p.tend; x.nec = p.nec; x.mr = p.mr; }
+      } else if(c.k === "nabs" && !NABS.length){
+        x.falta = true;
+      } else if(M){
+        x.real = ((VR.pv[pv] || {})[c.k]) || 0;
+        if(D.t > 0){ x.tend = x.real / D.t * D.m; x.mr = x.real / D.t; }
+        var rest = D.m - D.t;
+        x.nec = rest > 0 ? (obj - x.real) / rest : null;
+      }
+      x.av = (x.real != null && obj) ? x.real / obj : null;
+      x.pt = (x.tend != null && obj) ? x.tend / obj : null;
+      r.c[c.k] = x;
+    });
+    return r;
+  }
+  function sumar(filas, nombre){
+    var t = {pv: nombre, c: {}, tot: true};
+    CAT.forEach(function(c){
+      var x = {obj: 0, real: 0, tend: 0, nec: 0, mr: 0}, hay = false, falta = false;
+      filas.forEach(function(f){ var y = f.c[c.k]; x.obj += y.obj || 0; if(y.falta) falta = true; if(y.real != null){ hay = true; x.real += y.real; x.tend += y.tend || 0; x.nec += Math.max(0, y.nec || 0); x.mr += y.mr || 0; } });
+      if(!hay){ x.real = x.tend = x.nec = x.mr = null; }
+      x.falta = falta && !hay;
+      x.av = (x.real != null && x.obj) ? x.real / x.obj : null;
+      x.pt = (x.tend != null && x.obj) ? x.tend / x.obj : null;
+      t.c[c.k] = x;
+    });
+    return t;
+  }
+  function promedio(f){ var s = 0, k = 0; CAT.forEach(function(c){ var p = f.c[c.k].pt; if(p != null){ s += Math.min(p, 2); k++; } }); return k ? s / k : null; }
+  function armarFilas(){
+    armarVr();
+    var bloques = [];
+    supsVisibles().forEach(function(s){
+      var fs = OBJ[s].map(function(o){ return fila(o[0], o); });
+      if(orden === "ranking") fs.sort(function(a, b){ return (promedio(b) || 0) - (promedio(a) || 0); });
+      bloques.push({s: s, filas: fs, tot: sumar(fs, "Total " + SUPN[s])});
+    });
+    var emp = bloques.length > 1 ? sumar([].concat.apply([], bloques.map(function(b){ return b.filas; })), "ZUPPA") : null;
+    return {b: bloques, emp: emp};
+  }
+
+  // ---------- planificación guardada (misma Web App, indicadores GV_) ----------
+  async function cargarPlan(){
+    var hoy = hoyArg();
+    if(planFecha === hoy || planEstado === "cargando") return;
+    if(!apiOk()){ planFecha = hoy; return; }
+    planEstado = "cargando";
+    try{
+      var resp = await fetch(SUP_API_URL + "?action=getPlanificacion&fecha=" + hoy);
+      var json = await resp.json();
+      plan = {};
+      if(json && json.ok) (json.data || []).forEach(function(r){
+        if(String(r.indicador || "").indexOf("GV_") !== 0) return;
+        if(r.planif === "" || r.planif == null) return;
+        var v = Number(String(r.planif).replace(",", ".")); if(isNaN(v)) return;
+        (plan[r.indicador] = plan[r.indicador] || {})[norm(r.pv)] = v;
+      });
+      planFecha = hoy;
+    }catch(err){ console.error("Ranking Vol Galaxia: no pude leer la planificación", err); planFecha = hoy; }
+    planEstado = "";
+    render();
+  }
+  window.gvGuardar = async function(inp){
+    var ind = inp.getAttribute("data-ind"), pv = inp.getAttribute("data-pv");
+    var raw = String(inp.value || "").trim().replace(",", "."), v = raw === "" ? "" : Number(raw);
+    if(v !== "" && isNaN(v)){ inp.style.borderColor = "var(--red)"; return; }
+    inp.style.borderColor = "";
+    plan[ind] = plan[ind] || {};
+    if(v === "") delete plan[ind][pv]; else plan[ind][pv] = v;
+    render();
+    if(!apiOk()) return;
+    try{
+      await fetch(SUP_API_URL, {method: "POST", headers: {"Content-Type": "text/plain;charset=utf-8"},
+        body: JSON.stringify({action: "setPlanificacion", fecha: hoyArg(), indicador: ind, pv: pv, field: "planif", value: v, clientes: ""})});
+    }catch(err){ console.error("No se pudo guardar la planificación", err); }
+  };
+
+  // ---------- HL ↔ bultos (como la Calculadora HL: hl.json) ----------
+  function opciones(k){
+    if(!HL) return [];
+    var A = HL.a || [];
+    if(k === "cvza") return A.filter(function(x){ return x[4] === "CVZA"; });
+    if(k === "agua") return A.filter(function(x){ return x[4] === "AGUAS"; });
+    if(k === "still") return A.filter(function(x){ return STILL.indexOf(String(Number(x[0]))) !== -1; });
+    if(k === "rb") return A.filter(function(x){ return /RED BULL|^RB /.test(norm(x[1])); });
+    if(k === "nabs" && NABS.length) return A.filter(function(x){ return NABS.indexOf(String(Number(x[0]))) !== -1; });
+    return A.filter(function(x){ return x[4] === "UNG"; });
+  }
+  function prodDe(k){
+    var op = opciones(k); if(!op.length) return null;
+    var cod = prod[k], p = op.filter(function(x){ return String(Number(x[0])) === cod; })[0];
+    if(p) return p;
+    // por defecto: el más vendido del mes en esa categoría (si está en la lista)
+    var top = (VR && VR.top && VR.top[k]) || {}, mejor = null, mv = -1;
+    op.forEach(function(x){ var v = top[String(Number(x[0]))] || 0; if(v > mv){ mv = v; mejor = x; } });
+    if(!mv && (k === "cvza" || k === "ung")){ var pr = op.filter(function(x){ return /QUILMES CLASICA.*X12.*1000|PEPSI.*X8 2250|PEPSI.*2250/.test(norm(x[1])); })[0]; if(pr) return pr; }
+    return mejor || op[0];
+  }
+  window.gvProducto = function(sel){ prod[sel.getAttribute("data-k")] = sel.value; try{ localStorage.setItem("gvProd", JSON.stringify(prod)); }catch(x){} render(); };
+  function bultos(k, hl){
+    var p = prodDe(k); if(!p || !p[3] || hl == null || hl === "") return "";
+    var b = hl / p[3];
+    return '<small class="gv-bul">≈ ' + n(b, b < 10 ? 1 : 0) + " bultos</small>";
+  }
+
+  // ---------- pantalla ----------
+  function crear(){
+    if(document.getElementById("supViewGalVol")) return;
+    var stockBtn = document.getElementById("supViewStockBtn");
+    if(stockBtn){
+      var b = document.createElement("div");
+      b.className = "pill sup-pill-operativa"; b.id = "supViewGalVolBtn"; b.textContent = "🏆 Planificación Ranking Vol Galaxia";
+      b.onclick = function(){ supSetView("galvol"); };
+      stockBtn.parentNode.insertBefore(b, stockBtn.nextSibling);
+    }
+    var ref = document.getElementById("supViewStock");
+    var v = document.createElement("div");
+    v.id = "supViewGalVol"; v.style.display = "none";
+    v.innerHTML = '<div id="gvContent"></div>';
+    if(ref) ref.parentNode.insertBefore(v, ref.nextSibling);
+  }
+  function celdaAv(x){
+    if(x.falta) return '<td class="bk-cell"><b class="bk-dim">—</b><small>obj ' + n1(x.obj) + ' · falta definir</small></td>';
+    if(x.real == null) return '<td class="bk-cell"><b class="bk-dim">—</b><small>obj ' + n1(x.obj) + "</small></td>";
+    return '<td class="bk-cell ' + cls(x.pt) + '" title="Avance ' + pc(x.av) + " · Tendencia " + n1(x.tend) + ' HL"><b>' + pc(x.pt) + "</b><small>" + n1(x.real) + " / " + n1(x.obj) + '</small><small class="gv-med">MR ' + n1(x.mr) + " · MN " + (x.nec != null ? n1(Math.max(0, x.nec)) : "—") + "</small></td>";
+  }
+  function tablaAvance(F){
+    var h = '<div class="bk-table-wrap"><table class="bk-table bk-matrix gv-t"><thead><tr><th>Promotor</th>' +
+      CAT.map(function(c){ return "<th>" + c.n + "</th>"; }).join("") + "<th>Prom.</th></tr></thead><tbody>";
+    function tr(f, cl){
+      var p = promedio(f);
+      return '<tr class="' + (cl || "") + '"><td class="bk-name">' + (f.tot ? "" : foto(f.pv)) + e(f.pv) + "</td>" + CAT.map(function(c){ return celdaAv(f.c[c.k]); }).join("") +
+        '<td class="bk-cell ' + cls(p) + '"><b>' + pc(p) + "</b><small>promedio</small></td></tr>";
+    }
+    F.b.forEach(function(b){ b.filas.forEach(function(f){ h += tr(f); }); h += tr(b.tot, "bk-tot"); });
+    if(F.emp) h += tr(F.emp, "bk-tot bk-emp");
+    return h + "</tbody></table></div>";
+  }
+  function tablaPlan(F){
+    var h = '<div class="gv-prods">' + CAT.map(function(c){
+      var op = opciones(c.k), p = prodDe(c.k);
+      return '<label><span>' + c.n + '</span><select data-k="' + c.k + '" onchange="gvProducto(this)">' +
+        op.map(function(x){ return '<option value="' + e(String(Number(x[0]))) + '"' + (p && x[0] === p[0] ? " selected" : "") + ">" + e(x[1]) + " · " + n(x[3], 3) + " HL/bulto</option>"; }).join("") + "</select></label>";
+    }).join("") + "</div>";
+    h += '<div class="bk-table-wrap"><table class="bk-table gv-t gv-plan"><thead><tr><th>Promotor</th>' +
+      CAT.map(function(c){ return '<th class="bk-th-plan">' + c.n + "<br><small>nec. x día · planif. hoy</small></th>"; }).join("") + "</tr></thead><tbody>";
+    function tr(f, cl, editable){
+      return '<tr class="' + (cl || "") + '"><td class="bk-name">' + (f.tot ? "" : foto(f.pv)) + e(f.pv) + "</td>" + CAT.map(function(c){
+        var x = f.c[c.k], ind = c.ind, pl;
+        if(editable){ pl = (plan[ind] || {})[f.pv]; }
+        else { pl = null; (f.pvs || []).forEach(function(pv){ var v = (plan[ind] || {})[pv]; if(v != null) pl = (pl || 0) + v; }); }
+        var nec = x.nec != null ? Math.max(0, x.nec) : null, pp = (pl != null && nec) ? pl / nec : null;
+        var top = '<div class="gv-nec">' + (x.falta ? "falta definir" : "nec. " + n1(nec) + " HL") + (pp != null ? ' <span class="bk-badge ' + cls(pp) + '">' + pc(pp) + "</span>" : "") + "</div>";
+        var inp = editable ? '<input class="bk-plan-in" inputmode="decimal" data-ind="' + ind + '" data-pv="' + e(f.pv) + '" value="' + (pl != null ? String(pl).replace(".", ",") : "") + '" placeholder="HL" onchange="gvGuardar(this)" onkeydown="if(event.key===\'Enter\')this.blur()">'
+          : "<b>" + (pl != null ? n1(pl) + " HL" : "—") + "</b>";
+        return '<td class="bk-td-plan">' + top + inp + bultos(c.k, pl) + "</td>";
+      }).join("") + "</tr>";
+    }
+    var todos = [];
+    F.b.forEach(function(b){
+      b.filas.forEach(function(f){ h += tr(f, "", true); todos.push(f.pv); });
+      b.tot.pvs = b.filas.map(function(f){ return f.pv; });
+      h += tr(b.tot, "bk-tot", false);
+    });
+    if(F.emp){ F.emp.pvs = todos; h += tr(F.emp, "bk-tot bk-emp", false); }
+    return h + "</tbody></table></div>";
+  }
+  function render(){
+    var vis = [["sup", "gvContent", "supViewGalVol"], ["pas", "gvPasContent", "gvPasBox"]];
+    vis.forEach(function(v){
+      var box = document.getElementById(v[2]), el = document.getElementById(v[1]);
+      if(!box || !el || box.style.display === "none") return;
+      CTX = v[0]; renderEn(el);
+    });
+    CTX = "sup";
+  }
+  function renderEn(el){
+    if(!M && mEstado !== "error"){ el.innerHTML = '<div class="bk-empty">⏳ Cargando la venta del mes…</div>'; return; }
+    var F = armarFilas(), D = dias(), meta = (M && M.meta) || {};
+    var h = '<div class="bk-title">🏆 Planificación Ranking Vol Galaxia <small>objetivos noviembre–diciembre 2026 · HL</small></div>' +
+      '<div class="bk-dias">Día hábil <b>' + (D.t || "—") + "</b> de <b>" + (D.m || "—") + "</b> · CVZA y UNG del PAS" + (pasInforme() ? " al " + e(pasInforme()) : "") +
+      " · STILL, NABS TOP, AGUA y RED BULL de la venta del archivo VR" + (meta.ultimoAct ? " al " + e(meta.ultimoAct) : "") + "</div>" +
+      '<div class="pill-row bk-sub"><div class="pill' + (sub === "avance" ? " active" : "") + '" onclick="gvSub(\'avance\')">📈 Avance</div>' +
+      '<div class="pill' + (sub === "plan" ? " active" : "") + '" onclick="gvSub(\'plan\')">✏️ Planificar hoy</div></div>';
+    if(mEstado === "error") h += '<div class="bk-plan-note">⚠️ No pude leer la venta del mes del archivo VR: STILL, AGUA y RED BULL quedan sin real.</div>';
+    if(sub === "avance"){
+      h += '<div class="pill-row bk-sub gv-orden"><span class="bk-dim">Orden:</span><div class="pill' + (orden === "planilla" ? " active" : "") + '" onclick="gvOrden(\'planilla\')">Por supervisor</div><div class="pill' + (orden === "ranking" ? " active" : "") + '" onclick="gvOrden(\'ranking\')">🏆 Ranking</div></div>' +
+        '<div class="bk-plan-note">En cada casillero: <b>% de tendencia</b> (cómo cerraría el mes a este ritmo ÷ objetivo) y abajo real / objetivo en HL, más la media real (MR, lo que vende por día) y la media necesaria (MN, lo que necesita vender por día para llegar). Rojo hasta 65%, amarillo hasta 95%, verde arriba de 95%. "Prom." = promedio de las tendencias (cada una con tope 200%).</div>' +
+        tablaAvance(F);
+    } else {
+      h += '<div class="bk-plan-note">Cargá los HL que planifica cada promotor hoy y tocá Enter: se guarda en la planilla y lo ve todo el equipo. Debajo de cada casillero aparece a cuántos bultos equivale, según el producto que elijas acá arriba para cada columna. El % compara lo planificado con lo necesario por día.</div>' +
+        tablaPlan(F);
+    }
+    if(!NABS.length) h += '<div class="bk-foot">NABS TOP: falta cargar los códigos de artículo que lo forman; por ahora se ve solo el objetivo.</div>';
+    el.innerHTML = h;
+  }
+  // ---------- también en 📊 Resultados PAS (promotores) ----------
+  var pasVista = "pas";
+  function crearPas(){
+    var tab = document.getElementById("tabPas");
+    if(!tab || document.getElementById("gvPasBox")) return;
+    var row = document.createElement("div");
+    row.className = "pill-row"; row.id = "gvPasVistas"; row.style.marginBottom = "10px";
+    row.innerHTML = '<div class="pill active" id="gvPasVistaPas" onclick="gvPasVista(\'pas\')">📊 Resultados PAS</div><div class="pill" id="gvPasVistaGv" onclick="gvPasVista(\'gv\')">🏆 Planificación Ranking Vol Galaxia</div>';
+    tab.insertBefore(row, tab.firstChild);
+    var box = document.createElement("div");
+    box.id = "gvPasBox"; box.style.display = "none";
+    box.innerHTML = '<div id="gvPasContent"></div>';
+    tab.appendChild(box);
+  }
+  window.gvPasVista = function(v){
+    crearPas(); pasVista = v;
+    var on = v === "gv";
+    document.getElementById("gvPasVistaPas").classList.toggle("active", !on);
+    document.getElementById("gvPasVistaGv").classList.toggle("active", on);
+    ["pasInformeAl", "pasContent"].forEach(function(id){ var x = document.getElementById(id); if(x) x.style.display = on ? "none" : ""; });
+    var nota = document.querySelector("#tabPas > .sup-note"); if(nota) nota.style.display = on ? "none" : "";
+    document.getElementById("gvPasBox").style.display = on ? "block" : "none";
+    if(on){ cargarDatos(); if(sub === "plan") cargarPlan(); render(); }
+  };
+  if(typeof window.pasSetSup === "function"){
+    var oPas = window.pasSetSup;
+    window.pasSetSup = function(){ var r = oPas.apply(this, arguments); if(pasVista === "gv") render(); return r; };
+  }
+  window.gvSub = function(s){ sub = s; if(s === "plan") cargarPlan(); render(); };
+  window.gvOrden = function(o){ orden = o; render(); };
+
+  function bajar(url, ok, ko){
+    var urls = [url, "https://distribuidorazuppa.github.io/RUTACCC/" + url], i = 0;
+    (function sig(){
+      if(i >= urls.length){ ko(); return; }
+      fetch(urls[i++] + "?t=" + Date.now()).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(ok).catch(sig);
+    })();
+  }
+  function cargarDatos(){
+    if(mEstado) return;
+    mEstado = "cargando";
+    bajar("mmaa.json", function(j){ M = j; VR = null; mEstado = "ok"; render(); }, function(){ mEstado = "error"; render(); });
+    bajar("hl.json", function(j){ HL = j; render(); }, function(){});
+  }
+
+  var orig = window.supSetView;
+  window.supSetView = function(view){
+    crear();
+    var r = orig.apply(this, arguments);
+    var v = document.getElementById("supViewGalVol"), b = document.getElementById("supViewGalVolBtn");
+    if(v) v.style.display = view === "galvol" ? "block" : "none";
+    if(b) b.classList.toggle("active", view === "galvol");
+    if(view === "galvol"){ cargarDatos(); if(sub === "plan") cargarPlan(); render(); }
+    return r;
+  };
+  function init(){ crear(); crearPas(); }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
+</script>
+<!--GV:FIN-->
 </body>
 </html>
