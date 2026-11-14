@@ -13638,7 +13638,8 @@ const MMAA_DATA = {};
 
 
 
-<!--GV:INICIO GV_V7-->
+
+<!--GV:INICIO GV_V8-->
 <style id="gvStyle">
 /* 🏆 Planificación Ranking Vol Galaxia */
 .gv-t{min-width:760px;}
@@ -13656,6 +13657,10 @@ const MMAA_DATA = {};
 .bk-matrix td.bk-cell small.gv-med{margin-top:2px;font-size:.54rem;font-weight:700;opacity:.9;white-space:nowrap;}
 .bk-matrix td.bk-cell small.gv-vis,.gv-plan small.gv-vis{display:block;margin-top:2px;font-size:.54rem;font-weight:600;color:var(--muted);white-space:nowrap;}
 .gv-plan small.gv-vis{margin:0 0 4px;}
+.gv-cie-sel{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;}
+.gv-cie-sel label{font-family:var(--mono);font-size:.62rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.gv-cie-sel select{font-size:.8rem;font-weight:600;padding:6px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);}
+.gv-t th small{font-size:.5rem;font-weight:500;text-transform:none;letter-spacing:.02em;}
 </style>
 <script id="gvPatch">
 /* ===== 🏆 Planificación Ranking Vol Galaxia (GV_V1) — Supervisores › Resultados =====
@@ -13766,7 +13771,7 @@ const MMAA_DATA = {};
     b.setDate(b.getDate() - (k - 1));
     return b.getFullYear() + "-" + ("0" + (b.getMonth() + 1)).slice(-2) + "-" + ("0" + b.getDate()).slice(-2);
   }
-  var GJI = {still: 0, nabs: 1, agua: 2, rb: 3};
+  var GJI = {cvza: 0, still: 1, ung: 2, nabs: 3, agua: 4, rb: 5};
   function gjVis(pv, k, dd){
     if(!GJ || !GJ.d || GJI[k] == null) return null;
     var p = GJ.d[pv]; if(!p) return 0;
@@ -13964,12 +13969,15 @@ const MMAA_DATA = {};
       '<div class="bk-dias">Día hábil <b>' + (D.t || "—") + "</b> de <b>" + (D.m || "—") + "</b> · CVZA y UNG del PAS" + (pasInforme() ? " al " + e(pasInforme()) : "") +
       " · STILL, NABS TOP, AGUA y RED BULL de la venta del archivo VR" + (meta.ultimoAct ? " al " + e(meta.ultimoAct) : "") + "</div>" +
       '<div class="pill-row bk-sub"><div class="pill' + (sub === "avance" ? " active" : "") + '" onclick="gvSub(\'avance\')">📈 Avance</div>' +
-      '<div class="pill' + (sub === "plan" ? " active" : "") + '" onclick="gvSub(\'plan\')">✏️ Planificar hoy</div></div>';
+      '<div class="pill' + (sub === "plan" ? " active" : "") + '" onclick="gvSub(\'plan\')">✏️ Planificar hoy</div>' +
+      '<div class="pill' + (sub === "cierre" ? " active" : "") + '" onclick="gvSub(\'cierre\')">📋 Cierre</div></div>';
     if(mEstado === "error") h += '<div class="bk-plan-note">⚠️ No pude leer la venta del mes del archivo VR: STILL, AGUA y RED BULL quedan sin real.</div>';
     if(sub === "avance"){
       h += '<div class="pill-row bk-sub gv-orden"><span class="bk-dim">Orden:</span><div class="pill' + (orden === "planilla" ? " active" : "") + '" onclick="gvOrden(\'planilla\')">Por supervisor</div><div class="pill' + (orden === "ranking" ? " active" : "") + '" onclick="gvOrden(\'ranking\')">🏆 Ranking</div></div>' +
         '<div class="bk-plan-note">En cada casillero: <b>% de tendencia</b> (cómo cerraría el mes a este ritmo ÷ objetivo) y abajo real / objetivo en HL, más la media real (MR, lo que vende por día) y la media necesaria (MN, lo que necesita vender por día para llegar). También se ve −7 y −14: lo que vendió en la visita de hace 7 y 14 días (CVZA y UNG del PAS; el resto, de la base de preventa del archivo VR, con el mismo criterio). Rojo hasta 65%, amarillo hasta 95%, verde arriba de 95%. "Prom." = promedio de las tendencias (cada una con tope 200%).</div>' +
         tablaAvance(F);
+    } else if(sub === "cierre"){
+      h += vistaCierre(F);
     } else {
       h += '<div class="bk-plan-note">Cargá los HL que planifica cada promotor hoy y tocá Enter: se guarda en la planilla y lo ve todo el equipo. Debajo de cada casillero aparece a cuántos bultos equivale, según el producto que elijas acá arriba para cada columna. El % compara lo planificado con lo necesario por día. −7 y −14 es lo que vendió en la visita de hace 7 y 14 días, para tener de referencia.</div>' +
         tablaPlan(F);
@@ -14004,6 +14012,76 @@ const MMAA_DATA = {};
   if(typeof window.pasSetSup === "function"){
     var oPas = window.pasSetSup;
     window.pasSetSup = function(){ var r = oPas.apply(this, arguments); if(pasVista === "gv") render(); return r; };
+  }
+  // ---------- 📋 Cierre: planificado de un día vs lo vendido ----------
+  // Regla de siempre (Real CNC): la venta sale un día adelantada, así que el real del día planificado
+  // es la venta con la primera fecha posterior a ese día en la base de preventa.
+  var cieDia = null, ciePlan = {};
+  function iso(d){ return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+  function fechaReal(p){ var fs = (GJ && GJ.fechas) || []; for(var i = 0; i < fs.length; i++) if(fs[i] > p) return fs[i]; return null; }
+  function diasCierre(){
+    var h = hoyArg().split("-"), d = new Date(+h[0], +h[1] - 1, +h[2]), out = [], mes = d.getMonth();
+    for(var i = 0; i < 40; i++){ if(d.getMonth() !== mes) break; if(d.getDay() !== 0) out.push(iso(d)); d.setDate(d.getDate() - 1); }
+    return out;
+  }
+  function diaTxt(k){ var p = k.split("-"), d = new Date(+p[0], +p[1] - 1, +p[2]); return ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"][d.getDay()] + " " + p[2] + "/" + p[1]; }
+  async function cargarCiePlan(f){
+    if(ciePlan[f] || !apiOk()) { if(!apiOk()) ciePlan[f] = {}; return; }
+    ciePlan[f] = "cargando";
+    var m = {};
+    try{
+      var resp = await fetch(SUP_API_URL + "?action=getPlanificacion&fecha=" + f);
+      var json = await resp.json();
+      if(json && json.ok) (json.data || []).forEach(function(r){
+        if(String(r.indicador || "").indexOf("GV_") !== 0 || r.planif === "" || r.planif == null) return;
+        var v = Number(String(r.planif).replace(",", ".")); if(isNaN(v)) return;
+        (m[r.indicador] = m[r.indicador] || {})[norm(r.pv)] = v;
+      });
+    }catch(err){ console.error("Ranking Vol Galaxia: no pude leer la planificación del " + f, err); }
+    ciePlan[f] = m; render();
+  }
+  window.gvCieDia = function(v){ cieDia = v; cargarCiePlan(v); render(); };
+  function vistaCierre(F){
+    if(!GJ) return '<div class="bk-empty">⏳ Cargando la venta por día…</div>';
+    var ds = diasCierre();
+    if(!cieDia){ cieDia = ds[0]; for(var i = 0; i < ds.length; i++){ if(fechaReal(ds[i])){ cieDia = ds[i]; break; } } }
+    var fr = fechaReal(cieDia), P = ciePlan[cieDia];
+    if(P == null){ cargarCiePlan(cieDia); P = "cargando"; }
+    var h = '<div class="gv-cie-sel"><label for="gvCieSel">📅 Día planificado</label><select id="gvCieSel" onchange="gvCieDia(this.value)">' +
+      ds.map(function(k){ return '<option value="' + k + '"' + (k === cieDia ? " selected" : "") + ">" + diaTxt(k) + (k === hoyArg() ? " (hoy)" : "") + (fechaReal(k) ? "" : " · sin venta todavía") + "</option>"; }).join("") + "</select></div>" +
+      '<div class="bk-plan-note">Lo planificado ese día contra lo que se vendió de esa visita: la venta con la primera fecha posterior en la base de preventa del archivo VR (la misma regla del Cierre de Planificación CNC)' +
+      (fr ? ". Para el " + e(diaTxt(cieDia)) + " se toma la venta del <b>" + e(diaTxt(fr)) + "</b>." : ".") + " El % es vendido ÷ planificado: rojo hasta 65%, amarillo hasta 95%, verde arriba.</div>";
+    if(P === "cargando") return h + '<div class="bk-empty">⏳ Cargando lo planificado…</div>';
+    if(!fr) return h + '<div class="bk-empty">Todavía no hay venta en la base de preventa para ese día (la venta sale un día después). ' + (GJ.ultimo ? "Última venta cargada: " + e(GJ.ultimo) + "." : "") + "</div>";
+    function real(pv, k){ var p = (GJ.d || {})[pv]; var r = p && p[fr]; return r ? (r[GJI[k]] || 0) : 0; }
+    function celda(pl, re){
+      if(pl == null) return '<td class="bk-cell"><b class="bk-dim">—</b><small>vendió ' + n1(re) + " · sin planificar</small></td>";
+      var p = pl > 0 ? re / pl : null;
+      return '<td class="bk-cell ' + cls(p) + '"><b>' + (p != null ? pc(p) : "—") + "</b><small>" + n1(re) + " / " + n1(pl) + " HL</small></td>";
+    }
+    var h2 = '<div class="bk-table-wrap"><table class="bk-table bk-matrix gv-t"><thead><tr><th>Promotor</th>' + CAT.map(function(c){ return "<th>" + c.n + "<br><small>vendido / planif.</small></th>"; }).join("") + "</tr></thead><tbody>";
+    var hay = false, todos = [];
+    function filaTot(nombre, pvs, cl){
+      return '<tr class="' + cl + '"><td class="bk-name">' + e(nombre) + "</td>" + CAT.map(function(c){
+        var pl = null, reP = 0, reT = 0;
+        pvs.forEach(function(pv){ var v = (P[c.ind] || {})[pv], r = real(pv, c.k); reT += r; if(v != null){ pl = (pl || 0) + v; reP += r; } });
+        if(pl == null) return celda(null, reT);
+        var p = pl > 0 ? reP / pl : null;
+        return '<td class="bk-cell ' + cls(p) + '"><b>' + (p != null ? pc(p) : "—") + "</b><small>" + n1(reP) + " / " + n1(pl) + " HL</small></td>";
+      }).join("") + "</tr>";
+    }
+    F.b.forEach(function(b){
+      var pvs = b.filas.map(function(f){ return f.pv; });
+      b.filas.forEach(function(f){
+        todos.push(f.pv);
+        h2 += '<tr><td class="bk-name">' + foto(f.pv) + e(f.pv) + "</td>" + CAT.map(function(c){ var v = (P[c.ind] || {})[f.pv]; if(v != null) hay = true; return celda(v, real(f.pv, c.k)); }).join("") + "</tr>";
+      });
+      h2 += filaTot("Total " + SUPN[b.s], pvs, "bk-tot");
+    });
+    if(F.b.length > 1) h2 += filaTot("ZUPPA", todos, "bk-tot bk-emp");
+    h2 += "</tbody></table></div>";
+    if(!hay) h += '<div class="bk-plan-note">⚠️ Ese día no se cargó planificación en esta pestaña: se ve solo lo vendido.</div>';
+    return h + h2;
   }
   window.gvSub = function(s){ sub = s; if(s === "plan") cargarPlan(); render(); };
   window.gvOrden = function(o){ orden = o; render(); };
