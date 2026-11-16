@@ -13830,7 +13830,8 @@ const MMAA_DATA = {};
 </script>
 <!--TSB:FIN-->
 
-<!--GV:INICIO GV_V10-->
+
+<!--GV:INICIO GV_V11-->
 <style id="gvStyle">
 /* 🏆 Planificación Ranking Vol Galaxia */
 .gv-t{min-width:760px;}
@@ -13852,6 +13853,20 @@ const MMAA_DATA = {};
 .gv-cie-sel label{font-family:var(--mono);font-size:.62rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
 .gv-cie-sel select{font-size:.8rem;font-weight:600;padding:6px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);}
 .gv-t th small{font-size:.5rem;font-weight:500;text-transform:none;letter-spacing:.02em;}
+/* 📋 Cierre: letra grande y legible (se proyecta) */
+.bk-table.gv-cie th{font-family:var(--sans)!important;font-size:1rem!important;font-weight:800!important;letter-spacing:.02em!important;color:var(--ink)!important;padding:10px 8px!important;}
+.bk-table.gv-cie th small{font-size:.78rem!important;font-weight:600!important;color:var(--muted)!important;}
+.bk-table.gv-cie td{padding:9px 6px!important;}
+.bk-table.gv-cie td.bk-cell small{white-space:normal!important;}
+.bk-table.gv-cie td.bk-cell small.gv-sp{font-size:.85rem!important;font-weight:600!important;text-transform:uppercase;letter-spacing:.04em!important;color:#9a8f7a!important;margin-top:1px;}
+.bk-table.gv-cie td.bk-name{font-family:var(--sans)!important;font-size:1.25rem!important;font-weight:800!important;white-space:nowrap;}
+.bk-table.gv-cie td.bk-name .bk-foto{width:42px!important;height:42px!important;}
+.bk-table.gv-cie td.bk-cell b{font-family:var(--sans)!important;font-size:1.8rem!important;font-weight:900!important;line-height:1.15!important;display:block;}
+.bk-table.gv-cie td.bk-cell small{font-family:var(--sans)!important;font-size:1.12rem!important;font-weight:700!important;opacity:1!important;letter-spacing:0!important;display:block;margin-top:2px;}
+.bk-table.gv-cie td.bk-cell b.bk-dim{font-size:1.3rem!important;}
+.bk-table.gv-cie td.bk-cell:has(b.bk-dim) small{color:#4b5563!important;font-weight:600!important;}
+.bk-table.gv-cie tr.bk-tot td{font-size:1.25rem!important;}
+.bk-table.gv-cie tr.bk-emp td.bk-cell small{color:#e7dfcf!important;}
 </style>
 <script id="gvPatch">
 /* ===== 🏆 Planificación Ranking Vol Galaxia (GV_V1) — Supervisores › Resultados =====
@@ -14248,11 +14263,11 @@ const MMAA_DATA = {};
     if(!fr) return h + '<div class="bk-empty">' + (cieDia === hoyArg() ? "Todavía no está la venta de hoy: en la base de preventa del archivo VR la venta de hoy queda con fecha de mañana. Apenas el archivo VR la tenga, se ve acá (se actualiza sola cada hora, o en el momento desde la planilla: menú <b>🏆 Ranking Galaxia → Actualizar venta del día</b>)." : "Todavía no hay en la base de preventa una venta con fecha posterior a ese día (la venta sale un día después).") + (GJ.ultimo ? " Última fecha con venta: " + e(GJ.ultimo) + "." : "") + "</div>";
     function real(pv, k){ var p = (GJ.d || {})[pv]; var r = p && p[fr]; return r ? (r[GJI[k]] || 0) : 0; }
     function celda(pl, re){
-      if(pl == null) return '<td class="bk-cell"><b class="bk-dim">—</b><small>vendió ' + n1(re) + " · sin planificar</small></td>";
+      if(pl == null) return '<td class="bk-cell gv-sinpl"><b class="bk-dim">—</b><small>vendió ' + n1(re) + ' HL</small><small class="gv-sp">sin planificar</small></td>';
       var p = pl > 0 ? re / pl : null;
       return '<td class="bk-cell ' + cls(p) + '"><b>' + (p != null ? pc(p) : "—") + "</b><small>" + n1(re) + " / " + n1(pl) + " HL</small></td>";
     }
-    var h2 = '<div class="bk-table-wrap"><table class="bk-table bk-matrix gv-t"><thead><tr><th>Promotor</th>' + CAT.map(function(c){ return "<th>" + c.n + "<br><small>vendido / planif.</small></th>"; }).join("") + "</tr></thead><tbody>";
+    var h2 = '<div class="bk-table-wrap"><table class="bk-table bk-matrix gv-t gv-cie"><thead><tr><th>Promotor</th>' + CAT.map(function(c){ return "<th>" + c.n + "<br><small>vendido / planif.</small></th>"; }).join("") + "</tr></thead><tbody>";
     var hay = false, todos = [];
     function filaTot(nombre, pvs, cl){
       return '<tr class="' + cl + '"><td class="bk-name">' + e(nombre) + "</td>" + CAT.map(function(c){
