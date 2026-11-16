@@ -13639,7 +13639,197 @@ const MMAA_DATA = {};
 
 
 
-<!--GV:INICIO GV_V8-->
+
+<!--TSB:INICIO TSB_V1-->
+<script id="tsbPatch">
+/* ===== 💰 Trade Spend (Supervisores): bultos en cada vista — TSB_V1 =====
+   tsb.json (lo arma TsBultos.gs desde WAPI SUPERVISORES): por cliente, grupos de renglones de venta con
+   los bultos (Cantidad + Cantidad Sin Cargo) y las acciones que tocaron ese renglón. Un mismo renglón puede
+   tener varias acciones: se cuenta UNA vez en totales, categorías y canales, y en cada acción por separado. */
+(function(){
+  if(typeof TRADE_SPEND_DATA === "undefined" || typeof renderTradeSpend !== "function") return;
+  var B = null, IDX = {};
+  function fb(v){ if(v == null || isNaN(v)) return "—"; var a = Math.abs(v); return Number(v).toLocaleString("es-AR", {minimumFractionDigits: 0, maximumFractionDigits: a < 100 ? 1 : 0}); }
+  function tag(v){ return '<span class="tsb-b" title="Bultos (incluye los sin cargo)">📦 ' + fb(v) + " bultos</span>"; }
+  function permitidos(){
+    if(typeof supAuthData === "undefined" || !supAuthData || supAuthData.scope === "all") return null;
+    var s = {}; tsScopedClientes().forEach(function(c){ s[c.cod] = 1; }); return s;
+  }
+  function catDe(){ var m = {}; (TRADE_SPEND_DATA.acciones || []).forEach(function(a){ m[a.codigo] = a.categoria || "Sin categoría"; }); return m; }
+  // suma de bultos de los renglones de los clientes (cods: lista o null = todos los permitidos) que cumplen f(codigosAccion)
+  function sumar(cods, f, todos){
+    if(!B) return null;
+    var ok = todos ? null : permitidos(), t = 0;
+    (cods || Object.keys(B.c)).forEach(function(cod){
+      if(ok && !ok[cod]) return;
+      (B.c[cod] || []).forEach(function(g){ if(!f || f(g[1].map(function(i){ return B.acc[i]; }))) t += g[0]; });
+    });
+    return t;
+  }
+  function bAcc(codigo, cods, todos){ return sumar(cods, function(cs){ return cs.indexOf(codigo) !== -1; }, todos); }
+  function bAccs(set, cods){ return sumar(cods, function(cs){ return cs.some(function(c){ return set[c]; }); }); }
+  function bCat(nombre, cods){ var m = catDe(); return sumar(cods, function(cs){ return cs.some(function(c){ return m[c] === nombre; }); }); }
+  function cliCanal(){ var m = {}; (TRADE_SPEND_DATA.clientes || []).forEach(function(c){ m[c.cod] = c.canal || ""; }); (TRADE_SPEND_DATA.acciones || []).forEach(function(a){ (a.clientes || []).forEach(function(c){ if(!m[c.cod] && c.canal) m[c.cod] = c.canal; }); }); return m; }
+  function codsCanal(canal){ var m = cliCanal(); return Object.keys(B.c).filter(function(cod){ return (m[cod] || "Sin canal") === canal; }); }
+
+  var st = document.createElement("style"); st.id = "tsbStyle";
+  st.textContent = ".tsb-b{display:inline-block;font-family:var(--mono);font-size:.62rem;font-weight:800;color:var(--amber-deep);background:#fff4dd;border:1px solid #f3dfb5;border-radius:20px;padding:1px 7px;margin-left:6px;white-space:nowrap;vertical-align:middle}" +
+    ".ts-rank-nums .tsb-b{margin-left:4px}.ts-accion-tag .tsb-b{margin:0 6px}";
+  document.head.appendChild(st);
+
+  function deco(listId, arr, fn){
+    var el = document.getElementById(listId); if(!el || !B || !arr) return;
+    var rows = el.querySelectorAll(".ts-rank-row");
+    Array.prototype.forEach.call(rows, function(r, i){
+      var x = arr[i]; if(!x) return;
+      var n = r.querySelector(".ts-rank-nums"); if(!n || n.querySelector(".tsb-b")) return;
+      n.insertAdjacentHTML("beforeend", tag(fn(x)));
+    });
+  }
+  function kpi(){
+    var g = document.getElementById("tsNumPct") || document.getElementById("tsNumGasto"); if(!g || !B) return;
+    var card = g.closest(".alert-btn"); if(!card) return;
+    var list = window.tsLastList || [];
+    var v = sumar(list.map(function(c){ return c.cod; }), null);
+    var k = document.getElementById("tsbKpi");
+    if(!k){
+      k = card.cloneNode(true); k.id = "tsbKpi"; k.style.borderColor = "var(--amber-deep)";
+      var em = k.querySelector(".ab-emoji"); if(em) em.textContent = "📦";
+      var num = k.querySelector(".ab-num"); if(num){ num.removeAttribute("id"); num.id = "tsbKpiNum"; num.style.color = "var(--amber-deep)"; }
+      var lb = k.querySelector(".ab-lbl"); if(lb) lb.textContent = "Bultos con Trade Spend";
+      k.removeAttribute("onclick");
+      card.parentNode.insertBefore(k, card.nextSibling);
+    }
+    var nn = document.getElementById("tsbKpiNum"); if(nn) nn.textContent = fb(v);
+  }
+  function envolver(nombre, despues){
+    var o = window[nombre]; if(typeof o !== "function" || o._tsb) return;
+    var w = function(){ var r = o.apply(this, arguments); try{ despues.apply(this, arguments); }catch(e){ console.warn("tsb " + nombre, e); } return r; };
+    w._tsb = true; window[nombre] = w;
+  }
+  function resumenCats(){
+    var p = document.getElementById("tsCategoriaResumenPanel"); if(!p || !B) return;
+    Array.prototype.forEach.call(p.querySelectorAll(".alert-btn"), function(card){
+      var lb = card.querySelector(".ab-lbl"); if(!lb || lb.querySelector(".tsb-b")) return;
+      lb.insertAdjacentHTML("beforeend", tag(bCat(lb.textContent.trim())));
+    });
+  }
+  function decorarTodo(){
+    kpi(); resumenCats();
+    deco("tsRankingList", window.tsLastList, function(c){ return sumar([c.cod], null); });
+    deco("tsAccionList", window.tsLastAcciones, function(a){ return bAcc(a.codigo, a.clientes.map(function(c){ return c.cod; })); });
+    deco("tsCategoriaList", window.tsLastCategorias, function(c){ return bCat(c.nombre); });
+    deco("tsCategoriaAccionesList", window.tsLastCategoriaAcciones, function(a){ return bAcc(a.codigo, a.clientes.map(function(c){ return c.cod; })); });
+    deco("tsCanalList", window.tsLastCanales, function(c){ return sumar(codsCanal(c.nombre), null); });
+    if(typeof tsCanalSeleccionado !== "undefined" && tsCanalSeleccionado) deco("tsCanalCategoriasList", window.tsLastCanalCategorias, function(c){ return bCat(c.nombre, codsCanal(tsCanalSeleccionado)); });
+    selBar(); desc();
+  }
+  function selBar(){
+    var t = document.getElementById("tsSelTotal"); if(!t || !B || typeof tsSeleccionAcciones === "undefined") return;
+    var set = {}, cods = {};
+    (window.tsLastCategoriaAcciones || []).forEach(function(a){ if(tsSeleccionAcciones.has(a.codigo)){ set[a.codigo] = 1; a.clientes.forEach(function(c){ cods[c.cod] = 1; }); } });
+    var old = t.parentNode.querySelector(".tsb-b"); if(old) old.remove();
+    if(Object.keys(set).length) t.insertAdjacentHTML("afterend", tag(bAccs(set, Object.keys(cods))));
+  }
+  // 🎯 Descentralizadas: columna Bultos al lado de "TS Gastado"
+  function desc(){
+    var panel = document.getElementById("tsDescentralizadasPanel"); if(!panel || !B) return;
+    var ths = panel.querySelectorAll("thead th"), ig = -1;
+    Array.prototype.forEach.call(ths, function(th, i){ if(th.textContent.trim() === "TS Gastado") ig = i; });
+    if(ig === -1 || panel.querySelector("th.tsb-th")) return;
+    ths[ig].insertAdjacentHTML("afterend", '<th class="tsb-th">Bultos</th>');
+    var tot = 0;
+    Array.prototype.forEach.call(panel.querySelectorAll("tbody tr"), function(tr){
+      var cc = tr.querySelector("td.tsdescCod"), td = tr.children[ig]; if(!td) return;
+      var v = cc ? bAcc(cc.textContent.trim(), null, true) : null;
+      if(v != null) tot += v;
+      td.insertAdjacentHTML("afterend", '<td style="white-space:nowrap">' + (v != null ? fb(v) : "—") + "</td>");
+    });
+    var lbl = panel.querySelector(".alert-btn .ab-lbl");
+    if(lbl && !lbl.querySelector(".tsb-b")) lbl.insertAdjacentHTML("beforeend", tag(tot));
+  }
+  // modales
+  envolver("tsOpenDetail", function(idx){
+    var c = (window.tsLastList || [])[idx]; if(!c || !B) return;
+    var cod = document.getElementById("tsModalCod"); if(cod && !cod.querySelector(".tsb-b")) cod.insertAdjacentHTML("beforeend", tag(sumar([c.cod], null)));
+    var porDesc = {}; (TRADE_SPEND_DATA.acciones || []).forEach(function(a){ (porDesc[a.descripcion] = porDesc[a.descripcion] || {})[a.codigo] = 1; });
+    var tags = document.querySelectorAll("#tsModalAcciones .ts-accion-tag");
+    Array.prototype.forEach.call(tags, function(t, i){
+      var a = c.acciones[i]; if(!a || t.querySelector(".tsb-b")) return;
+      var set = porDesc[a.accion]; if(!set) return;
+      var b = t.querySelector("b"); if(b) b.insertAdjacentHTML("beforebegin", tag(bAccs(set, [c.cod])));
+    });
+  });
+  envolver("tsMostrarAccionModal_", function(a){
+    if(!a || !B) return;
+    var cods = a.clientes.map(function(c){ return c.cod; });
+    var g = document.getElementById("tsAccionModalGasto"); if(g && !g.querySelector(".tsb-b")) g.insertAdjacentHTML("beforeend", tag(bAcc(a.codigo, cods)));
+    var tags = document.querySelectorAll("#tsAccionModalClientes .ts-accion-tag");
+    Array.prototype.forEach.call(tags, function(t, i){
+      var c = a.clientes[i]; if(!c || t.querySelector(".tsb-b")) return;
+      var b = t.querySelector("b"); if(b) b.insertAdjacentHTML("beforebegin", tag(bAcc(a.codigo, [c.cod])));
+    });
+  });
+  // detalle de una acción descentralizada (tocar la fila): tarjeta + columna Bultos por cliente
+  function detalle(){
+    var body = document.getElementById("tsDetBody"); if(!body || !B) return;
+    var tit = document.getElementById("tsDetTitulo"), cod = tit ? tit.textContent.split(" · ")[0].trim() : "";
+    if(!cod) return;
+    var table = body.querySelector("table.tsdet-table"); if(!table || table.querySelector("th.tsb-th")) return;
+    var ths = table.querySelectorAll("thead th"), ig = -1;
+    Array.prototype.forEach.call(ths, function(th, i){ if(/TS gastado/i.test(th.textContent)) ig = i; });
+    if(ig === -1) return;
+    ths[ig].insertAdjacentHTML("afterend", '<th class="tsb-th">Bultos</th>');
+    var tot = 0;
+    Array.prototype.forEach.call(table.querySelectorAll("tbody tr"), function(tr){
+      var c = tr.children[1] ? tr.children[1].textContent.trim() : "", v = c ? (bAcc(cod, [c]) || 0) : 0; tot += v;
+      if(tr.children[ig]) tr.children[ig].insertAdjacentHTML("afterend", "<td>" + fb(v) + "</td>");
+    });
+    var cards = body.querySelector(".tsdet-cards");
+    if(cards && !cards.querySelector(".tsb-card")) cards.insertAdjacentHTML("beforeend", '<div class="tsdet-card tsb-card"><small>Bultos</small><b>' + fb(bAcc(cod, null, true)) + "</b><span>total de la acción · incluye los sin cargo</span></div>");
+  }
+  envolver("tsDetAbrir", detalle);
+  envolver("tsDetFiltrar", function(){ setTimeout(detalle, 260); });
+
+  // ⬇️ descargas: columna "Bultos"
+  var oCsv = window.tsDescargarCSV_;
+  if(typeof oCsv === "function"){
+    window.tsDescargarCSV_ = function(headers, rows, prefijo){
+      try{
+        if(B && headers.indexOf("Bultos") === -1){
+          var f = null, p = String(prefijo || "");
+          if(p === "trade_spend_por_cliente") f = function(r){ return sumar([String(r[0])], null); };
+          else if(p === "trade_spend_por_accion" || (p.indexOf("trade_spend_categoria_") === 0)) f = function(r){ var a = (TRADE_SPEND_DATA.acciones || []).filter(function(x){ return x.codigo === r[0]; })[0]; return bAcc(r[0], a ? a.clientes.map(function(c){ return c.cod; }) : null); };
+          else if(p === "trade_spend_por_categoria") f = function(r){ return bCat(r[0]); };
+          else if(p.indexOf("trade_spend_canal_") === 0 && typeof tsCanalSeleccionado !== "undefined" && tsCanalSeleccionado){ var cc = codsCanal(tsCanalSeleccionado); f = function(r){ return bCat(r[0], cc); }; }
+          else if(p === "trade_spend_por_canal_completo") f = function(r){ return bCat(r[1], codsCanal(r[0])); };
+          if(f){ headers = headers.concat(["Bultos"]); rows = rows.map(function(r){ var v = f(r); return r.concat([v != null ? Math.round(v * 100) / 100 : ""]); }); }
+        }
+      }catch(e){ console.warn("tsb csv", e); }
+      return oCsv.call(this, headers, rows, prefijo);
+    };
+  }
+
+  ["renderTradeSpend", "renderTsAccion", "renderTsCategoria", "renderTsCategoriaAcciones", "renderTsCanal", "renderTsCanalCategorias", "tsActualizarSelBar", "renderTsDescentralizadasObjetivo", "renderTsResumenCategorias"].forEach(function(n){ envolver(n, decorarTodo); });
+
+  var urls = ["tsb.json", "https://distribuidorazuppa.github.io/RUTACCC/tsb.json"], k = 0;
+  (function bajar(){
+    if(k >= urls.length) return;
+    fetch(urls[k++] + "?t=" + Date.now()).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(j){
+      if(!j || !j.c || !j.acc) return;
+      B = j; IDX = {}; j.acc.forEach(function(c, i){ IDX[c] = i; });
+      try{
+        if(typeof supAuthData !== "undefined" && supAuthData){
+          ["renderTradeSpend", "renderTsAccion", "renderTsCategoria", "renderTsCanal"].forEach(function(n){ try{ window[n](); }catch(e){} });
+        }
+      }catch(e){}
+    }).catch(bajar);
+  })();
+})();
+
+</script>
+<!--TSB:FIN-->
+<!--GV:INICIO GV_V9-->
 <style id="gvStyle">
 /* 🏆 Planificación Ranking Vol Galaxia */
 .gv-t{min-width:760px;}
@@ -14048,11 +14238,11 @@ const MMAA_DATA = {};
     var fr = fechaReal(cieDia), P = ciePlan[cieDia];
     if(P == null){ cargarCiePlan(cieDia); P = "cargando"; }
     var h = '<div class="gv-cie-sel"><label for="gvCieSel">📅 Día planificado</label><select id="gvCieSel" onchange="gvCieDia(this.value)">' +
-      ds.map(function(k){ return '<option value="' + k + '"' + (k === cieDia ? " selected" : "") + ">" + diaTxt(k) + (k === hoyArg() ? " (hoy)" : "") + (fechaReal(k) ? "" : " · sin venta todavía") + "</option>"; }).join("") + "</select></div>" +
+      ds.map(function(k){ return '<option value="' + k + '"' + (k === cieDia ? " selected" : "") + ">" + diaTxt(k) + (k === hoyArg() ? " (hoy)" : "") + (fechaReal(k) ? "" : (k === hoyArg() ? " · se ve mañana" : " · sin venta todavía")) + "</option>"; }).join("") + "</select></div>" +
       '<div class="bk-plan-note">Lo planificado ese día contra lo que se vendió de esa visita: la venta con la primera fecha posterior en la base de preventa del archivo VR (la misma regla del Cierre de Planificación CNC)' +
       (fr ? ". Para el " + e(diaTxt(cieDia)) + " se toma la venta del <b>" + e(diaTxt(fr)) + "</b>." : ".") + " El % es vendido ÷ planificado: rojo hasta 65%, amarillo hasta 95%, verde arriba.</div>";
     if(P === "cargando") return h + '<div class="bk-empty">⏳ Cargando lo planificado…</div>';
-    if(!fr) return h + '<div class="bk-empty">Todavía no hay venta en la base de preventa para ese día (la venta sale un día después). ' + (GJ.ultimo ? "Última venta cargada: " + e(GJ.ultimo) + "." : "") + "</div>";
+    if(!fr) return h + '<div class="bk-empty">' + (cieDia === hoyArg() ? "Lo que se planifica hoy se compara con la venta de la <b>próxima fecha</b> de la base de preventa (la venta sale un día después), así que se va a ver recién mañana, cuando el archivo VR tenga esa venta. Para ver un cierre, elegí un día anterior." : "Todavía no hay en la base de preventa una venta con fecha posterior a ese día (la venta sale un día después).") + (GJ.ultimo ? " Última fecha con venta: " + e(GJ.ultimo) + "." : "") + "</div>";
     function real(pv, k){ var p = (GJ.d || {})[pv]; var r = p && p[fr]; return r ? (r[GJI[k]] || 0) : 0; }
     function celda(pl, re){
       if(pl == null) return '<td class="bk-cell"><b class="bk-dim">—</b><small>vendió ' + n1(re) + " · sin planificar</small></td>";
@@ -14116,194 +14306,5 @@ const MMAA_DATA = {};
 })();
 </script>
 <!--GV:FIN-->
-<!--TSB:INICIO TSB_V1-->
-<script id="tsbPatch">
-/* ===== 💰 Trade Spend (Supervisores): bultos en cada vista — TSB_V1 =====
-   tsb.json (lo arma TsBultos.gs desde WAPI SUPERVISORES): por cliente, grupos de renglones de venta con
-   los bultos (Cantidad + Cantidad Sin Cargo) y las acciones que tocaron ese renglón. Un mismo renglón puede
-   tener varias acciones: se cuenta UNA vez en totales, categorías y canales, y en cada acción por separado. */
-(function(){
-  if(typeof TRADE_SPEND_DATA === "undefined" || typeof renderTradeSpend !== "function") return;
-  var B = null, IDX = {};
-  function fb(v){ if(v == null || isNaN(v)) return "—"; var a = Math.abs(v); return Number(v).toLocaleString("es-AR", {minimumFractionDigits: 0, maximumFractionDigits: a < 100 ? 1 : 0}); }
-  function tag(v){ return '<span class="tsb-b" title="Bultos (incluye los sin cargo)">📦 ' + fb(v) + " bultos</span>"; }
-  function permitidos(){
-    if(typeof supAuthData === "undefined" || !supAuthData || supAuthData.scope === "all") return null;
-    var s = {}; tsScopedClientes().forEach(function(c){ s[c.cod] = 1; }); return s;
-  }
-  function catDe(){ var m = {}; (TRADE_SPEND_DATA.acciones || []).forEach(function(a){ m[a.codigo] = a.categoria || "Sin categoría"; }); return m; }
-  // suma de bultos de los renglones de los clientes (cods: lista o null = todos los permitidos) que cumplen f(codigosAccion)
-  function sumar(cods, f, todos){
-    if(!B) return null;
-    var ok = todos ? null : permitidos(), t = 0;
-    (cods || Object.keys(B.c)).forEach(function(cod){
-      if(ok && !ok[cod]) return;
-      (B.c[cod] || []).forEach(function(g){ if(!f || f(g[1].map(function(i){ return B.acc[i]; }))) t += g[0]; });
-    });
-    return t;
-  }
-  function bAcc(codigo, cods, todos){ return sumar(cods, function(cs){ return cs.indexOf(codigo) !== -1; }, todos); }
-  function bAccs(set, cods){ return sumar(cods, function(cs){ return cs.some(function(c){ return set[c]; }); }); }
-  function bCat(nombre, cods){ var m = catDe(); return sumar(cods, function(cs){ return cs.some(function(c){ return m[c] === nombre; }); }); }
-  function cliCanal(){ var m = {}; (TRADE_SPEND_DATA.clientes || []).forEach(function(c){ m[c.cod] = c.canal || ""; }); (TRADE_SPEND_DATA.acciones || []).forEach(function(a){ (a.clientes || []).forEach(function(c){ if(!m[c.cod] && c.canal) m[c.cod] = c.canal; }); }); return m; }
-  function codsCanal(canal){ var m = cliCanal(); return Object.keys(B.c).filter(function(cod){ return (m[cod] || "Sin canal") === canal; }); }
-
-  var st = document.createElement("style"); st.id = "tsbStyle";
-  st.textContent = ".tsb-b{display:inline-block;font-family:var(--mono);font-size:.62rem;font-weight:800;color:var(--amber-deep);background:#fff4dd;border:1px solid #f3dfb5;border-radius:20px;padding:1px 7px;margin-left:6px;white-space:nowrap;vertical-align:middle}" +
-    ".ts-rank-nums .tsb-b{margin-left:4px}.ts-accion-tag .tsb-b{margin:0 6px}";
-  document.head.appendChild(st);
-
-  function deco(listId, arr, fn){
-    var el = document.getElementById(listId); if(!el || !B || !arr) return;
-    var rows = el.querySelectorAll(".ts-rank-row");
-    Array.prototype.forEach.call(rows, function(r, i){
-      var x = arr[i]; if(!x) return;
-      var n = r.querySelector(".ts-rank-nums"); if(!n || n.querySelector(".tsb-b")) return;
-      n.insertAdjacentHTML("beforeend", tag(fn(x)));
-    });
-  }
-  function kpi(){
-    var g = document.getElementById("tsNumPct") || document.getElementById("tsNumGasto"); if(!g || !B) return;
-    var card = g.closest(".alert-btn"); if(!card) return;
-    var list = window.tsLastList || [];
-    var v = sumar(list.map(function(c){ return c.cod; }), null);
-    var k = document.getElementById("tsbKpi");
-    if(!k){
-      k = card.cloneNode(true); k.id = "tsbKpi"; k.style.borderColor = "var(--amber-deep)";
-      var em = k.querySelector(".ab-emoji"); if(em) em.textContent = "📦";
-      var num = k.querySelector(".ab-num"); if(num){ num.removeAttribute("id"); num.id = "tsbKpiNum"; num.style.color = "var(--amber-deep)"; }
-      var lb = k.querySelector(".ab-lbl"); if(lb) lb.textContent = "Bultos con Trade Spend";
-      k.removeAttribute("onclick");
-      card.parentNode.insertBefore(k, card.nextSibling);
-    }
-    var nn = document.getElementById("tsbKpiNum"); if(nn) nn.textContent = fb(v);
-  }
-  function envolver(nombre, despues){
-    var o = window[nombre]; if(typeof o !== "function" || o._tsb) return;
-    var w = function(){ var r = o.apply(this, arguments); try{ despues.apply(this, arguments); }catch(e){ console.warn("tsb " + nombre, e); } return r; };
-    w._tsb = true; window[nombre] = w;
-  }
-  function resumenCats(){
-    var p = document.getElementById("tsCategoriaResumenPanel"); if(!p || !B) return;
-    Array.prototype.forEach.call(p.querySelectorAll(".alert-btn"), function(card){
-      var lb = card.querySelector(".ab-lbl"); if(!lb || lb.querySelector(".tsb-b")) return;
-      lb.insertAdjacentHTML("beforeend", tag(bCat(lb.textContent.trim())));
-    });
-  }
-  function decorarTodo(){
-    kpi(); resumenCats();
-    deco("tsRankingList", window.tsLastList, function(c){ return sumar([c.cod], null); });
-    deco("tsAccionList", window.tsLastAcciones, function(a){ return bAcc(a.codigo, a.clientes.map(function(c){ return c.cod; })); });
-    deco("tsCategoriaList", window.tsLastCategorias, function(c){ return bCat(c.nombre); });
-    deco("tsCategoriaAccionesList", window.tsLastCategoriaAcciones, function(a){ return bAcc(a.codigo, a.clientes.map(function(c){ return c.cod; })); });
-    deco("tsCanalList", window.tsLastCanales, function(c){ return sumar(codsCanal(c.nombre), null); });
-    if(typeof tsCanalSeleccionado !== "undefined" && tsCanalSeleccionado) deco("tsCanalCategoriasList", window.tsLastCanalCategorias, function(c){ return bCat(c.nombre, codsCanal(tsCanalSeleccionado)); });
-    selBar(); desc();
-  }
-  function selBar(){
-    var t = document.getElementById("tsSelTotal"); if(!t || !B || typeof tsSeleccionAcciones === "undefined") return;
-    var set = {}, cods = {};
-    (window.tsLastCategoriaAcciones || []).forEach(function(a){ if(tsSeleccionAcciones.has(a.codigo)){ set[a.codigo] = 1; a.clientes.forEach(function(c){ cods[c.cod] = 1; }); } });
-    var old = t.parentNode.querySelector(".tsb-b"); if(old) old.remove();
-    if(Object.keys(set).length) t.insertAdjacentHTML("afterend", tag(bAccs(set, Object.keys(cods))));
-  }
-  // 🎯 Descentralizadas: columna Bultos al lado de "TS Gastado"
-  function desc(){
-    var panel = document.getElementById("tsDescentralizadasPanel"); if(!panel || !B) return;
-    var ths = panel.querySelectorAll("thead th"), ig = -1;
-    Array.prototype.forEach.call(ths, function(th, i){ if(th.textContent.trim() === "TS Gastado") ig = i; });
-    if(ig === -1 || panel.querySelector("th.tsb-th")) return;
-    ths[ig].insertAdjacentHTML("afterend", '<th class="tsb-th">Bultos</th>');
-    var tot = 0;
-    Array.prototype.forEach.call(panel.querySelectorAll("tbody tr"), function(tr){
-      var cc = tr.querySelector("td.tsdescCod"), td = tr.children[ig]; if(!td) return;
-      var v = cc ? bAcc(cc.textContent.trim(), null, true) : null;
-      if(v != null) tot += v;
-      td.insertAdjacentHTML("afterend", '<td style="white-space:nowrap">' + (v != null ? fb(v) : "—") + "</td>");
-    });
-    var lbl = panel.querySelector(".alert-btn .ab-lbl");
-    if(lbl && !lbl.querySelector(".tsb-b")) lbl.insertAdjacentHTML("beforeend", tag(tot));
-  }
-  // modales
-  envolver("tsOpenDetail", function(idx){
-    var c = (window.tsLastList || [])[idx]; if(!c || !B) return;
-    var cod = document.getElementById("tsModalCod"); if(cod && !cod.querySelector(".tsb-b")) cod.insertAdjacentHTML("beforeend", tag(sumar([c.cod], null)));
-    var porDesc = {}; (TRADE_SPEND_DATA.acciones || []).forEach(function(a){ (porDesc[a.descripcion] = porDesc[a.descripcion] || {})[a.codigo] = 1; });
-    var tags = document.querySelectorAll("#tsModalAcciones .ts-accion-tag");
-    Array.prototype.forEach.call(tags, function(t, i){
-      var a = c.acciones[i]; if(!a || t.querySelector(".tsb-b")) return;
-      var set = porDesc[a.accion]; if(!set) return;
-      var b = t.querySelector("b"); if(b) b.insertAdjacentHTML("beforebegin", tag(bAccs(set, [c.cod])));
-    });
-  });
-  envolver("tsMostrarAccionModal_", function(a){
-    if(!a || !B) return;
-    var cods = a.clientes.map(function(c){ return c.cod; });
-    var g = document.getElementById("tsAccionModalGasto"); if(g && !g.querySelector(".tsb-b")) g.insertAdjacentHTML("beforeend", tag(bAcc(a.codigo, cods)));
-    var tags = document.querySelectorAll("#tsAccionModalClientes .ts-accion-tag");
-    Array.prototype.forEach.call(tags, function(t, i){
-      var c = a.clientes[i]; if(!c || t.querySelector(".tsb-b")) return;
-      var b = t.querySelector("b"); if(b) b.insertAdjacentHTML("beforebegin", tag(bAcc(a.codigo, [c.cod])));
-    });
-  });
-  // detalle de una acción descentralizada (tocar la fila): tarjeta + columna Bultos por cliente
-  function detalle(){
-    var body = document.getElementById("tsDetBody"); if(!body || !B) return;
-    var tit = document.getElementById("tsDetTitulo"), cod = tit ? tit.textContent.split(" · ")[0].trim() : "";
-    if(!cod) return;
-    var table = body.querySelector("table.tsdet-table"); if(!table || table.querySelector("th.tsb-th")) return;
-    var ths = table.querySelectorAll("thead th"), ig = -1;
-    Array.prototype.forEach.call(ths, function(th, i){ if(/TS gastado/i.test(th.textContent)) ig = i; });
-    if(ig === -1) return;
-    ths[ig].insertAdjacentHTML("afterend", '<th class="tsb-th">Bultos</th>');
-    var tot = 0;
-    Array.prototype.forEach.call(table.querySelectorAll("tbody tr"), function(tr){
-      var c = tr.children[1] ? tr.children[1].textContent.trim() : "", v = c ? (bAcc(cod, [c]) || 0) : 0; tot += v;
-      if(tr.children[ig]) tr.children[ig].insertAdjacentHTML("afterend", "<td>" + fb(v) + "</td>");
-    });
-    var cards = body.querySelector(".tsdet-cards");
-    if(cards && !cards.querySelector(".tsb-card")) cards.insertAdjacentHTML("beforeend", '<div class="tsdet-card tsb-card"><small>Bultos</small><b>' + fb(bAcc(cod, null, true)) + "</b><span>total de la acción · incluye los sin cargo</span></div>");
-  }
-  envolver("tsDetAbrir", detalle);
-  envolver("tsDetFiltrar", function(){ setTimeout(detalle, 260); });
-
-  // ⬇️ descargas: columna "Bultos"
-  var oCsv = window.tsDescargarCSV_;
-  if(typeof oCsv === "function"){
-    window.tsDescargarCSV_ = function(headers, rows, prefijo){
-      try{
-        if(B && headers.indexOf("Bultos") === -1){
-          var f = null, p = String(prefijo || "");
-          if(p === "trade_spend_por_cliente") f = function(r){ return sumar([String(r[0])], null); };
-          else if(p === "trade_spend_por_accion" || (p.indexOf("trade_spend_categoria_") === 0)) f = function(r){ var a = (TRADE_SPEND_DATA.acciones || []).filter(function(x){ return x.codigo === r[0]; })[0]; return bAcc(r[0], a ? a.clientes.map(function(c){ return c.cod; }) : null); };
-          else if(p === "trade_spend_por_categoria") f = function(r){ return bCat(r[0]); };
-          else if(p.indexOf("trade_spend_canal_") === 0 && typeof tsCanalSeleccionado !== "undefined" && tsCanalSeleccionado){ var cc = codsCanal(tsCanalSeleccionado); f = function(r){ return bCat(r[0], cc); }; }
-          else if(p === "trade_spend_por_canal_completo") f = function(r){ return bCat(r[1], codsCanal(r[0])); };
-          if(f){ headers = headers.concat(["Bultos"]); rows = rows.map(function(r){ var v = f(r); return r.concat([v != null ? Math.round(v * 100) / 100 : ""]); }); }
-        }
-      }catch(e){ console.warn("tsb csv", e); }
-      return oCsv.call(this, headers, rows, prefijo);
-    };
-  }
-
-  ["renderTradeSpend", "renderTsAccion", "renderTsCategoria", "renderTsCategoriaAcciones", "renderTsCanal", "renderTsCanalCategorias", "tsActualizarSelBar", "renderTsDescentralizadasObjetivo", "renderTsResumenCategorias"].forEach(function(n){ envolver(n, decorarTodo); });
-
-  var urls = ["tsb.json", "https://distribuidorazuppa.github.io/RUTACCC/tsb.json"], k = 0;
-  (function bajar(){
-    if(k >= urls.length) return;
-    fetch(urls[k++] + "?t=" + Date.now()).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(j){
-      if(!j || !j.c || !j.acc) return;
-      B = j; IDX = {}; j.acc.forEach(function(c, i){ IDX[c] = i; });
-      try{
-        if(typeof supAuthData !== "undefined" && supAuthData){
-          ["renderTradeSpend", "renderTsAccion", "renderTsCategoria", "renderTsCanal"].forEach(function(n){ try{ window[n](); }catch(e){} });
-        }
-      }catch(e){}
-    }).catch(bajar);
-  })();
-})();
-
-</script>
-<!--TSB:FIN-->
 </body>
 </html>
