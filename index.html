@@ -13829,7 +13829,8 @@ const MMAA_DATA = {};
 
 </script>
 <!--TSB:FIN-->
-<!--GV:INICIO GV_V9-->
+
+<!--GV:INICIO GV_V10-->
 <style id="gvStyle">
 /* 🏆 Planificación Ranking Vol Galaxia */
 .gv-t{min-width:760px;}
@@ -13954,11 +13955,13 @@ const MMAA_DATA = {};
   }
   var MESN = {ene: 0, feb: 1, mar: 2, abr: 3, may: 4, jun: 5, jul: 6, ago: 7, sep: 8, set: 8, oct: 9, nov: 10, dic: 11};
   function fechaVisita(k){
-    // el PAS cuenta "−7" como la venta con fecha (día del informe − 6) en la base de preventa (pedido de la visita de hace 7 días)
+    // "−7" del PAS = venta de la visita de hace 7 días, que en la base de preventa queda con fecha del día
+    // siguiente (la del sábado, el lunes)
     var t = pasInforme(), m = String(t).toLowerCase().match(/(\d{1,2})[-\/ ]([a-z]{3})[a-z]*[-\/ ](\d{2,4})/), b;
     if(m && MESN[m[2]] != null){ var y = +m[3]; if(y < 100) y += 2000; b = new Date(y, MESN[m[2]], +m[1]); }
     else { var h = hoyArg().split("-"); b = new Date(+h[0], +h[1] - 1, +h[2]); }
-    b.setDate(b.getDate() - (k - 1));
+    b.setDate(b.getDate() - k + 1);
+    if(b.getDay() === 0) b.setDate(b.getDate() + 1);
     return b.getFullYear() + "-" + ("0" + (b.getMonth() + 1)).slice(-2) + "-" + ("0" + b.getDate()).slice(-2);
   }
   var GJI = {cvza: 0, still: 1, ung: 2, nabs: 3, agua: 4, rb: 5};
@@ -14238,11 +14241,11 @@ const MMAA_DATA = {};
     var fr = fechaReal(cieDia), P = ciePlan[cieDia];
     if(P == null){ cargarCiePlan(cieDia); P = "cargando"; }
     var h = '<div class="gv-cie-sel"><label for="gvCieSel">📅 Día planificado</label><select id="gvCieSel" onchange="gvCieDia(this.value)">' +
-      ds.map(function(k){ return '<option value="' + k + '"' + (k === cieDia ? " selected" : "") + ">" + diaTxt(k) + (k === hoyArg() ? " (hoy)" : "") + (fechaReal(k) ? "" : (k === hoyArg() ? " · se ve mañana" : " · sin venta todavía")) + "</option>"; }).join("") + "</select></div>" +
-      '<div class="bk-plan-note">Lo planificado ese día contra lo que se vendió de esa visita: la venta con la primera fecha posterior en la base de preventa del archivo VR (la misma regla del Cierre de Planificación CNC)' +
+      ds.map(function(k){ return '<option value="' + k + '"' + (k === cieDia ? " selected" : "") + ">" + diaTxt(k) + (k === hoyArg() ? " (hoy)" : "") + (fechaReal(k) ? "" : (k === hoyArg() ? " · esperando la venta de hoy" : " · sin venta todavía")) + "</option>"; }).join("") + "</select></div>" +
+      '<div class="bk-plan-note">Lo planificado ese día contra lo que se vendió de esa visita: en la base de preventa del archivo VR la venta queda con fecha del día siguiente, así que se toma la primera fecha posterior (la misma regla del Cierre de Planificación CNC)' +
       (fr ? ". Para el " + e(diaTxt(cieDia)) + " se toma la venta del <b>" + e(diaTxt(fr)) + "</b>." : ".") + " El % es vendido ÷ planificado: rojo hasta 65%, amarillo hasta 95%, verde arriba.</div>";
     if(P === "cargando") return h + '<div class="bk-empty">⏳ Cargando lo planificado…</div>';
-    if(!fr) return h + '<div class="bk-empty">' + (cieDia === hoyArg() ? "Lo que se planifica hoy se compara con la venta de la <b>próxima fecha</b> de la base de preventa (la venta sale un día después), así que se va a ver recién mañana, cuando el archivo VR tenga esa venta. Para ver un cierre, elegí un día anterior." : "Todavía no hay en la base de preventa una venta con fecha posterior a ese día (la venta sale un día después).") + (GJ.ultimo ? " Última fecha con venta: " + e(GJ.ultimo) + "." : "") + "</div>";
+    if(!fr) return h + '<div class="bk-empty">' + (cieDia === hoyArg() ? "Todavía no está la venta de hoy: en la base de preventa del archivo VR la venta de hoy queda con fecha de mañana. Apenas el archivo VR la tenga, se ve acá (se actualiza sola cada hora, o en el momento desde la planilla: menú <b>🏆 Ranking Galaxia → Actualizar venta del día</b>)." : "Todavía no hay en la base de preventa una venta con fecha posterior a ese día (la venta sale un día después).") + (GJ.ultimo ? " Última fecha con venta: " + e(GJ.ultimo) + "." : "") + "</div>";
     function real(pv, k){ var p = (GJ.d || {})[pv]; var r = p && p[fr]; return r ? (r[GJI[k]] || 0) : 0; }
     function celda(pl, re){
       if(pl == null) return '<td class="bk-cell"><b class="bk-dim">—</b><small>vendió ' + n1(re) + " · sin planificar</small></td>";
